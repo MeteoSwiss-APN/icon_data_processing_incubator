@@ -1,4 +1,4 @@
-pipeline {
+job('myjob') {
     scm {
         git {
             remote {
