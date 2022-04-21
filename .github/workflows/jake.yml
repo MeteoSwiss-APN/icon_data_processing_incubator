@@ -1,6 +1,6 @@
 name: Jake Github Action
 
-on: 
+on:
   push:
     branches:
     - master
