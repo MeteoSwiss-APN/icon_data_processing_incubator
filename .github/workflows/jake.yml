@@ -17,8 +17,9 @@ jobs:
 
     - name: get dependencies
       run: |
-        conda env create --file environment_dev.yml
         source $(conda info | grep -i 'base environment' | awk '{print $4}')/etc/profile.d/conda.sh
+        conda env create --file environment_dev.yml
+        conda info --envs
         conda activate idpi_env
         conda list > packages.list
     - name: Run Jake
