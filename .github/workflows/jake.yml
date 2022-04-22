@@ -20,7 +20,7 @@ jobs:
         source $(conda info | grep -i 'base environment' | awk '{print $4}')/etc/profile.d/conda.sh
         conda env create --file environment_dev.yml
         conda info --envs
-        conda activate idpi_env
+        conda activate idpi_dev
         conda list > packages.list
     - name: Run Jake
       uses: sonatype-nexus-community/jake-github-action@main
