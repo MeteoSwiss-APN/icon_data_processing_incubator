@@ -6,6 +6,7 @@ import jinja2
 import numpy as np
 import xarray as xr
 import cfgrib
+import cfgrib.xarray_to_grib
 
 def get_da(field, dss):
     for ds in dss:
