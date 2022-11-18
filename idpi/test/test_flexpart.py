@@ -126,7 +126,7 @@ def test_flexpart():
     with open("field_mappings.yml") as f:
         field_map = yaml.safe_load(f)
 
-    datadir = "/scratch/cosuna/flexpart-input/newdata/"
+    datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/"
     datafile = datadir + "/efsf00000000"
     constants = ("FIS", "FR_LAND", "SDOR")
     inputf = (
@@ -220,10 +220,6 @@ def test_flexpart():
     assert np.allclose(
         fs_ds_o["SDOR"], ds["SDOR"], rtol=3e-7, atol=5e-7, equal_nan=True
     )
-
-    os.environ[
-        "GRIB_DEFINITION_PATH"
-    ] = "/project/g110/spack-install/tsa/cosmo-eccodes-definitions/2.19.0.7/gcc/zcuyy4uduizdpxfzqmxg6bc74p2skdfp/cosmoDefinitions/definitions/:/scratch/cosuna/spack-install/tsa/eccodes/2.19.0/gcc/viigacbsqxbbcid22hjvijrrcihebyeh/share/eccodes/definitions/"
 
     ds_out = {}
     for field in ("FIS", "FR_LAND", "SDOR"):
