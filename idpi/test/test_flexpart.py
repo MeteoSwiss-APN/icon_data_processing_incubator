@@ -4,12 +4,13 @@ import subprocess
 
 import cfgrib
 import cfgrib.xarray_to_grib
+import eccodes
 import jinja2
 import numpy as np
 import xarray as xr
 import yaml
-import eccodes
 from operators.flexpart import fflexpart
+
 
 def get_da(field, dss):
     for ds in dss:
@@ -37,9 +38,10 @@ def load_data(fields, field_mapping, datafile):
 
     return ds
 
+
 def test_flexpart():
-    gpaths = os.environ['GRIB_DEFINITION_PATH'].split(':')
-    eccodes_gpath=[p for p in gpaths if 'cosmoDefinitions' not in p][0]
+    gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
+    eccodes_gpath = [p for p in gpaths if "cosmoDefinitions" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
 
     with open("field_mappings.yml") as f:

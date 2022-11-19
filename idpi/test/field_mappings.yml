@@ -1,89 +1,89 @@
-FIS: 
+FIS:
   ifs:
     name: z
     paramId: 129
   cosmo:
     paramId: 500004
-FR_LAND: 
+FR_LAND:
   ifs:
     name: lsm
     paramId: 172
   cosmo:
     paramId: 500054
-SDOR: 
-  ifs: 
+SDOR:
+  ifs:
     name: sdor
     paramId: 160
-ETADOT: 
-  ifs: 
+ETADOT:
+  ifs:
     name: etadot
-T:  
-  ifs: 
+T:
+  ifs:
     name: t
     paramId: 130
   cosmo:
     paramId: 500014
-QV: 
-  ifs: 
+QV:
+  ifs:
     name: q
     paramId: 133
-  cosmo: 
+  cosmo:
     paramId: 500035
-U: 
+U:
   ifs:
     name: u
     paramId: 131
-  cosmo: 
+  cosmo:
     paramId: 500028
-V: 
+V:
   ifs:
     name: v
     paramId: 132
   cosmo:
     paramId: 500030
-PS: 
+PS:
   ifs:
     name: sp
     paramId: 134
   cosmo:
     paramId: 500000
-U_10M: 
+U_10M:
   ifs:
     name: 10u
     paramId: 165
-  cosmo: 
+  cosmo:
     paramId: 500027
-V_10M: 
+V_10M:
   ifs:
     name: 10v
     paramId: 166
   cosmo:
     paramId: 500029
-T_2M: 
+T_2M:
   ifs:
     name: 2t
     paramId: 167
   cosmo:
     paramId: 500011
-TD_2M: 
+TD_2M:
   ifs:
     name: 2d
     paramId: 168
   cosmo:
     paramId: 500017
-CLCT: 
+CLCT:
   ifs:
     name: tcc
     paramId: 164
   cosmo:
-    paramId: 500046 
-W_SNOW: 
+    paramId: 500046
+W_SNOW:
   ifs:
     name: sd
     paramId: 141
   cosmo:
     paramId: 500044
-TOT_CON: 
+TOT_CON:
 # IFS and cosmo not compatible
   ifs:
     name: cp
@@ -91,32 +91,32 @@ TOT_CON:
   cosmo:
     paramId: 500043
 
-TOT_GSP: 
+TOT_GSP:
 # IFS and cosmo not compatible
   ifs:
     name: lsp
     paramId: 142
   cosmo:
     paramId: 500042
-SSR: 
+SSR:
 # IFS and cosmo not compatible
   ifs:
     name: ssr
     paramId: 176
   cosmo:
     paramId: 500078
-SSHF: 
+SSHF:
 # IFS and cosmo not compatible
   ifs:
     name: sshf
     paramId: 146
   cosmo:
     paramId: 500087
-EWSS: 
+EWSS:
   ifs:
     name: ewss
     paramId: 180
-NSSS: 
+NSSS:
   ifs:
     name: nsss
     paramId: 181

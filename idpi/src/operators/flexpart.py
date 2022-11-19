@@ -1,4 +1,6 @@
 import numpy as np
+
+
 # similar to the subtract.accumulate but permute the order of the operans of the diff
 # TODO implement as a ufunc
 def cumdiff(A, axis):
@@ -16,6 +18,7 @@ def cumdiff(A, axis):
 
         r[tuple(slices)] = np.expand_dims(t, axis=t.ndim)
     return r
+
 
 def fflexpart(ds, istep):
     ds_out = {}
