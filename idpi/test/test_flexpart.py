@@ -10,7 +10,7 @@ import numpy as np
 import xarray as xr
 import yaml
 from operators.flexpart import fflexpart
-
+import eccodes
 
 def get_da(field, dss):
     for ds in dss:
@@ -46,6 +46,15 @@ def test_flexpart():
 
     with open("field_mappings.yml") as f:
         field_map = yaml.safe_load(f)
+
+    def path():
+        return '/scratch/cosuna/spack-install/tsa/eccodes/2.19.0/gcc/viigacbsqxbbcid22hjvijrrcihebyeh/share/eccodes/definitions/'
+    print(eccodes.codes_definition_path())
+
+    os.environ['ECCODES_DEFINITION_PATH'] = '/scratch/cosuna/spack-install/tsa/eccodes/2.19.0/gcc/viigacbsqxbbcid22hjvijrrcihebyeh/share/eccodes/definitions/'
+    eccodes.codes_definition_path = path
+
+    print(eccodes.codes_definition_path())
 
     datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/"
     datafile = datadir + "/efsf00000000"
