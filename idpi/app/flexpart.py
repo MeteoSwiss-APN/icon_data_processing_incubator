@@ -8,7 +8,7 @@ import numpy as np
 import xarray as xr
 import yaml
 from cfgrib import abc
-import pickle
+import param_parser as pp
 
 def read_keys(
     first: abc.Field, keys: T.List[str], optional=False
@@ -153,11 +153,10 @@ def load_data(fields, field_mapping, datafile):
     ds["ETADOT"] = ds["ETADOT"].sel(hybrid=slice(1, 60))
     ds["T"] = ds["T"].sel(hybrid=slice(40, 60))
     ds["QV"] = ds["QV"].sel(hybrid=slice(40, 60))
-
     return ds
 
 
-def write_to_grib(filename, ds):
+def write_to_grib(filename, ds, param_db):
 
         # "U",
         # "V",
@@ -179,7 +178,7 @@ def write_to_grib(filename, ds):
 
         for field in ds:
             # TODO undo
-            if n > 5:
+            if n > 11:
                 continue
 
             # TODO need to support SDOR
@@ -187,8 +186,11 @@ def write_to_grib(filename, ds):
                 continue
 
             ds[field].attrs.pop("GRIB_cfName", None)
+            
             if 'paramId' in field_map[field]['cosmo']:
-                ds[field]['paramId'] = field_map[field]['cosmo']['paramId']
+                ds[field].attrs['GRIB_paramId'] = field_map[field]['cosmo']['paramId']
+
+            paramId = ds[field].GRIB_paramId
 
             # TODO remove those or check
             # WHy is NV set by Fieldextra for FIS ?
@@ -197,9 +199,16 @@ def write_to_grib(filename, ds):
             ds[field].attrs["GRIB_scanningMode"] = 0
             # TODO set this from numpy layout
             ds[field].attrs["GRIB_jScansPositively"] = 0
+            print("U", field, ds[field].GRIB_units)
             if ds[field].attrs["GRIB_units"] == "m**2 s**-2":
                 # problem otherwise grib_set_values[3] lengthOfTimeRange (type=long) failed: Key/value not found
                 ds[field].attrs["GRIB_units"] = "m"
+            print("param_", param_db[paramId], paramId)
+            if 'units' in param_db[paramId]:
+                ds[field].attrs["GRIB_units"] = param_db[paramId]['units']
+            else:
+                print("NO UNIT", field, ds[field].attrs["GRIB_units"])
+                print(param_db[paramId])
 
             if ds[field].GRIB_edition == 1:
                 # Somehow grib1 loads a perturbationNumber=0 which sets a 'number' coordinate.
@@ -317,6 +326,9 @@ def run_flexpart():
     eccodes_gpath=[p for p in gpaths if 'cosmoDefinitions' not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
 
+    param_db = pp.param_db(cosmo_gpath+"/grib2")
+
+
     datadir = "/scratch/cosuna/flexpart-input/newdata/"
     datafile = datadir + "/efsf00000000"
     constants = ("FIS", "FR_LAND", "SDOR")
@@ -373,14 +385,14 @@ def run_flexpart():
     for field in ("FIS", "FR_LAND", "SDOR"):
         ds_out[field] = ds[field]
 
-    write_to_grib("flexpart_out.grib", ds_out)
+    write_to_grib("flexpart_out.grib", ds_out, param_db)
   
     for i in range(1, 4):
         h = i * 3
 
         ds_out = flexpart(ds, i)
         print("i........ ", i)
-        write_to_grib("flexpart_out.grib", ds_out)
+        write_to_grib("flexpart_out.grib", ds_out, param_db)
 
 
 if __name__ == "__main__":
