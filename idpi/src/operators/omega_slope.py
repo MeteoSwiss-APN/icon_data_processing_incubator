@@ -24,7 +24,6 @@ def cumdiff(A, axis):
 
 def omega_slope(ps, etadot, ak, bk):
     """Compute omega slope."""
-
     ak1 = ak[1:].assign_coords({"hybrid": ak[{"hybrid": slice(0, -1)}].hybrid})
     bk1 = bk[1:].assign_coords({"hybrid": bk[{"hybrid": slice(0, -1)}].hybrid})
 

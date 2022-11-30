@@ -1,4 +1,3 @@
-import numpy as np
 from operators.omega_slope import omega_slope
 
 
