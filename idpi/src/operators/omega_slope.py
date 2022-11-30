@@ -2,6 +2,7 @@
 import numpy as np
 import operators.constants as cnt
 
+
 # similar to the subtract.accumulate but permute the order of the operans of the diff
 # TODO implement as a ufunc
 def cumdiff(A, axis):
@@ -23,13 +24,9 @@ def cumdiff(A, axis):
 
 def omega_slope(ps, etadot, ak, bk):
     """Compute omega slope."""
- 
-    ak1 = ak[1:].assign_coords(
-        {"hybrid": ak[{"hybrid": slice(0, -1)}].hybrid}
-    )
-    bk1 = bk[1:].assign_coords(
-        {"hybrid": bk[{"hybrid": slice(0, -1)}].hybrid}
-    )
+
+    ak1 = ak[1:].assign_coords({"hybrid": ak[{"hybrid": slice(0, -1)}].hybrid})
+    bk1 = bk[1:].assign_coords({"hybrid": bk[{"hybrid": slice(0, -1)}].hybrid})
 
     return (
         2.0

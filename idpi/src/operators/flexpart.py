@@ -1,6 +1,7 @@
 import numpy as np
 from operators.omega_slope import omega_slope
 
+
 def fflexpart(ds, istep):
     ds_out = {}
     for field in (
@@ -43,9 +44,8 @@ def fflexpart(ds, istep):
     )
     ds_out["EWSS"].attrs = ds["EWSS"].attrs
 
-    ds_out["OMEGA_SLOPE"] = omega_slope(ds["PS"].isel(step=istep), ds["ETADOT"].isel(step=istep),
-      ds["ak"], ds["bk"]).isel(
-        hybrid=slice(39, 61)
-    )
+    ds_out["OMEGA_SLOPE"] = omega_slope(
+        ds["PS"].isel(step=istep), ds["ETADOT"].isel(step=istep), ds["ak"], ds["bk"]
+    ).isel(hybrid=slice(39, 61))
 
     return ds_out
