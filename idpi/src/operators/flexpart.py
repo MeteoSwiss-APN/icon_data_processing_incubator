@@ -1,24 +1,5 @@
 import numpy as np
-
-
-# similar to the subtract.accumulate but permute the order of the operans of the diff
-# TODO implement as a ufunc
-def cumdiff(A, axis):
-    r = np.empty(np.shape(A))
-    t = 0  # op = the ufunc being applied to A's  elements
-    for i in range(np.shape(A)[axis]):
-        t = np.take(A, i, axis) - t
-
-        slices = []
-        for dim in range(A.ndim):
-            if dim == axis:
-                slices.append(slice(i, i + 1))
-            else:
-                slices.append(slice(None))
-
-        r[tuple(slices)] = np.expand_dims(t, axis=t.ndim)
-    return r
-
+from operators.omega_slope import omega_slope
 
 def fflexpart(ds, istep):
     ds_out = {}
@@ -62,24 +43,8 @@ def fflexpart(ds, istep):
     )
     ds_out["EWSS"].attrs = ds["EWSS"].attrs
 
-    surface_pressure_ref = 101325.0
-
-    ak1 = ds["ak"][1:].assign_coords(
-        {"hybrid": ds["ak"][{"hybrid": slice(0, -1)}].hybrid}
-    )
-    bk1 = ds["bk"][1:].assign_coords(
-        {"hybrid": ds["bk"][{"hybrid": slice(0, -1)}].hybrid}
-    )
-
-    omega_slope = (
-        2.0
-        * ds["PS"].isel(step=istep)
-        * ds["ETADOT"].isel(step=istep)
-        * ((ak1 - ds["ak"][0:-1]) / ds["PS"].isel(step=istep) + bk1 - ds["bk"][0:-1])
-        / ((ak1 - ds["ak"][0:-1]) / surface_pressure_ref + bk1 - ds["bk"][0:-1])
-    )
-
-    ds_out["OMEGA_SLOPE"] = omega_slope.reduce(cumdiff, dim="hybrid").isel(
+    ds_out["OMEGA_SLOPE"] = omega_slope(ds["PS"].isel(step=istep), ds["ETADOT"].isel(step=istep),
+      ds["ak"], ds["bk"]).isel(
         hybrid=slice(39, 61)
     )
 
