@@ -1,6 +1,8 @@
 """algorithm for computing omega_slope."""
+# Third-party
 import numpy as np
 import operators.constants as cnt
+import xarray as xr
 
 
 # similar to the subtract.accumulate but permute the order of the operans of the diff
@@ -22,7 +24,9 @@ def cumdiff(A, axis):
     return r
 
 
-def omega_slope(ps, etadot, ak, bk):
+def omega_slope(
+    ps: xr.DataArray, etadot: xr.DataArray, ak: xr.DataArray, bk: xr.DataArray
+):
     """Compute omega slope."""
     ak1 = ak[1:].assign_coords({"hybrid": ak[{"hybrid": slice(0, -1)}].hybrid})
     bk1 = bk[1:].assign_coords({"hybrid": bk[{"hybrid": slice(0, -1)}].hybrid})

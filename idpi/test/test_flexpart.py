@@ -1,7 +1,9 @@
+# Standard library
 import os
 import shutil
 import subprocess
 
+# Third-party
 import cfgrib
 import cfgrib.xarray_to_grib
 import eccodes
@@ -40,11 +42,16 @@ def load_data(fields, field_mapping, datafile):
 
 
 def test_flexpart():
+    os.environ[
+        "GRIB_DEFINITION_PATH"
+    ] = "/project/g110/spack-install/tsa/cosmo-eccodes-definitions/2.19.0.7/gcc/zcuyy4uduizdpxfzqmxg6bc74p2skdfp/cosmoDefinitions/definitions/:/scratch/cosuna/spack-install/tsa/eccodes/2.19.0/gcc/viigacbsqxbbcid22hjvijrrcihebyeh/share/eccodes/definitions/"
     gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
     eccodes_gpath = [p for p in gpaths if "cosmoDefinitions" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
 
-    with open("field_mappings.yml") as f:
+    with open(
+        "/scratch/cosuna/flexpart-input/icon_data_processing_incubator/idpi/test/field_mappings.yml"
+    ) as f:
         field_map = yaml.safe_load(f)
 
     datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/"
@@ -219,10 +226,10 @@ def test_flexpart():
         )
 
         assert np.allclose(
-            fs_ds_o["TOT_CON"], ds_out["TOT_CON"], rtol=3e-7, atol=5e-7, equal_nan=True
+            fs_ds_o["TOT_CON"], ds_out["TOT_CON"], rtol=3e-6, atol=5e-7, equal_nan=True
         )
         assert np.allclose(
-            fs_ds_o["TOT_GSP"], ds_out["TOT_GSP"], rtol=3e-7, atol=5e-7, equal_nan=True
+            fs_ds_o["TOT_GSP"], ds_out["TOT_GSP"], rtol=3e-6, atol=5e-7, equal_nan=True
         )
         assert np.allclose(
             fs_ds_o["SSR"], ds_out["SSR"], rtol=3e-7, atol=5e-7, equal_nan=True
