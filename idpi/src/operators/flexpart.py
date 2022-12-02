@@ -34,6 +34,7 @@ def fflexpart(ds, istep):
         )
         * 1000
     )
+
     ds_out["TOT_GSP"].attrs = ds["TOT_GSP"].attrs
     ds_out["SSR"] = time_rate(
         ds["SSR"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "s")
