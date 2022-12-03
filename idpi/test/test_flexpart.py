@@ -8,10 +8,9 @@ import subprocess
 import eccodes
 import jinja2
 import numpy as np
+import operators.flexpart as flx
 import xarray as xr
 from definitions import root_dir
-from operators.flexpart import (append_pv, fflexpart, ifs_data_loader,
-                                load_flexpart_data)
 
 
 def test_flexpart():
@@ -43,19 +42,19 @@ def test_flexpart():
         "NSSS",
     )
 
-    loader = ifs_data_loader(
+    loader = flx.ifs_data_loader(
         (pathlib.Path(root_dir) / "share" / "field_mappings.yml").resolve()
     )
-    ds = load_flexpart_data(constants + inputf, loader, datafile)
+    ds = flx.load_flexpart_data(constants + inputf, loader, datafile)
 
     for h in range(3, 10, 3):
         datafile = datadir + f"/efsf00{h:02d}0000"
-        newds = load_flexpart_data(inputf, loader, datafile)
+        newds = flx.load_flexpart_data(inputf, loader, datafile)
 
         for field in newds:
             ds[field] = xr.concat([ds[field], newds[field]], dim="step")
 
-    append_pv(ds)
+    flx.append_pv(ds)
 
     conf_files = {
         "inputi": datadir + "/efsf00<HH>0000",
@@ -136,7 +135,7 @@ def test_flexpart():
         ):
             fs_ds_o[f] = fs_ds[f].isel(y_1=slice(None, None, -1))
 
-        ds_out = fflexpart(ds, i)
+        ds_out = flx.fflexpart(ds, i)
 
         assert np.allclose(
             fs_ds_o["ETADOT"].transpose("y_1", "x_1", "z_1", "time").isel(time=0),
