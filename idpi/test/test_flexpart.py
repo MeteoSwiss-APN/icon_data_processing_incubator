@@ -10,7 +10,8 @@ import jinja2
 import numpy as np
 import xarray as xr
 from definitions import root_dir
-from operators.flexpart import fflexpart, ifs_data_loader, load_flexpart_data
+from operators.flexpart import (append_pv, fflexpart, ifs_data_loader,
+                                load_flexpart_data)
 
 
 def test_flexpart():
@@ -54,21 +55,7 @@ def test_flexpart():
         for field in newds:
             ds[field] = xr.concat([ds[field], newds[field]], dim="step")
 
-    NV = ds["U"].GRIB_NV
-    ds["ak"] = (
-        xr.DataArray(ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid"))
-        .sel(hybrid=slice(0, 61))
-        .assign_coords(
-            {"hybrid": np.append(ds["ETADOT"].hybrid, [len(ds["ETADOT"].hybrid) + 1])}
-        )
-    )
-    ds["bk"] = (
-        xr.DataArray(ds["U"].GRIB_pv[int(NV / 2) : NV], dims=("hybrid"))
-        .sel(hybrid=slice(0, 61))
-        .assign_coords(
-            {"hybrid": np.append(ds["ETADOT"].hybrid, [len(ds["ETADOT"].hybrid) + 1])}
-        )
-    )
+    append_pv(ds)
 
     conf_files = {
         "inputi": datadir + "/efsf00<HH>0000",

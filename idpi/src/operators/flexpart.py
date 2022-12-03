@@ -1,6 +1,7 @@
 # Third-party
 import cfgrib
 import numpy as np
+import xarray as xr
 import yaml
 from operators.omega_slope import omega_slope
 from operators.time_operators import time_rate
@@ -49,6 +50,24 @@ def load_flexpart_data(fields, loader, datafile):
     ds["QV"] = ds["QV"].sel(hybrid=slice(40, 60))
 
     return ds
+
+
+def append_pv(ds):
+    NV = ds["U"].GRIB_NV
+    ds["ak"] = (
+        xr.DataArray(ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid"))
+        .sel(hybrid=slice(0, 61))
+        .assign_coords(
+            {"hybrid": np.append(ds["ETADOT"].hybrid, [len(ds["ETADOT"].hybrid) + 1])}
+        )
+    )
+    ds["bk"] = (
+        xr.DataArray(ds["U"].GRIB_pv[int(NV / 2) : NV], dims=("hybrid"))
+        .sel(hybrid=slice(0, 61))
+        .assign_coords(
+            {"hybrid": np.append(ds["ETADOT"].hybrid, [len(ds["ETADOT"].hybrid) + 1])}
+        )
+    )
 
 
 def fflexpart(ds, istep):
