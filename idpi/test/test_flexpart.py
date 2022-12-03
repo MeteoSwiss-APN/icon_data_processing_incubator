@@ -2,6 +2,7 @@
 import os
 import shutil
 import subprocess
+import pathlib
 
 # Third-party
 import cfgrib
@@ -58,17 +59,9 @@ def load_flexpart_data(fields, loader, datafile):
 
 
 def test_flexpart():
-    os.environ[
-        "GRIB_DEFINITION_PATH"
-    ] = "/project/g110/spack-install/tsa/cosmo-eccodes-definitions/2.19.0.7/gcc/zcuyy4uduizdpxfzqmxg6bc74p2skdfp/cosmoDefinitions/definitions/:/scratch/cosuna/spack-install/tsa/eccodes/2.19.0/gcc/viigacbsqxbbcid22hjvijrrcihebyeh/share/eccodes/definitions/"
     gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
     eccodes_gpath = [p for p in gpaths if "cosmoDefinitions" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
-
-    with open(
-        "/scratch/cosuna/flexpart-input/icon_data_processing_incubator/idpi/test/field_mappings.yml"
-    ) as f:
-        field_map = yaml.safe_load(f)
 
     datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/"
     datafile = datadir + "/efsf00000000"
@@ -94,7 +87,7 @@ def test_flexpart():
         "NSSS",
     )
 
-    loader = ifs_data_loader("/scratch/cosuna/flexpart-input/icon_data_processing_incubator/idpi/test/field_mappings.yml")
+    loader = ifs_data_loader((pathlib.Path(__file__).parent / 'field_mappings.yml').resolve())
     ds = load_flexpart_data(constants + inputf, loader, datafile)
 
     for h in range(3, 10, 3):
