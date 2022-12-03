@@ -16,7 +16,7 @@ from operators.flexpart import fflexpart
 
 
 class ifs_data_loader:
-    """Class for loading data from ifs and convert conventions to COSMO"""
+    """Class for loading data from ifs and convert conventions to COSMO."""
 
     def __init__(self, field_mapping_file: str):
         with open(field_mapping_file) as f:
