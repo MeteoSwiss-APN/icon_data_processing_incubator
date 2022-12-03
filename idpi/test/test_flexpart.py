@@ -1,8 +1,8 @@
 # Standard library
 import os
+import pathlib
 import shutil
 import subprocess
-import pathlib
 
 # Third-party
 import cfgrib
@@ -17,6 +17,7 @@ from operators.flexpart import fflexpart
 
 class ifs_data_loader:
     """Class for loading data from ifs and convert conventions to COSMO"""
+
     def __init__(self, field_mapping_file: str):
         with open(field_mapping_file) as f:
             self._field_map = yaml.safe_load(f)
@@ -33,7 +34,7 @@ class ifs_data_loader:
 
         for f in fields:
             ds[f] = self._get_da(self._field_map[f]["ifs"]["name"], ifs_multi_ds)
-            if 'cosmo' in self._field_map[f]:
+            if "cosmo" in self._field_map[f]:
                 ufact = self._field_map[f]["cosmo"].get("unit_factor")
 
                 if ufact:
@@ -45,6 +46,7 @@ class ifs_data_loader:
         for ds in dss:
             if field in ds:
                 return ds[field]
+
 
 def load_flexpart_data(fields, loader, datafile):
     ds = loader.open_ifs_to_cosmo(datafile, fields)
@@ -87,7 +89,9 @@ def test_flexpart():
         "NSSS",
     )
 
-    loader = ifs_data_loader((pathlib.Path(__file__).parent / 'field_mappings.yml').resolve())
+    loader = ifs_data_loader(
+        (pathlib.Path(__file__).parent / "field_mappings.yml").resolve()
+    )
     ds = load_flexpart_data(constants + inputf, loader, datafile)
 
     for h in range(3, 10, 3):
