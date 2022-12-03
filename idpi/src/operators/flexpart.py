@@ -25,14 +25,12 @@ def fflexpart(ds, istep):
         time_rate(
             ds["TOT_CON"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "h")
         )
-        * 1000
     )
     ds_out["TOT_CON"].attrs = ds["TOT_CON"].attrs
     ds_out["TOT_GSP"] = (
         time_rate(
             ds["TOT_GSP"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "h")
         )
-        * 1000
     )
 
     ds_out["TOT_GSP"].attrs = ds["TOT_GSP"].attrs

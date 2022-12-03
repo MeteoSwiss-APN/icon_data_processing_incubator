@@ -14,24 +14,40 @@ import yaml
 from operators.flexpart import fflexpart
 
 
-def get_da(field, dss):
-    for ds in dss:
-        if field in ds:
-            return ds[field]
+class ifs_data_loader:
+    """Class for loading data from ifs and convert conventions to COSMO"""
+    def __init__(self, field_mapping_file: str):
+        with open(field_mapping_file) as f:
+            self._field_map = yaml.safe_load(f)
 
+    def open_ifs_to_cosmo(self, datafile: str, fields: list[str]):
+        ds = {}
 
-def load_data(fields, field_mapping, datafile):
-    ds = {}
+        read_keys = ["pv", "NV"]
+        ifs_multi_ds = cfgrib.open_datasets(
+            datafile,
+            backend_kwargs={"read_keys": read_keys},
+            encode_cf=("time", "geography", "vertical"),
+        )
 
-    read_keys = ["pv", "NV"]
-    dss = cfgrib.open_datasets(
-        datafile,
-        backend_kwargs={"read_keys": read_keys},
-        encode_cf=("time", "geography", "vertical"),
-    )
+        for f in fields:
+            ds[f] = self._get_da(self._field_map[f]["ifs"]["name"], ifs_multi_ds)
+            if 'cosmo' in self._field_map[f]:
+                ufact = self._field_map[f]["cosmo"].get("unit_factor")
 
-    for f in fields:
-        ds[f] = get_da(field_mapping[f]["ifs"]["name"], dss)
+                if ufact:
+                    ds[f] *= ufact
+
+        return ds
+
+    def _get_da(self, field, dss):
+        for ds in dss:
+            if field in ds:
+                return ds[field]
+
+def load_flexpart_data(fields, loader, datafile):
+    ds = loader.open_ifs_to_cosmo(datafile, fields)
+
     ds["U"] = ds["U"].sel(hybrid=slice(40, 60))
     ds["V"] = ds["V"].sel(hybrid=slice(40, 60))
     ds["ETADOT"] = ds["ETADOT"].sel(hybrid=slice(1, 60))
@@ -78,11 +94,12 @@ def test_flexpart():
         "NSSS",
     )
 
-    ds = load_data(constants + inputf, field_map, datafile)
+    loader = ifs_data_loader("/scratch/cosuna/flexpart-input/icon_data_processing_incubator/idpi/test/field_mappings.yml")
+    ds = load_flexpart_data(constants + inputf, loader, datafile)
 
     for h in range(3, 10, 3):
         datafile = datadir + f"/efsf00{h:02d}0000"
-        newds = load_data(inputf, field_map, datafile)
+        newds = load_flexpart_data(inputf, loader, datafile)
 
         for field in newds:
             ds[field] = xr.concat([ds[field], newds[field]], dim="step")

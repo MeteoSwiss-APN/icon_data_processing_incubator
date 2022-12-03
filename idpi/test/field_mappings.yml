@@ -90,6 +90,7 @@ TOT_CON:
     paramId: 143
   cosmo:
     paramId: 500043
+    unit_factor: 1000
 
 TOT_GSP:
 # IFS and cosmo not compatible
@@ -98,6 +99,7 @@ TOT_GSP:
     paramId: 142
   cosmo:
     paramId: 500042
+    unit_factor: 1000
 SSR:
 # IFS and cosmo not compatible
   ifs:
