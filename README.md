@@ -6,6 +6,8 @@ Prototype for data processing framework
 conda env create --file environment_dev.yml
 conda activate idpi_env
 
+pip install -e .
+
 cd idpi/test
 source setup.sh
 pytest -s
