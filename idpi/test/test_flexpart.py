@@ -9,6 +9,7 @@ import eccodes
 import jinja2
 import numpy as np
 import xarray as xr
+from definitions import root_dir
 from operators.flexpart import fflexpart, ifs_data_loader, load_flexpart_data
 
 
@@ -42,7 +43,7 @@ def test_flexpart():
     )
 
     loader = ifs_data_loader(
-        (pathlib.Path(__file__).parent / "field_mappings.yml").resolve()
+        (pathlib.Path(root_dir) / "share" / "field_mappings.yml").resolve()
     )
     ds = load_flexpart_data(constants + inputf, loader, datafile)
 
