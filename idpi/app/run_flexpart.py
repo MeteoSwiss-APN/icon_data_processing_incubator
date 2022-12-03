@@ -1,29 +1,31 @@
 import os
+import pathlib
+
 import cfgrib
 import cfgrib.xarray_to_grib
 import eccodes
-import numpy as np
+import param_parser as pp
 import xarray as xr
 import yaml
-import param_parser as pp
-from operators.flexpart import fflexpart, load_flexpart_data, ifs_data_loader
-import pathlib
+from definitions import root_dir
+from operators.flexpart import fflexpart, ifs_data_loader, load_flexpart_data
+
 
 def write_to_grib(filename, ds, param_db):
 
-        # "U",
-        # "V",
-        # "T",
-        # "QV",
-        # "PS",
-        # "U_10M",
-        # "V_10M",
-        # "T_2M",
-        # "TD_2M",
-        # "CLCT",
-        # "W_SNOW",
+    # "U",
+    # "V",
+    # "T",
+    # "QV",
+    # "PS",
+    # "U_10M",
+    # "V_10M",
+    # "T_2M",
+    # "TD_2M",
+    # "CLCT",
+    # "W_SNOW",
 
-    with open("field_mappings.yml") as f:
+    with open((pathlib.Path(root_dir) / "share" / "field_mappings.yml").resolve()) as f:
         field_map = yaml.safe_load(f)
 
     with open(filename, "ab") as f:
@@ -39,9 +41,9 @@ def write_to_grib(filename, ds, param_db):
                 continue
 
             ds[field].attrs.pop("GRIB_cfName", None)
-            
-            if 'paramId' in field_map[field]['cosmo']:
-                ds[field].attrs['GRIB_paramId'] = field_map[field]['cosmo']['paramId']
+
+            if "paramId" in field_map[field]["cosmo"]:
+                ds[field].attrs["GRIB_paramId"] = field_map[field]["cosmo"]["paramId"]
 
             paramId = ds[field].GRIB_paramId
 
@@ -57,8 +59,8 @@ def write_to_grib(filename, ds, param_db):
                 # problem otherwise grib_set_values[3] lengthOfTimeRange (type=long) failed: Key/value not found
                 ds[field].attrs["GRIB_units"] = "m"
             print("param_", param_db[paramId], paramId)
-            if 'units' in param_db[paramId]:
-                ds[field].attrs["GRIB_units"] = param_db[paramId]['units']
+            if "units" in param_db[paramId]:
+                ds[field].attrs["GRIB_units"] = param_db[paramId]["units"]
             else:
                 print("NO UNIT", field, ds[field].attrs["GRIB_units"])
                 print(param_db[paramId])
@@ -83,12 +85,13 @@ def write_to_grib(filename, ds, param_db):
             )
             n += 1
 
+
 def run_flexpart():
     gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
-    cosmo_gpath=[p for p in gpaths if 'cosmoDefinitions' in p][0]
+    cosmo_gpath = [p for p in gpaths if "cosmoDefinitions" in p][0]
     eccodes_gpath = [p for p in gpaths if "cosmoDefinitions" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
-    param_db = pp.param_db(cosmo_gpath+"/grib2")
+    param_db = pp.param_db(cosmo_gpath + "/grib2")
 
     datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/"
     datafile = datadir + "/efsf00000000"
@@ -115,7 +118,7 @@ def run_flexpart():
     )
 
     loader = ifs_data_loader(
-        (pathlib.Path(__file__).parent / "field_mappings.yml").resolve()
+        (pathlib.Path(root_dir) / "share" / "field_mappings.yml").resolve()
     )
     ds = load_flexpart_data(constants + inputf, loader, datafile)
 
@@ -126,14 +129,14 @@ def run_flexpart():
         for field in newds:
             ds[field] = xr.concat([ds[field], newds[field]], dim="step")
 
-    eccodes.codes_set_definitions_path(':'.join([cosmo_gpath, eccodes_gpath]))
+    eccodes.codes_set_definitions_path(":".join([cosmo_gpath, eccodes_gpath]))
 
     ds_out = {}
     for field in ("FIS", "FR_LAND", "SDOR"):
         ds_out[field] = ds[field]
 
     write_to_grib("flexpart_out.grib", ds_out, param_db)
-  
+
     for i in range(1, 4):
         h = i * 3
 

@@ -1,11 +1,16 @@
 # Third-party
+import pathlib
+import typing as T
+
 import cfgrib
+import eccodes
 import numpy as np
 import yaml
+from cfgrib import abc
+from definitions import root_dir
 from operators.omega_slope import omega_slope
 from operators.time_operators import time_rate
-from cfgrib import abc
-import typing as T
+
 
 def read_keys(
     first: abc.Field, keys: T.List[str], optional=False
@@ -54,7 +59,12 @@ def myread_data_var_attrs(
     import yaml
 
     product_conf = None
-    with open("./productDefinitionTemplate.yml", "r") as stream:
+    with open(
+        (
+            pathlib.Path(root_dir) / "share" / "./productDefinitionTemplate.yml"
+        ).resolve(),
+        "r",
+    ) as stream:
         product_conf = yaml.safe_load(stream)
 
     prod_number = attributes["GRIB_productDefinitionTemplateNumber"]
@@ -129,15 +139,14 @@ class ifs_data_loader:
     def open_ifs_to_cosmo(self, datafile: str, fields: list[str]):
         ds = {}
 
-        read_keys = ["pv", "NV"]
-        read_keys += [
-        "edition",
-        "productDefinitionTemplateNumber",
-        "uvRelativeToGrid",
-        "resolutionAndComponentFlags",
-        "section4Length",
-        "PVPresent",
-        "productionStatusOfProcessedData",
+        read_keys = [
+            "edition",
+            "productDefinitionTemplateNumber",
+            "uvRelativeToGrid",
+            "resolutionAndComponentFlags",
+            "section4Length",
+            "PVPresent",
+            "productionStatusOfProcessedData",
         ]
 
         ifs_multi_ds = cfgrib.open_datasets(
@@ -172,6 +181,7 @@ def load_flexpart_data(fields, loader, datafile):
     ds["QV"] = ds["QV"].sel(hybrid=slice(40, 60))
 
     return ds
+
 
 def fflexpart(ds, istep):
     ds_out = {}
