@@ -1,4 +1,11 @@
+FI:
+  ifs:
+    name: z
+    paramId: 129
+  cosmo:
+    paramId: 500006
 FIS:
+  # ifs does not define a field for FIS (surface of geopotential), there is only z
   ifs:
     name: z
     paramId: 129
@@ -17,6 +24,7 @@ SDOR:
 ETADOT:
   ifs:
     name: etadot
+    paramId: 77
 T:
   ifs:
     name: t
@@ -80,9 +88,10 @@ CLCT:
 W_SNOW:
   ifs:
     name: sd
-    paramId: 141
+    paramId: 228141
   cosmo:
     paramId: 500044
+
 TOT_CON:
 # IFS and cosmo not compatible
   ifs:
@@ -100,14 +109,14 @@ TOT_GSP:
   cosmo:
     paramId: 500042
     unit_factor: 1000
-SSR:
+ASOB_S:
 # IFS and cosmo not compatible
   ifs:
     name: ssr
     paramId: 176
   cosmo:
     paramId: 500078
-SSHF:
+ASHFL_S:
 # IFS and cosmo not compatible
   ifs:
     name: sshf
