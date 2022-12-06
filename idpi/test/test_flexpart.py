@@ -94,6 +94,10 @@ def test_flexpart():
     for f in ("FIS", "FR_LAND", "SDOR"):
         fs_ds_o[f] = fs_ds[f].isel(y_1=slice(None, None, -1))
 
+    ds_out = {}
+    for field in ("FIS", "FR_LAND", "SDOR"):
+        ds_out[field] = ds[field]
+
     assert np.allclose(fs_ds_o["FIS"], ds["FIS"], rtol=3e-7, atol=5e-7, equal_nan=True)
     assert np.allclose(
         fs_ds_o["FR_LAND"], ds["FR_LAND"], rtol=3e-7, atol=5e-7, equal_nan=True
@@ -101,10 +105,6 @@ def test_flexpart():
     assert np.allclose(
         fs_ds_o["SDOR"], ds["SDOR"], rtol=3e-7, atol=5e-7, equal_nan=True
     )
-
-    ds_out = {}
-    for field in ("FIS", "FR_LAND", "SDOR"):
-        ds_out[field] = ds[field]
 
     # Compute few steps of a 3 hourly data
     for i in range(1, 4):

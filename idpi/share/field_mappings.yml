@@ -5,8 +5,10 @@ FI:
   cosmo:
     paramId: 500006
 FIS:
-  # ifs does not define a field for FIS (surface of geopotential). 
-  # it must be extracted from FI
+  # ifs does not define a field for FIS (surface of geopotential), there is only z
+  ifs:
+    name: z
+    paramId: 129
   cosmo:
     paramId: 500004
 FR_LAND:
@@ -89,7 +91,6 @@ W_SNOW:
     paramId: 141
   cosmo:
     paramId: 500044
-    unit_factor: 1000
 
 TOT_CON:
 # IFS and cosmo not compatible
