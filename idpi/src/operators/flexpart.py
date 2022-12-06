@@ -95,14 +95,14 @@ def fflexpart(ds, istep):
     )
 
     ds_out["TOT_GSP"].attrs = ds["TOT_GSP"].attrs
-    ds_out["SSR"] = time_rate(
-        ds["SSR"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "s")
+    ds_out["ASOB_S"] = time_rate(
+        ds["ASOB_S"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "s")
     )
-    ds_out["SSR"].attrs = ds["SSR"].attrs
-    ds_out["SSHF"] = time_rate(
-        ds["SSHF"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "s")
+    ds_out["ASOB_S"].attrs = ds["ASOB_S"].attrs
+    ds_out["ASHFL_S"] = time_rate(
+        ds["ASHFL_S"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "s")
     )
-    ds_out["SSHF"].attrs = ds["SSHF"].attrs
+    ds_out["ASHFL_S"].attrs = ds["ASHFL_S"].attrs
     ds_out["EWSS"] = time_rate(
         ds["EWSS"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "s")
     )

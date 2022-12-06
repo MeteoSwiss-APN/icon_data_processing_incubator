@@ -36,8 +36,8 @@ def test_flexpart():
         "W_SNOW",
         "TOT_CON",
         "TOT_GSP",
-        "SSR",
-        "SSHF",
+        "ASOB_S",
+        "ASHFL_S",
         "EWSS",
         "NSSS",
     )
@@ -185,10 +185,10 @@ def test_flexpart():
             fs_ds_o["TOT_GSP"], ds_out["TOT_GSP"], rtol=3e-6, atol=5e-7, equal_nan=True
         )
         assert np.allclose(
-            fs_ds_o["SSR"], ds_out["SSR"], rtol=3e-7, atol=5e-7, equal_nan=True
+            fs_ds_o["SSR"], ds_out["ASOB_S"], rtol=3e-7, atol=5e-7, equal_nan=True
         )
         assert np.allclose(
-            fs_ds_o["SSHF"], ds_out["SSHF"], rtol=3e-7, atol=5e-7, equal_nan=True
+            fs_ds_o["SSHF"], ds_out["ASHFL_S"], rtol=3e-7, atol=5e-7, equal_nan=True
         )
         assert np.allclose(
             fs_ds_o["EWSS"], ds_out["EWSS"], rtol=3e-7, atol=5e-7, equal_nan=True
