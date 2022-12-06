@@ -53,6 +53,7 @@ def load_flexpart_data(fields, loader, datafile):
 
 
 def append_pv(ds):
+    """Compute ak, bk (weights that define the vertical coordinate) from pv."""
     NV = ds["U"].GRIB_NV
     ds["ak"] = (
         xr.DataArray(ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid"))
