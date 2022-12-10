@@ -131,3 +131,6 @@ NSSS:
   ifs:
     name: nsss
     paramId: 181
+OMEGA:
+  cosmo:
+    paramId: 500031

@@ -31,10 +31,13 @@ def omega_slope(
     ak1 = ak[1:].assign_coords({"hybrid": ak[{"hybrid": slice(0, -1)}].hybrid})
     bk1 = bk[1:].assign_coords({"hybrid": bk[{"hybrid": slice(0, -1)}].hybrid})
 
-    return (
+    res = (
         2.0
         * ps
         * etadot
         * ((ak1 - ak[0:-1]) / ps + bk1 - bk[0:-1])
         / ((ak1 - ak[0:-1]) / cnt.surface_pressure_ref() + bk1 - bk[0:-1])
     ).reduce(cumdiff, dim="hybrid")
+
+    res.attrs = etadot.attrs
+    return res

@@ -3,7 +3,6 @@ import pathlib
 import typing as T
 
 import cfgrib
-import eccodes
 import numpy as np
 import xarray as xr
 import yaml
@@ -101,17 +100,6 @@ def myread_data_var_attrs(
     return attributes
 
 
-def mymessage_set(self, item: str, value: T.Any) -> None:
-    arr = isinstance(value, (np.ndarray, T.Sequence)) and not isinstance(value, str)
-    if arr:
-        eccodes.codes_set_array(self.codes_id, item, value)
-    else:
-        try:
-            eccodes.codes_set(self.codes_id, item, value)
-        except eccodes.CodesInternalError:
-            pass
-
-
 cfgrib.dataset.read_data_var_attrs = myread_data_var_attrs
 cfgrib.dataset.EXTRA_DATA_ATTRIBUTES_KEYS = [
     "shortName",
@@ -127,7 +115,38 @@ cfgrib.dataset.EXTRA_DATA_ATTRIBUTES_KEYS = [
     "NV",
     "gridDefinitionDescription",
 ]
-cfgrib.messages.Message.message_set = mymessage_set
+
+cfgrib.xarray_to_grib.MESSAGE_DEFINITION_KEYS = [
+    # for the GRIB 2 sample we must set this before setting 'totalNumber'
+    "productDefinitionTemplateNumber",
+    # We need to set the centre before the units
+    "centre",
+    # NO IDEA WHAT IS GOING ON HERE: saving regular_ll_msl.grib results in the wrong `paramId`
+    #   unless `units` is set before some other unknown key, this happens at random and only in
+    #   Python 3.5, so it must be linked to dict key stability.
+    "units",
+]
+
+# Needed for this fix https://github.com/ecmwf/cfgrib/pull/324
+def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
+    coords_names = []  # type: T.List[str]
+    for coord_name in (
+        cfgrib.dataset.ALL_HEADER_DIMS
+        + cfgrib.xarray_to_grib.ALL_TYPE_OF_LEVELS
+        + cfgrib.dataset.ALL_REF_TIME_KEYS
+    ):
+        if (
+            coord_name in data_var.coords
+            and data_var.coords[coord_name].size == 1
+            and coord_name not in data_var.dims
+        ):
+            data_var = data_var.expand_dims(coord_name)
+        if coord_name in data_var.dims:
+            coords_names.append(coord_name)
+    return coords_names, data_var
+
+
+cfgrib.xarray_to_grib.expand_dims = expand_dims
 
 
 class ifs_data_loader:
@@ -158,6 +177,12 @@ class ifs_data_loader:
 
         for f in fields:
             ds[f] = self._get_da(self._field_map[f]["ifs"]["name"], ifs_multi_ds)
+            if ds[f].GRIB_edition == 1:
+                # Somehow grib1 loads a perturbationNumber=0 which sets a 'number' coordinate.
+                # That will force in cfgrib setting the productDefinitionTemplateNumber to 1
+                # https://github.com/ecmwf/cfgrib/blob/27071067bcdd7505b1abbcb2cea282cf23b36598/cfgrib/xarray_to_grib.py#L123
+                ds[f] = ds[f].drop_vars("number")
+
             if "cosmo" in self._field_map[f]:
                 ufact = self._field_map[f]["cosmo"].get("unit_factor")
 
@@ -243,7 +268,7 @@ def fflexpart(ds, istep):
 
     ds_out["EWSS"].attrs = ds["EWSS"].attrs
 
-    ds_out["OMEGA_SLOPE"] = omega_slope(
+    ds_out["OMEGA"] = omega_slope(
         ds["PS"].isel(step=istep), ds["ETADOT"].isel(step=istep), ds["ak"], ds["bk"]
     ).isel(hybrid=slice(39, 61))
 
