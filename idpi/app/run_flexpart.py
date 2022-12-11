@@ -47,9 +47,6 @@ def write_to_grib(filename, ds, param_db):
             ds[field].attrs["GRIB_scanningMode"] = 0
             # TODO set this from numpy layout
             ds[field].attrs["GRIB_jScansPositively"] = 0
-            # if ds[field].attrs["GRIB_units"] == "m**2 s**-2":
-            #     # problem otherwise grib_set_values[3] lengthOfTimeRange (type=long) failed: Key/value not found
-            #     ds[field].attrs["GRIB_units"] = "m"
 
             if paramId in param_db and "units" in param_db[paramId]:
                 ds[field].attrs["GRIB_units"] = param_db[paramId]["units"]

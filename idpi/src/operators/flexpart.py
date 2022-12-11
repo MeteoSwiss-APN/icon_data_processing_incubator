@@ -127,7 +127,7 @@ cfgrib.xarray_to_grib.MESSAGE_DEFINITION_KEYS = [
     "units",
 ]
 
-# Needed for this fix https://github.com/ecmwf/cfgrib/pull/324
+
 def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
     coords_names = []  # type: T.List[str]
     for coord_name in (
@@ -135,6 +135,7 @@ def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
         + cfgrib.xarray_to_grib.ALL_TYPE_OF_LEVELS
         + cfgrib.dataset.ALL_REF_TIME_KEYS
     ):
+        # Needed for this fix https://github.com/ecmwf/cfgrib/pull/324
         if (
             coord_name in data_var.coords
             and data_var.coords[coord_name].size == 1
