@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 
@@ -9,6 +10,8 @@ import param_parser as pp
 import xarray as xr
 import yaml
 from definitions import root_dir
+
+logger = logging.getLogger(__name__)
 
 
 def write_to_grib(filename, ds, param_db):
@@ -38,21 +41,28 @@ def write_to_grib(filename, ds, param_db):
                 ds[field].attrs["GRIB_paramId"] = field_map[field]["cosmo"]["paramId"]
 
             paramId = ds[field].GRIB_paramId
-
-            # TODO remove those or check
-            # WHy is NV set by Fieldextra for FIS ?
             ds[field].attrs["GRIB_centre"] = 78
 
             ds[field].attrs["GRIB_subCentre"] = 0
-            ds[field].attrs["GRIB_scanningMode"] = 0
-            # TODO set this from numpy layout
-            ds[field].attrs["GRIB_jScansPositively"] = 0
+            jScansPositively = (
+                ds[field].coords["latitude"].values[-1]
+                > ds[field].coords["latitude"].values[0]
+            )
+            iScansPositively = (
+                ds[field].coords["longitude"].values[-1]
+                > ds[field].coords["longitude"].values[0]
+            )
+            ds[field].attrs["GRIB_scanningMode"] = int(
+                (not iScansPositively) * 1 + 2 * (jScansPositively)
+            )
+            ds[field].attrs["GRIB_jScansPositively"] = jScansPositively * 1
 
             if paramId in param_db and "units" in param_db[paramId]:
                 ds[field].attrs["GRIB_units"] = param_db[paramId]["units"]
             else:
-                # TODO log
-                print("NO UNITs for field ", field, ds[field].attrs["GRIB_units"])
+                logger.warning(
+                    f"No units defined in eccodes definitions for field {field}. Using state units defined as: {ds[field].attrs['GRIB_units']}"
+                )
 
             if ds[field].GRIB_edition == 1:
                 ds[field].attrs["GRIB_edition"] = 2
@@ -165,4 +175,5 @@ def run_flexpart():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING)
     run_flexpart()
