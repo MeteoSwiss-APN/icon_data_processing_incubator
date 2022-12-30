@@ -1,36 +1,67 @@
 import xarray as xr
-    
 
-def curl(U: xr.DataArray, V: xr.DataArray, W: xr.DataArray, diff_type: str) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
-
-
-    # prepare 'window' slices for computing the derivatives
-    if diff_type == "center":
+def set_diff_type(dt: str):
+    """
+    Sets the type of differentiation to be used for functions of this module.
+    Allowed values are 'left', 'center', 'right'.
+    """
+    global __diff_type, __s
+    __diff_type = dt
+    if dt == "center":
         c = slice(1, -1)
-    elif diff_type == "left":
+    elif dt == "left":
         c = slice(1, None)
-    elif diff_type == "right":
+    elif dt == "right":
         c = slice(0, -1)
     m = slice(0, -1 if c.stop is None else -2)
     p = slice(c.start+1, None)
-    s = {"c":c, "m":m, "p":p}
+    __s = {"c":c, "m":m, "p":p}
 
-    def win(position: str) -> xr.DataArray:
+set_diff_type("center") # default
+    
+
+def stpt(stencil: str) -> dict[str, slice]:
+    """
+    Returns a dictionary which indicates the stencil points of a data array as specified by the argument.
+
+    This dictionary can be used for selecting values from a data array.
+    Consider the following example, where ``A`` is a data array. ::
+
+        B = A[stpt('ccc')] + A[stpt('cpm')]
+
+    Here we add for every point a in ``A`` its upper (y+1) neighbor, one level below (z-1) and store the result in ``B``.
+    In this method we allow 3d neighbor stencils. Points on the border won't be included.
+
+    Depending on the ``diff_type`` (set with ``set_diff_type``), the stencils will be interpreted differently.
+    For 'left', positive stencils (+1, 'p') will be mapped to the original point.
+    For 'right', negative stencils (-1, 'm') will be mapped to the original point.
+
+    Args:
+        stencil (str): A string indicating the stencil. 
+        This string must have three characters, corresponding to the 'x', 'y' and 'z' dimension (in this order).
+        The characters can be 
+
+        - 'c': center (+/-0)
+        - 'm': below (-1)
+        - 'p': above (+1)
+    """
+    global __s
+    return {d : __s[k] for d, k in zip("xyz", stencil)}
+    
+
+def curl(U: xr.DataArray, V: xr.DataArray, W: xr.DataArray) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
+
+    def win(s: str) -> xr.DataArray:
         """
-        This function allows us to select the part of U, V or W for computing the derivatives based on a string (``position``) such as 'vcmp'.
-        ``position`` must always have 4 characters. The first character indicates the wind component ('u', 'v' or 'w').
-        The last three characters indicate the position of the 'window' and are either:
-
-        - 'c' for center
-        - 'm' for one below center
-        - 'p' for one above center
-
-        The position of the last three characters indicate the dimension ('x', 'y', 'z').
+        Retruns the application of the ``stpt`` function on either ``U``, ``V`` or ``W``, depending on the first character of the argument.
+        
+        Args:
+            s (str): A 4-character string. The first character indicates the data array for which the stencil should be applied and can be 'u', 'v' or 'w'.
+            The last 3 characters are passed to ``stpt``.
         """
-        x = position[0]
+        x = s[0]
         X = U if x == "u" else V if x == "v" else "w"
-        sel = {d : s[k] for d, k in zip("xyz", position[1:])}
-        return X[sel]
+        return X[stpt(s[1:])]
 
     # prepare parameters
     # TODO
