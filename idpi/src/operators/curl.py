@@ -7,14 +7,9 @@ def set_diff_type(dt: str):
     """
     global __diff_type, __s
     __diff_type = dt
-    if dt == "center":
-        c = slice(1, -1)
-    elif dt == "left":
-        c = slice(1, None)
-    elif dt == "right":
-        c = slice(0, -1)
-    m = slice(0, -1 if c.stop is None else -2)
-    p = slice(c.start+1, None)
+    c = slice(1, -1)
+    m = slice(0, -1) if dt != "right" else c
+    p = slice(1, None) if dt != "left" else c
     __s = {"c":c, "m":m, "p":p}
 
 set_diff_type("center") # default
@@ -76,7 +71,7 @@ def curl(U: xr.DataArray, V: xr.DataArray, W: xr.DataArray) -> tuple[xr.DataArra
     sqrtg_r_s = 0
     tgrlat = 0
 
-    # compute weighted derivatives for FE
+    # compute weighted derivatives for FD
 
     du_dlam = (win("uccc") - win("umcc")) * inv_dlon
     du_dphi = ((win("ucpc") + win("umpc")) - (win("ucmc") + win("ummc"))) * 0.25 * inv_dlat
