@@ -1,25 +1,26 @@
-from operators.curl import curl, stpt, set_diff_type
-from operators.theta import ftheta
-from operators.rho import f_rho_tot
-import xarray as xr
-import numpy as np
 import constants as const
+import numpy as np
+import xarray as xr
+from operators.curl import curl, set_diff_type, stpt
+from operators.rho import f_rho_tot
+from operators.theta import ftheta
 
 mc_deg_to_rad = np.pi / 180
 mc_rad_to_deg = 180 / np.pi
 
+
 def fpotvortic(
-    QV, 
-    QC, 
+    QV,
+    QC,
     QI,
-    U: xr.DataArray, 
-    V: xr.DataArray, 
-    W: xr.DataArray, 
-    P: xr.DataArray, 
+    U: xr.DataArray,
+    V: xr.DataArray,
+    W: xr.DataArray,
+    P: xr.DataArray,
     T: xr.DataArray,
     HHL: xr.DataArray,
-    QW_load: xr.DataArray = None,
-    diff_type = "center"
+    QW_load: xr.DataArray | None = None,
+    diff_type="center",
 ) -> xr.DataArray:
 
     # prepare parameters
@@ -47,12 +48,18 @@ def fpotvortic(
     def hhl(s: str) -> xr.DataArray:
         return HHL[stpt(s)]
 
-    sqrtg_r_s = 1. / (hhl("ccc") - hhl("ccp"))
-    dzeta_dlam = 0.25 * inv_dlon * sqrtg_r_s * (
-        (hhl("pcc") - hhl("mcc")) + (hhl("pcp") - hhl("mcp"))
+    sqrtg_r_s = 1.0 / (hhl("ccc") - hhl("ccp"))
+    dzeta_dlam = (
+        0.25
+        * inv_dlon
+        * sqrtg_r_s
+        * ((hhl("pcc") - hhl("mcc")) + (hhl("pcp") - hhl("mcp")))
     )
-    dzeta_dphi = 0.25 * inv_dlat * sqrtg_r_s * (
-        (hhl("cpc") - hhl("cmc")) + (hhl("cpp" - hhl("cmp")))
+    dzeta_dphi = (
+        0.25
+        * inv_dlat
+        * sqrtg_r_s
+        * ((hhl("cpc") - hhl("cmc")) + (hhl("cpp") - hhl("cmp")))
     )
 
     # curl
@@ -60,6 +67,7 @@ def fpotvortic(
 
     # potential temperature
     theta = ftheta(T, P)
+
     # shortcut for stencils of theta
     def t(s: str) -> xr.DataArray:
         return theta[stpt(s)]
@@ -77,7 +85,8 @@ def fpotvortic(
     # potential vorticity
     out = (
         ((t("pcc") - t("mcc")) * wi + (t("ccp") - t("ccm")) * wk * dzeta_dlam) * curl1
-        + ((t("cpc") - t("cmc") * wj) + (t("ccp") - t("ccm")) * wk * dzeta_dphi) * (curl2 + cor2)
+        + ((t("cpc") - t("cmc") * wj) + (t("ccp") - t("ccm")) * wk * dzeta_dphi)
+        * (curl2 + cor2)
         + ((t("ccp") - t("ccm")) * wk * (-sqrtg_r_s)) * (curl3 + cor3)
     ) / rho
 

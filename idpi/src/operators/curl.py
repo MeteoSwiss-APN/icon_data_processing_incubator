@@ -1,23 +1,25 @@
 import xarray as xr
 
+__diff_type: str = "center"
+__s: dict[str, slice] = {}
+
+
 def set_diff_type(dt: str):
-    """
-    Sets the type of differentiation to be used for functions of this module.
-    Allowed values are 'left', 'center', 'right'.
-    """
+    """Set the type of differentiation to be used for functions of this module. Allowed values are 'left', 'center', 'right'."""
     global __diff_type, __s
     __diff_type = dt
     c = slice(1, -1)
     m = slice(0, -1) if dt != "right" else c
     p = slice(1, None) if dt != "left" else c
-    __s = {"c":c, "m":m, "p":p}
+    __s = {"c": c, "m": m, "p": p}
 
-set_diff_type("center") # default
-    
+
+set_diff_type("center")  # default
+
 
 def stpt(stencil: str) -> dict[str, slice]:
     """
-    Returns a dictionary which indicates the stencil points of a data array as specified by the argument.
+    Return a dictionary which indicates the stencil points of a data array as specified by the argument.
 
     This dictionary can be used for selecting values from a data array.
     Consider the following example, where ``A`` is a data array. ::
@@ -32,30 +34,31 @@ def stpt(stencil: str) -> dict[str, slice]:
     For 'right', negative stencils (-1, 'm') will be mapped to the original point.
 
     Args:
-        stencil (str): A string indicating the stencil. 
+        stencil (str): A string indicating the stencil.
         This string must have three characters, corresponding to the 'x', 'y' and 'z' dimension (in this order).
-        The characters can be 
+        The characters can be
 
         - 'c': center (+/-0)
         - 'm': below (-1)
         - 'p': above (+1)
     """
     global __s
-    return {d : __s[k] for d, k in zip("xyz", stencil)}
-    
+    return {d: __s[k] for d, k in zip("xyz", stencil)}
 
-def curl(U: xr.DataArray, V: xr.DataArray, W: xr.DataArray) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
 
+def curl(
+    U: xr.DataArray, V: xr.DataArray, W: xr.DataArray
+) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
     def win(s: str) -> xr.DataArray:
         """
-        Retruns the application of the ``stpt`` function on either ``U``, ``V`` or ``W``, depending on the first character of the argument.
-        
+        Retrun the application of the ``stpt`` function on either ``U``, ``V`` or ``W``, depending on the first character of the argument.
+
         Args:
             s (str): A 4-character string. The first character indicates the data array for which the stencil should be applied and can be 'u', 'v' or 'w'.
             The last 3 characters are passed to ``stpt``.
         """
         x = s[0]
-        X = U if x == "u" else V if x == "v" else "w"
+        X = U if x == "u" else V if x == "v" else W
         return X[stpt(s[1:])]
 
     # prepare parameters
@@ -73,16 +76,22 @@ def curl(U: xr.DataArray, V: xr.DataArray, W: xr.DataArray) -> tuple[xr.DataArra
 
     # compute weighted derivatives for FD
 
-    du_dlam = (win("uccc") - win("umcc")) * inv_dlon
-    du_dphi = ((win("ucpc") + win("umpc")) - (win("ucmc") + win("ummc"))) * 0.25 * inv_dlat
+    du_dphi = (
+        ((win("ucpc") + win("umpc")) - (win("ucmc") + win("ummc"))) * 0.25 * inv_dlat
+    )
     du_dzeta = ((win("uccp") + win("umcp")) - (win("uccm") + win("umcm"))) * 0.5 * wk
 
-    dv_dlam = ((win("vpcc") + (win("vpmc")) - (win("vmcc") + win("vmmc")))) * 0.25 * inv_dlon
-    dv_dphi = (win("vccc") - win("vcmc")) * inv_dlat
+    dv_dlam = (
+        ((win("vpcc") + (win("vpmc")) - (win("vmcc") + win("vmmc")))) * 0.25 * inv_dlon
+    )
     dv_dzeta = ((win("vccp") + (win("vcmp")) - (win("vccm") + win("vcmm")))) * 0.5 * wk
 
-    dw_dlam = ((win("wpcp") + (win("wpcc")) - (win("wmcp") + win("wmcc")))) * 0.25 * inv_dlon
-    dw_dphi = ((win("wcpp") + win("wcpc")) - (win("wcmp") + win("wcmc"))) * 0.25 * inv_dlat
+    dw_dlam = (
+        ((win("wpcp") + (win("wpcc")) - (win("wmcp") + win("wmcc")))) * 0.25 * inv_dlon
+    )
+    dw_dphi = (
+        ((win("wcpp") + win("wcpc")) - (win("wcmp") + win("wcmc"))) * 0.25 * inv_dlat
+    )
     dw_dzeta = win("wccp") - win("wccc")
 
     # compute curl
@@ -92,7 +101,7 @@ def curl(U: xr.DataArray, V: xr.DataArray, W: xr.DataArray) -> tuple[xr.DataArra
         - r_earth_inv * 0.5 * (win("vccc") + win("vcmc"))
     )
     curl2 = r_earth_inv * (
-        - sqrtg_r_s * du_dzeta
+        -sqrtg_r_s * du_dzeta
         - acrlat * (dw_dlam + dzeta_dlam * dw_dzeta)
         + r_earth_inv * 0.5 * (win("uccc") + win("umcc"))
     )

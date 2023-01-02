@@ -1,5 +1,5 @@
 pc_omega = 7.2921e-5
-earth_radius = 6371229.0 # value from COSMO GRIB2 key
+earth_radius = 6371229.0  # value from COSMO GRIB2 key
 
 p0 = 1.0e5
 

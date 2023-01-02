@@ -1,5 +1,5 @@
-import xarray as xr
 import constants as const
+import xarray as xr
 
 
 def f_rho_tot(
@@ -7,12 +7,11 @@ def f_rho_tot(
     P: xr.DataArray,
     QV: xr.DataArray,
     QC: xr.DataArray,
-    QI: xr.DataArray = 0,
-    QP: xr.DataArray = 0
+    QI: xr.DataArray | int = 0,
+    QP: xr.DataArray | int = 0,
 ) -> xr.DataArray:
     """
-    Total density of air mixture (perfect gas law, pressure as sum of partial pressures).
-    Result is in [kg/m**3].
+    Total density of air mixture (perfect gas law, pressure as sum of partial pressures). Result is in [kg/m**3].
 
     Args:
         T (xr.DataArray): Temperature [Kelvin]
