@@ -2,7 +2,7 @@
 import cfgrib
 
 
-def load_data(outds, fields, datafile, chunk_size=10):
+def load_data(outds, fields, datafile, chunk_size: int | None = 10):
 
     chunk_arg = {}
     if chunk_size:

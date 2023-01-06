@@ -10,15 +10,15 @@ mc_rad_to_deg = 180 / np.pi
 
 
 def fpotvortic(
-    QV,
-    QC,
-    QI,
     U: xr.DataArray,
     V: xr.DataArray,
     W: xr.DataArray,
     P: xr.DataArray,
     T: xr.DataArray,
     HHL: xr.DataArray,
+    QV: xr.DataArray,
+    QC: xr.DataArray,
+    QI: xr.DataArray,
     QW_load: xr.DataArray | None = None,
     diff_type="center",
 ) -> xr.DataArray:
