@@ -14,8 +14,6 @@ def test_pv():
     datafile = datadir + "/lfff00000000.ch"
     cdatafile = datadir + "/lfff00000000c.ch"
 
-    # TODO: z-dim renaming
-
     ds = {}
     grib_decoder.load_data(
         ds, ["U", "V", "W", "P", "T", "QV", "QC", "QI"], datafile, chunk_size=None
