@@ -45,7 +45,7 @@
 &Process in_field="SOILTYP" /
 &Process in_field="HSURF", tag='GRID' /
 &Process in_field="FIS" /
-&Process in_field="HEIGHT", tag="hhl_c1e", levmin=1, levmax=81, level_class="k_half" /
+&Process in_field="HEIGHT", tag="hhl", levmin=1, levmax=81, level_class="k_half" /
 
 &Process
   in_file="{{ file.inputi }}"
@@ -56,4 +56,12 @@
   tstart=0, tstop=0, tincr=1
 /
 
-&Process in_field="U"
+&Process in_field="U", levmin=1, levmax=81 /
+&Process in_field="V", levmin=1, levmax=81 /
+&Process in_field="W", levmin=1, levmax=81 /
+&Process in_field="P", levmin=1, levmax=81 /
+&Process in_field="T", levmin=1, levmax=81 /
+&Process in_field="QV", levmin=1, levmax=80 /
+&Process in_field="QC", levmin=1, levmax=80 /
+&Process in_field="QI", levmin=1, levmax=80 /
+&Process out_field="POT_VORTIC" /

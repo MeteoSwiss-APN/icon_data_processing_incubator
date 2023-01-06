@@ -20,7 +20,10 @@ def test_pv():
     )
     grib_decoder.load_data(ds, ["HHL", "HSURF"], cdatafile, chunk_size=None)
 
-    ds = {k: v.rename(generalVerticalLayer="z") for k, v in ds.items()}
+    ds = {
+        k: v.rename(generalVerticalLayer="z") if "generalVerticalLayer" in v.dims else v
+        for k, v in ds.items()
+    }
 
     potv = pv.fpotvortic(
         ds["U"],
@@ -37,7 +40,7 @@ def test_pv():
     conf_files = {
         "inputi": datadir + "/lfff<DDHH>0000.ch",
         "inputc": datadir + "/lfff00000000c.ch",
-        "output": "<HH>_BRN.nc",
+        "output": "<HH>_POT_VORTIC.nc",
     }
     out_file = "00_POT_VORTIC.nc"
     prodfiles = ["fieldextra.diagnostic"]
