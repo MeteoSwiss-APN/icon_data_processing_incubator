@@ -14,7 +14,7 @@ def test_pv():
     datafile = datadir + "/lfff00000000.ch"
     cdatafile = datadir + "/lfff00000000c.ch"
 
-    ds = {}
+    ds: dict[str, xr.DataArray] = {}
     grib_decoder.load_data(
         ds, ["U", "V", "W", "P", "T", "QV", "QC", "QI"], datafile, chunk_size=None
     )
@@ -74,7 +74,7 @@ def test_pv():
 
     subprocess.run([executable, tmpdir + "/test_POT_VORTIC.nl "], check=True)
 
-    fs_ds = xr.open_dataset("00_POT_VORTIC.nc")
+    fs_ds = xr.open_dataset("00_PV.nc")
     brn_ref = fs_ds["BRN"].rename(
         {"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"}
     )
