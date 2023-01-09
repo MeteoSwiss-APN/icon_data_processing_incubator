@@ -20,8 +20,46 @@ def fpotvortic(
     QC: xr.DataArray,
     QI: xr.DataArray,
     QW_load: xr.DataArray | None = None,
-    diff_type="center",
+    diff_type=None,
 ) -> xr.DataArray:
+    """Compute the potential vorticity.
+
+    The potential vorticity is computed with the following formula:
+
+    .. math::
+        v_p = \frac{1}{\rho} * \frac{\partial \Theta}{\partial \z} * (c_v + 2 \Omega)
+
+    where :math:`\rho` is the total air density, :math:`\frac{\partial \Theta}{\partial \z}` is the gradient of the potential temperature,
+    :math:`c_v` is the curl of the wind in y direction and :math`\Omega` is the coriolis term.
+
+    The effect of water loading is ignored if ``QW_load`` is not specified.
+
+    The type of the numerical derivatives can be specified by setting ``diff_type`` to either 'left', 'right' or 'center' (default).
+    For 'center', both neighboring values will be used.
+    With 'left', only the left neighbors will be used and the right neighbor will be assumed to be equal to the current value.
+    With 'right', it's the other way around.
+    The left neighbor's index is one lower than the current index, while the right neighbor's index is one higher.
+
+    All input arrays must have the same coordinates and sizes.
+    The output will be the same orthotope as the inputs, where the boundary was removed.
+    The boundaries of some inputs are used for computing the numerical derivatives and hence, they cannot be included in the result.
+
+    Args:
+        U (xr.DataArray): Wind in x direction
+        V (xr.DataArray): Wind in y direction
+        W (xr.DataArray): Wind in z direction
+        P (xr.DataArray): Pressure
+        T (xr.DataArray): Temperature
+        HHL (xr.DataArray): Height of half-layers
+        QV (xr.DataArray): Specific humidity [kg/kg]
+        QC (xr.DataArray): Specific cloud water content [kg/kg]
+        QI (xr.DataArray): Specific cloud ice content [kg/kg].
+        QW_load (xr.DataArray | None, optional): Specific precipitable components content [kg/kg]. Defaults to None.
+        diff_type (_type_, optional): The type of differentiation. Defaults to None.
+
+    Returns:
+        xr.DataArray: The potential vorticity
+    """
 
     # prepare parameters
 
