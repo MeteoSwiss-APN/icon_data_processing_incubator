@@ -51,16 +51,16 @@
   in_file="{{ file.inputi }}"
   in_regrid_target="GRID"
   in_regrid_method="average,square,0.9",
-  out_file="{{ file.output }}", out_type="NETCDF"
-  in_size_field=570
+  out_file="<HH>_PV.nc", out_type="NETCDF"
+  in_size_field=640
   tstart=0, tstop=0, tincr=1
 /
 
-&Process in_field="U", levmin=1, levmax=81 /
-&Process in_field="V", levmin=1, levmax=81 /
-&Process in_field="W", levmin=1, levmax=81 /
-&Process in_field="P", levmin=1, levmax=81 /
-&Process in_field="T", levmin=1, levmax=81 /
+&Process in_field="U", regrid=.t., levmin=1, levmax=80 /
+&Process in_field="V", regrid=.t., levmin=1, levmax=80 /
+&Process in_field="W", regrid=.t., levmin=1, levmax=80 /
+&Process in_field="P", levmin=1, levmax=80 /
+&Process in_field="T", levmin=1, levmax=80 /
 &Process in_field="QV", levmin=1, levmax=80 /
 &Process in_field="QC", levmin=1, levmax=80 /
 &Process in_field="QI", levmin=1, levmax=80 /
