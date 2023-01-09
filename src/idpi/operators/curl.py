@@ -9,8 +9,8 @@ def set_diff_type(dt: str):
     global __diff_type, __s
     __diff_type = dt
     c = slice(1, -1)
-    m = slice(0, -1) if dt != "right" else c
-    p = slice(1, None) if dt != "left" else c
+    m = slice(0, -2) if dt != "right" else c
+    p = slice(2, None) if dt != "left" else c
     __s = {"c": c, "m": m, "p": p}
 
 
