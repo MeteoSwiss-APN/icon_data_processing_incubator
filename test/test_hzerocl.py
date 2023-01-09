@@ -2,28 +2,29 @@ import os
 import shutil
 import subprocess
 
-import grib_decoder
 import jinja2
 import numpy as np
-import operators.thetav as mthetav
 import xarray as xr
 
+from idpi import grib_decoder
+from idpi.operators.hzerocl import fhzerocl
 
-def test_thetav():
+
+def test_hzerocl():
     datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/SWISS"
     datafile = datadir + "/lfff00000000.ch"
+    cdatafile = datadir + "/lfff00000000c.ch"
 
     ds = {}
-    grib_decoder.load_data(ds, ["P", "T", "QV"], datafile, chunk_size=None)
-
-    thetav = mthetav.fthetav(ds["P"], ds["T"], ds["QV"])
+    grib_decoder.load_data(ds, ["T"], datafile, chunk_size=None)
+    grib_decoder.load_data(ds, ["HHL"], cdatafile, chunk_size=None)
 
     conf_files = {
         "inputi": datadir + "/lfff<DDHH>0000.ch",
         "inputc": datadir + "/lfff00000000c.ch",
-        "output": "<HH>_THETAV.nc",
+        "output": "<HH>_hzerocl.nc",
     }
-    out_file = "00_THETAV.nc"
+    out_file = "00_hzerocl.nc"
     prodfiles = ["fieldextra.diagnostic"]
 
     testdir = os.path.dirname(os.path.realpath(__file__))
@@ -38,10 +39,10 @@ def test_thetav():
 
     templateLoader = jinja2.FileSystemLoader(searchpath=testdir + "/fe_templates")
     templateEnv = jinja2.Environment(loader=templateLoader)
-    template = templateEnv.get_template("./test_THETAV.nl")
+    template = templateEnv.get_template("./test_hzerocl.nl")
     outputText = template.render(file=conf_files, ready_flags=tmpdir)
 
-    with open(tmpdir + "/test_THETAV.nl", "w") as nl_file:
+    with open(tmpdir + "/test_hzerocl.nl", "w") as nl_file:
         nl_file.write(outputText)
 
     # remove output and product files
@@ -49,12 +50,20 @@ def test_thetav():
         if os.path.exists(cwd + "/" + afile):
             os.remove(cwd + "/" + afile)
 
-    subprocess.run([executable, tmpdir + "/test_THETAV.nl "], check=True)
+    subprocess.run([executable, tmpdir + "/test_hzerocl.nl "], check=True)
+    hzerocl = fhzerocl(ds["T"], ds["HHL"])
 
-    fs_ds = xr.open_dataset("00_THETAV.nc")
+    fs_ds = xr.open_dataset("00_hzerocl.nc")
+    hzerocl_ref = fs_ds["HZEROCL"].rename({"x_1": "x", "y_1": "y"}).squeeze()
 
-    assert np.allclose(fs_ds["THETA_V"], thetav)
+    assert np.allclose(
+        hzerocl_ref,
+        hzerocl,
+        rtol=1e-5,
+        atol=1e-5,
+        equal_nan=True,
+    )
 
 
 if __name__ == "__main__":
-    test_thetav()
+    test_hzerocl()
