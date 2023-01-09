@@ -2,10 +2,10 @@ import os
 import shutil
 import subprocess
 
-import grib_decoder
+from idpi import grib_decoder
 import jinja2
 import numpy as np
-import operators.thetav as mthetav
+from idpi.operators import thetav as mthetav
 import xarray as xr
 
 

@@ -2,10 +2,10 @@ import os
 import shutil
 import subprocess
 
-import grib_decoder
+from idpi import grib_decoder
 import jinja2
 import numpy as np
-import operators.brn as mbrn
+from idpi.operators import brn as mbrn
 import xarray as xr
 
 

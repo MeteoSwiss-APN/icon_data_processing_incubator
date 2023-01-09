@@ -1,5 +1,5 @@
 """algorithm for height of zero degree operator."""
-from operators.destagger import destagger
+from .destagger import destagger
 
 
 def fhzerocl(t, hhl):
