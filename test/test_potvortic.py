@@ -20,10 +20,14 @@ def test_pv():
     )
     grib_decoder.load_data(ds, ["HHL", "HSURF"], cdatafile, chunk_size=None)
 
+    # rename vertical dimension
     ds = {
         k: v.rename(generalVerticalLayer="z") if "generalVerticalLayer" in v.dims else v
         for k, v in ds.items()
     }
+
+    # ensure same size for all input arrays
+    ds = {k: v.isel(z=slice(80)) if "z" in v.dims else v for k, v in ds.items()}
 
     potv = pv.fpotvortic(
         ds["U"],
