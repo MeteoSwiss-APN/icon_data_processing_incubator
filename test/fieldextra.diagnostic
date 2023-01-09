@@ -1,0 +1,228 @@
+**************************************************************************
+  Program fieldextra called with control file 
+    /users/thoerman/icon_data_processing_incubator/test/tmp/test_hzerocl.nl
+  Diagnostic file created on 2023-01-09 16:26  +0:00
+**************************************************************************
+
+
+RELEASE INFORMATION
+===================
+
+Program version v14.1.0d (dev_test_passed_ce38362d)
+  Using libaec version 1.0.0
+  Using jasper version 2.0.14
+  Using ecCodes version 2.25.0
+  Expecting ecCodes COSMO definitions 2.25.0.1
+
+  Using netcdf-c version 4.4.0
+  Using netcdf-fortran version 4.4.4
+  Using RTTOV version 11.2.0
+  Using icon tools version 2.5.2.1
+Compiled by GCC version 8.3.0
+Compiler flags: -cpp -I ../grib1/grib1-2.20/grib1_gnu_opt_omp/lib/../include -I ../icontools/icontools-2.5.2.1/icontools_gnu_opt_omp/lib/../include -I ../eccodes/eccodes-2.25.0-Source/eccodes_gnu_omp/lib/../include -I ../rttov/rttov-11.2.0/rttov_gnu/lib/../mod -I ../rttov/rttov-11.2.0/rttov_gnu/lib/../include -I ../netcdf/netcdf-c-4.4.0/netcdf_gnu/lib/../include -I ../netcdf/netcdf-fortran-4.4.4/netcdf_gnu/lib/../include -D_REENTRANT -D HAVE_ICONTOOLS -D NETCDF -march=skylake-avx512 -mmmx -mno-3dnow -msse -msse2 -msse3 -mssse3 -mno-sse4a -mcx16 -msahf -mmovbe -maes -mno-sha -mpclmul -mpopcnt -mabm -mno-lwp -mfma -mno-fma4 -mno-xop -mbmi -mno-sgx -mbmi2 -mno-pconfig -mno-wbnoinvd -mno-tbm -mavx -mavx2 -msse4.2 -msse4.1 -mlzcnt -mrtm -mhle -mrdrnd -mf16c -mfsgsbase -mrdseed -mprfchw -madx -mfxsr -mxsave -mxsaveopt -mavx512f -mno-avx512er -mavx512cd -mno-avx512pf -mno-prefetchwt1 -mclflushopt -mxsavec -mxsaves -mavx512dq -mavx512bw -mavx512vl -mno-avx512ifma -mno-avx512vbmi -mno-avx5124fmaps -mno-avx5124vnniw -mclwb -mno-mwaitx -mno-clzero -mpku -mno-rdpid -mno-gfni -mno-shstk -mno-avx512vbmi2 -mno-avx512vnni -mno-vaes -mno-vpclmulqdq -mno-avx512bitalg -mno-movdiri -mno-movdir64b --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=25344 -mtune=skylake-avx512 -auxbase-strip fxtr_main_tagged.o -O3 -fopenmp -funroll-loops -fno-trapping-math -fno-signaling-nans -ffinite-math-only
+
+
+MULTIPROCESSING STATUS
+======================
+
+OpenMP enabled
+ Total number of OpenMP threads used by program: 1
+ Parallel import inactive (n_ompthread_collect=1)
+ Number of threads available for regrid in collect step: 1
+ Number of concurrent output processed in generate step: 1
+ Number of threads used by operators in generate step: 1
+
+
+OUTPUT PRODUCTION
+=================
+Call 3 of generate_output:
+Production with    1 OMP thread(s)
+File 00_hzerocl.nc (all contributing input collected)
+
+
+CODE TIMING
+===========
+
+The next table reports the total time spent in the program (Total), and the distribution
+of this time in the pre-processing part, the preparation of pseudo output and the
+production of standard output. The detailed distribution for the standard output
+is reported in the last part of the table. Both absolute values and percentual
+values with respect to the total time are given. When available, the speedup of
+the parallel sections of the code are displayed in the last column (speedup takes
+parallel region overhead into account). All reported values are based on wall clock
+time, and include also idle time and time used by the input/output subsystem.
+
+                              WALL CLOCK                       SPEEDUP
+                                 PROGRAM       [s]       [%]   OUTLOOP
+           --------------------------------------------------  -------
+                                   Total     1.293   100.000
+                                 -------Total           -----  -------
+                  Preprocessing (common)     0.170    13.124
+                    Preprocessing (grid)     0.000     0.001
+                  Prepare incore storage     0.160    12.404
+           Production of standard output     0.963    74.472
+                                 -------Incore storage  -----  -------
+                          Wait for input     0.000     0.001
+            Unpack and process meta data     0.087     6.711
+                             Unpack data     0.035     2.699
+                                   Other     0.039     2.993
+                                 -------Standard output -----  -------
+                  Parallel: Collect data     0.870    67.281     1.000    (see next tables for details)
+               Parallel: Generate output     0.093     7.181     0.980    (see next tables for details)
+                                   Other     0.000     0.010
+           --------------------------------------------------  -------
+
+
+The next tables reports the cumulated time spent in different regions of the outer loops
+(cumulated time is the sum over each thread of the time spent in the corresponding part
+of the code; it is the same as wall clock time for sequential code).
+
+                        CUMULATED TIMING
+                            COLLECT DATA       [s]       [%]
+           --------------------------------------------------
+                                   Total     0.870   100.000
+                                 -------Total           -----
+               Generate on-demand fields     0.065     7.531
+                          Wait for input     0.000     0.003
+                   Unpack records (open)     0.000     0.005
+               Unpack records (metadata)     0.734    84.374
+                 (EcCodes: new_from_file     0.576    66.297)
+                   Unpack records (data)     0.000     0.006
+                        Process metadata     0.029     3.385
+                            Match record     0.002     0.229
+                                    Mask     0.000     0.000
+                                  Regrid     0.000     0.000
+                                   Store     0.030     3.495               (see next table for details)
+                                   Other     0.008     0.972
+           --------------------------------------------------
+
+                        CUMULATED TIMING
+                         GENERATE OUTPUT       [s]       [%]
+           --------------------------------------------------
+                                   Total     0.091   100.000
+                                 -------Total           -----
+                                    Sort     0.000     0.369
+                                 Prepare     0.073    80.124               (see next table for details)
+                            Write (zone)     0.014    14.869               (see next table for details)
+                                   Other     0.005     5.007
+           --------------------------------------------------
+
+
+The next tables reports cumulated time with a finer granularity than in the previous
+table. When available, the speedup due to inner loop parallelism is displayed in the
+last column (speedup takes parallel region overhead into account).
+
+                        CUMULATED TIMING
+                                   STORE       [s]       [%]
+           --------------------------------------------------  -------
+                                   Total     0.030   100.000
+                                 -------Total           -----  -------
+                          Init procedure     0.000     0.313
+                            Init storage     0.002     5.623
+                           Reset storage     0.000     0.345
+                         Realloc storage     0.000     0.327
+                          Check metainfo     0.002     6.663
+                               Find date     0.000     0.658
+                             Update date     0.000     0.298
+                            Update field     0.001     4.008
+                             Update mesh     0.000     0.425
+                          Merge operator     0.000     0.292
+                        Compare operator     0.000     0.291
+                            Fill storage     0.021    70.342
+                            OMP critical     0.000     0.762
+                                   Other     0.003     9.652
+
+                        CUMULATED TIMING                       SPEEDUP
+                                 PREPARE       [s]       [%]    INLOOP
+           --------------------------------------------------  -------
+                                   Total     0.073   100.000
+                                 -------Total           -----  -------
+                          Initialization     0.018    24.729
+        Parallel: Compute+copy field (*)     0.053    73.255     0.998
+                          Scale & Offset     0.000     0.005
+                     Check/set meta-info     0.000     0.043
+                   Prepare for print out     0.000     0.030
+                                   Other     0.001     1.938
+           --------------------------------------------------  -------
+                 (*) copy/(compute+copy)              42.626
+           --------------------------------------------------  -------
+
+                        CUMULATED TIMING
+                                   WRITE       [s]       [%]
+           --------------------------------------------------
+                                   Total     0.013   100.000
+                                 -------Total           -----
+                                  NETCDF     0.013   100.000
+           --------------------------------------------------
+
+
+The next table reports statistics about time spent for the production of each output.
+First one finds the total time in seconds, then the total time per grid point and
+validation date, in milliseconds; finally, the percentual distribution of the total
+time for different sub-tasks (initial re-gridding, field storage, product preparation
+formatting and disk access). All times refer to wall clock time.
+
+To sort the table according to decreasing output cost :  (UNIX) sort -r -g -k 2
+
+                                        WALL CLOCK
+                                            OUTPUT      total[s]    total/pt[ms]     regrid[%]      store[%]    prepare[%]      write[%]
+       ---------------------------------------------------------------------------------------------------------------------------------
+                                     00_hzerocl.nc         0.116         0.00123         0.000        26.126        62.664        11.210
+
+                                                        total[s]                     regrid[s]      store[s]    prepare[s]      write[s]
+                     --------------- All output ----------------------------------------------------------------------------------------
+                                                           0.116                         0.000         0.030         0.073         0.013
+                     -------------------------------------------------------------------------------------------------------------------
+
+
+The next table reports the detailed timing within the parallel region "generate output";
+the number of threads used for this region is specified by n_ompthread_generate in the
+namelist &RunSpecification. For each call of generate_output, the distribution of the
+tasks in the different threads, the associated timing and the speedup of the parallel
+region are displayed (speedup takes parallel region overhead into account).
+
+                                   PARALLEL TIMING
+                                   GENERATE OUTPUT      total[s]       speedup        thread         notes
+                     -------------------------------------------------------------------------------------
+                                            call 3         0.091         0.995
+                                    ----------------------------------------------------------------------
+                                     00_hzerocl.nc         0.091                           0
+                                    ----------------------------------------------------------------------
+                                    Region speedup                       0.981
+                     -------------------------------------------------------------------------------------
+                     a) multiple files derived from same internal storage
+
+
+MEMORY USAGE
+============
+
+Reporting on memory usage is based on tracking dynamic memory allocation within the program.
+The real usage is larger than the reported value, but for large problems the additional
+untracked memory is relatively small. All estimations use the following size of fortran
+objects, in byte:
+             CHARACTER 1     LOGICAL 4     INTEGER 4        REAL 4
+
+The high water mark is the highest value during the execution of the program, this is
+the value which is compared against soft_memory_limit at run time (see &RunSpecification).
+The memory reported for each output represents the memory specifically allocated for this
+output; it is also expressed as a percentage of the sum of all memory allocated for each
+output (cumulated).
+
+To sort the table according to decreasing output cost :  (UNIX) sort -r -g -k 2
+
+                            MEMORY USAGE       [MByte]           [%]
+                     ---------------------------------------------------------------------------
+                               Cumulated       179.730
+                         High water mark       150.814
+                              Soft limit    358400.000
+                     ---------------------------------------------------------------------------
+                                  INCORE        59.278        32.982
+                           00_hzerocl.nc       120.452        67.018
+                     ---------------------------------------------------------------------------
+
+
+RUNTIME STATUS
+==============
+
+Program successfully completed
+

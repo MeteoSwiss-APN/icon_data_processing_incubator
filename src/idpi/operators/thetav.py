@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import constants as const
+from .. import constants as const
 
 
 def fthetav(p, t, qv):

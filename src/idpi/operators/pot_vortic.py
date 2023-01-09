@@ -1,9 +1,9 @@
-import constants as const
+from .. import constants as const
 import numpy as np
 import xarray as xr
-from operators.curl import curl, set_diff_type, stpt
-from operators.rho import f_rho_tot
-from operators.theta import ftheta
+from .curl import curl, set_diff_type, stpt
+from .rho import f_rho_tot
+from .theta import ftheta
 
 mc_deg_to_rad = np.pi / 180
 mc_rad_to_deg = 180 / np.pi
