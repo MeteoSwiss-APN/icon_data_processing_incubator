@@ -2,11 +2,12 @@ import os
 import shutil
 import subprocess
 
-from idpi import grib_decoder
 import jinja2
 import numpy as np
-from idpi.operators import thetav as mthetav
 import xarray as xr
+
+from idpi import grib_decoder
+from idpi.operators import thetav as mthetav
 
 
 def test_thetav():

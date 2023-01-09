@@ -2,10 +2,11 @@ import os
 import shutil
 import subprocess
 
-from idpi import grib_decoder
 import jinja2
 import numpy as np
 import xarray as xr
+
+from idpi import grib_decoder
 from idpi.operators.destagger import destagger
 
 
