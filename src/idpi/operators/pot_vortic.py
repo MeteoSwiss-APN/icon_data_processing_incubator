@@ -60,19 +60,34 @@ def fpotvortic(
     Returns:
         xr.DataArray: The potential vorticity
     """
-
     # prepare parameters
 
-    lon = U["longitude"]
-    lat = U["latitude"]
+    dlon = U.attrs["GRIB_iDirectionIncrementInDegrees"]
+    dlat = U.attrs["GRIB_jDirectionIncrementInDegrees"]
     mdeg2rad = 1e-6 * mc_deg_to_rad
-    inv_dlon = 1 / ((lon[1, 0] - lon[0, 0]) * mdeg2rad)
-    inv_dlat = 1 / ((lat[0, 1] - lat[0, 0]) * mdeg2rad)
+    inv_dlon = 1 / (dlon * mdeg2rad)
+    inv_dlat = 1 / (dlat * mdeg2rad)
+
+    # target coordinates
+    stpt2 = stpt("ccc")
+    stpt2.pop("z")
+    lat = U["latitude"][stpt2]
+    lon = U["longitude"][stpt2]
 
     # FD (finite differences) weights
     wi = 0.5 * inv_dlon
     wj = 0.5 * inv_dlat
     wk = 0.5 if diff_type == "center" else 1.0
+
+    # remove coordinates
+    args = [U, V, W, P, T, HHL, QV, QC, QI, lat, lon]
+    if QW_load:
+        args.append(QW_load)
+    for a in args:
+        del a["latitude"]
+        del a["longitude"]
+        if "z" in a.coords:
+            del a["z"]
 
     # other preparations
 
@@ -126,12 +141,10 @@ def fpotvortic(
         + ((t("cpc") - t("cmc") * wj) + (t("ccp") - t("ccm")) * wk * dzeta_dphi)
         * (curl2 + cor2)
         + ((t("ccp") - t("ccm")) * wk * (-sqrtg_r_s)) * (curl3 + cor3)
-    ) / rho
+    ) / rho[stpt("ccc")]
 
     # set coordinates of output
-    stpt2 = stpt("ccc")
-    stpt2.pop("z")
-    out["longitude"] = lon[stpt2]
-    out["latitude"] = lat[stpt2]
+    out["longitude"] = lon
+    out["latitude"] = lat
 
     return out
