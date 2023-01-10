@@ -74,10 +74,8 @@ def test_pv():
 
     subprocess.run([executable, tmpdir + "/test_POT_VORTIC.nl "], check=True)
 
-    fs_ds = xr.open_dataset("00_PV.nc")
-    brn_ref = fs_ds["BRN"].rename(
-        {"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"}
-    )
+    fs_ds = xr.open_dataset("00_POT_VORTIC.nc")
+    brn_ref = fs_ds["POT_VORTIC"].rename({"x_1": "x", "y_1": "y", "z_1": "z"})
 
     assert np.allclose(brn_ref, potv, rtol=3e-3, atol=5e-2, equal_nan=True)
 
