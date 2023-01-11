@@ -69,6 +69,7 @@ def fpotvortic(
     inv_dlat = 1 / (dlat * mdeg2rad)
 
     # target coordinates
+    # the output array is missing the border, so we remove the border from the coordinates as well
     stpt2 = stpt("ccc")
     stpt2.pop("z")
     lat = U["latitude"][stpt2]
