@@ -1,4 +1,7 @@
 import xarray as xr
+import numpy as np
+
+from idpi import constants as const
 
 __diff_type: str = "center"
 __s: dict[str, slice] = {}
@@ -47,7 +50,15 @@ def stpt(stencil: str) -> dict[str, slice]:
 
 
 def curl(
-    U: xr.DataArray, V: xr.DataArray, W: xr.DataArray
+    U: xr.DataArray,
+    V: xr.DataArray,
+    W: xr.DataArray,
+    HHL: xr.DataArray,
+    inv_dlon: float,
+    inv_dlat: float,
+    wk: float,
+    sqrtg_r_s: xr.DataArray,
+    lat: xr.DataArray,
 ) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
     def win(s: str) -> xr.DataArray:
         """
@@ -62,17 +73,31 @@ def curl(
         return X[stpt(s[1:])]
 
     # prepare parameters
-    # TODO
-    inv_dlon = 0
-    inv_dlat = 0
-    wk = 0
 
-    acrlat = 0
-    r_earth_inv = 0
-    dzeta_dphi = 0
-    dzeta_dlam = 0
-    sqrtg_r_s = 0
-    tgrlat = 0
+    r_earth_inv = 1 / const.earth_radius
+    mdeg2rad = 1e-6 * np.pi / 180
+    acrlat: xr.DataArray = 1 / (np.cos(lat * mdeg2rad) * const.earth_radius)  # type: ignore[assignment]
+    tgrlat: xr.DataArray = np.tan(lat * mdeg2rad)  # type: ignore[assignment]
+
+    dzeta_dlam = (
+        0.25
+        * inv_dlon
+        * sqrtg_r_s
+        * (
+            (HHL[stpt("pcc")] - HHL[stpt("mcc")])
+            + (HHL[stpt("pcp")] - HHL[stpt("mcp")])
+        )
+    )
+
+    dzeta_dphi = (
+        0.25
+        * inv_dlat
+        * sqrtg_r_s
+        * (
+            (HHL[stpt("cpc")] - HHL[stpt("cmc")])
+            + (HHL[stpt("cpp")] - HHL[stpt("cmp")])
+        )
+    )
 
     # compute weighted derivatives for FD
 

@@ -93,6 +93,7 @@ class fx_context(AbstractContextManager):
         subprocess.run([self.fx_binary, nl_file], check=True)
         # export data
         self.output = xr.open_dataset(self.output_path)
+        return self
 
     def __exit__(
         self,

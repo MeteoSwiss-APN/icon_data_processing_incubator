@@ -117,7 +117,7 @@ def fpotvortic(
     )
 
     # curl
-    curl1, curl2, curl3 = curl(U, V, W)
+    curl1, curl2, curl3 = curl(U, V, W, HHL, inv_dlon, inv_dlat, wk, sqrtg_r_s, lat)
 
     # potential temperature
     theta = ftheta(T, P)

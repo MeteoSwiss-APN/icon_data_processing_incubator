@@ -7,7 +7,7 @@ from utils import fx_context, data_dir
 
 
 def test_pv():
-    with fx_context("PV") as context:
+    with fx_context("POT_VORTIC") as context:
         datafile = data_dir + "/lfff00000000.ch"
         cdatafile = context.nl_const_input
 
