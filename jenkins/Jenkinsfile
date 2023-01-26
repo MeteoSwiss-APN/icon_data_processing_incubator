@@ -23,7 +23,7 @@ pipeline {
         stage('test') {
             steps {
                 sh '''#!/usr/bin/env bash
-                source "${HOME}/conda/etc/profile.d/conda.sh"
+                source "$WORKSPACE/conda/etc/profile.d/conda.sh"
                 source $WORKSPACE/conda/etc/profile.d/mamba.sh
                 mamba activate idpi
                 cd idpi/test
