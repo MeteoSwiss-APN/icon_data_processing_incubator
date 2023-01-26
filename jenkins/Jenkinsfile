@@ -1,6 +1,6 @@
 pipeline {
     environment {
-       PATH = "$WORKSPACE/micromamba/bin:$PATH"
+       PATH = "$WORKSPACE/conda/bin:$PATH"
     }
     agent {
         label 'tsa'
@@ -15,15 +15,15 @@ pipeline {
     stages {
         stage('setup micromamba') {
             steps {
-                sh 'curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"'
-                sh 'bash Mambaforge-$(uname)-$(uname -m).sh'
-                sh 'rm Mambaforge-$(uname)-$(uname -m).sh'
+                sh 'wget -O Mambaforge.sh  "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"'
+                sh 'bash Mambaforge.sh -b -p "${WORKSPACE}/conda"'
+                sh 'rm Mambaforge.sh'
             }
         }
         stage('test') {
             steps {
                 sh '''#!/usr/bin/env bash
-                source $WORKSPACE/miniconda/etc/profile.d/conda.sh
+                source $WORKSPACE/conda/etc/profile.d/mamba.sh
                 mamba activate idpi
                 cd idpi/test
                 source setup.sh
