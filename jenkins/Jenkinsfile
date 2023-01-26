@@ -18,7 +18,7 @@ pipeline {
                 sh 'wget -O Mambaforge.sh  "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"'
                 sh 'bash Mambaforge.sh -b -p "${WORKSPACE}/conda"'
                 sh 'rm Mambaforge.sh'
-                sh 'mamba create -f environment.yml'
+                sh 'mamba create --file environment.yml'
             }
         }
         stage('test') {
