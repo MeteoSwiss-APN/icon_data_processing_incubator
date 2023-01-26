@@ -14,8 +14,10 @@ pipeline {
     }
     stages {
         stage('setup micromamba') {
-            sh 'curl micro.mamba.pm/install.sh | bash'
-            sh 'mamba create -f environment.yml'
+            steps {
+                sh 'curl micro.mamba.pm/install.sh | bash'
+                sh 'mamba create -f environment.yml'
+            }
         }
         stage('test') {
             steps {
