@@ -28,9 +28,9 @@ pipeline {
                 sh '''#!/usr/bin/env bash
                 source $WORKSPACE/miniconda/etc/profile.d/conda.sh
                 conda activate idpi
-                cd idpi/test
+                cd test
                 source setup.sh
-                export PYTHONPATH=$WORKSPACE/idpi/src
+                export PYTHONPATH=$WORKSPACE/src/
                 pytest -s
                 '''
             }
