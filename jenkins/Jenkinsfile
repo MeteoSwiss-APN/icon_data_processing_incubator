@@ -15,8 +15,9 @@ pipeline {
     stages {
         stage('setup micromamba') {
             steps {
-                sh 'curl micro.mamba.pm/install.sh | bash'
-                sh 'mamba create -f environment.yml'
+                sh 'curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"'
+                sh 'bash Mambaforge-$(uname)-$(uname -m).sh'
+                sh 'rm Mambaforge-$(uname)-$(uname -m).sh'
             }
         }
         stage('test') {
