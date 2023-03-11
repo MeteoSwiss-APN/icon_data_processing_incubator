@@ -21,9 +21,6 @@ def write_to_grib(filename, ds, param_db):
 
     with open(filename, "ab") as f:
         for field in ds:
-            # TODO need to support SDOR
-            if field == "SDOR":
-                continue
 
             # cfgrib tries to extend_dims to cover all coordinates, but
             # Xarray complains that valid_time is a variable (not scalar) and can not extend dims
@@ -37,13 +34,18 @@ def write_to_grib(filename, ds, param_db):
             ds[field].attrs.pop("GRIB_name", None)
             ds[field].attrs.pop("GRIB_shortName", None)
 
-            if "cosmo" in field_map[field] and "paramId" in field_map[field]["cosmo"]:
-                ds[field].attrs["GRIB_paramId"] = field_map[field]["cosmo"]["paramId"]
+            # if "cosmo" in field_map[field] and "paramId" in field_map[field]["cosmo"]:
+            #     ds[field].attrs["GRIB_paramId"] = field_map[field]["cosmo"]["paramId"]
 
             paramId = ds[field].GRIB_paramId
-            ds[field].attrs["GRIB_centre"] = 78
+            # ds[field].attrs["GRIB_centre"] = 78
 
-            ds[field].attrs["GRIB_subCentre"] = 0
+            # ds[field].attrs["GRIB_subCentre"] = 0
+            # TODO need to support SDOR
+            # if field == "SDOR":
+            ds[field].attrs["GRIB_centre"] = 'ecmf'
+                # continue
+
             jScansPositively = (
                 ds[field].coords["latitude"].values[-1]
                 > ds[field].coords["latitude"].values[0]
