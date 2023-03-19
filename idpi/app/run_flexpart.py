@@ -6,7 +6,6 @@ import cfgrib
 import cfgrib.xarray_to_grib
 import eccodes
 import operators.flexpart as flx
-import param_parser as pp
 import xarray as xr
 import yaml
 from definitions import root_dir
@@ -78,10 +77,7 @@ def canonical_dataarray_to_grib(
 
         message.write(file)
 
-def write_to_grib(filename, ds, param_db):
-
-    with open((pathlib.Path(root_dir) / "share" / "field_mappings.yml").resolve()) as f:
-        field_map = yaml.safe_load(f)
+def write_to_grib(filename, ds):
 
     with open(filename, "ab") as f:
         for field in ds:
@@ -166,7 +162,6 @@ def run_flexpart():
     cosmo_gpath = [p for p in gpaths if "cosmoDefinitions" in p][0]
     eccodes_gpath = [p for p in gpaths if "cosmoDefinitions" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
-    param_db = pp.param_db(cosmo_gpath + "/grib2")
 
     datadir = "/scratch/cosuna/flexpart_test/data/ifs-flexpart-europe/23030600"
     nsteps=6
@@ -222,7 +217,7 @@ def run_flexpart():
             ds_out[a] = ds_const[a]
 
         print("i........ ", i)
-        write_to_grib("dispf202303060"+str(i), ds_out, param_db)
+        write_to_grib("dispf202303060"+str(i), ds_out)
 
 
 if __name__ == "__main__":
