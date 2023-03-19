@@ -28,8 +28,12 @@ def omega_slope(
     ps: xr.DataArray, etadot: xr.DataArray, ak: xr.DataArray, bk: xr.DataArray
 ):
     """Compute omega slope."""
-    ak1 = ak[1:].assign_coords({"hybrid": ak[{"hybrid": slice(0, -1)}].hybrid})
-    bk1 = bk[1:].assign_coords({"hybrid": bk[{"hybrid": slice(0, -1)}].hybrid})
+
+    ak = ak.isel(hybrid_pv=slice(0, 61), step=0).rename({"hybrid_pv":"hybrid"})
+    bk = bk.isel(hybrid_pv=slice(0, 61), step=0).rename({"hybrid_pv":"hybrid"})
+
+    ak1 = ak[dict(hybrid=slice(1,None))].assign_coords({"hybrid": ak[{"hybrid": slice(0, -1)}].hybrid})
+    bk1 = bk[dict(hybrid=slice(1,None))].assign_coords({"hybrid": bk[{"hybrid": slice(0, -1)}].hybrid})
 
     res = (
         2.0

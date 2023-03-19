@@ -200,34 +200,33 @@ class ifs_data_loader:
 
 def load_flexpart_data(fields, loader, datafile):
     ds = loader.open_ifs_to_cosmo(datafile, fields)
+    append_pv_raw(ds)
 
-    ds["U"] = ds["U"].sel(hybrid=slice(40, 60))
-    ds["V"] = ds["V"].sel(hybrid=slice(40, 60))
-    ds["ETADOT"] = ds["ETADOT"].sel(hybrid=slice(1, 60))
-    ds["T"] = ds["T"].sel(hybrid=slice(40, 60))
-    ds["QV"] = ds["QV"].sel(hybrid=slice(40, 60))
+    ds["U"] = ds["U"].sel(hybrid=slice(40, 137))
+    ds["V"] = ds["V"].sel(hybrid=slice(40, 137))
+    ds["ETADOT"] = ds["ETADOT"].sel(hybrid=slice(1, 137))
+    ds["T"] = ds["T"].sel(hybrid=slice(40, 137))
+    ds["QV"] = ds["QV"].sel(hybrid=slice(40, 137))
 
     return ds
 
 
-def append_pv(ds):
+def append_pv_raw(ds):
     """Compute ak, bk (weights that define the vertical coordinate) from pv."""
     NV = ds["U"].GRIB_NV
+
     ds["ak"] = (
-        xr.DataArray(ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid"))
-        .sel(hybrid=slice(0, 61))
-        .assign_coords(
-            {"hybrid": np.append(ds["ETADOT"].hybrid, [len(ds["ETADOT"].hybrid) + 1])}
-        )
+        xr.DataArray(ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid_pv"))
+        .assign_coords({"hybrid_pv": np.append(ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]),
+                        "time": ds["ETADOT"].time, 
+                        "step": ds["ETADOT"].step})
     )
     ds["bk"] = (
-        xr.DataArray(ds["U"].GRIB_pv[int(NV / 2) : NV], dims=("hybrid"))
-        .sel(hybrid=slice(0, 61))
-        .assign_coords(
-            {"hybrid": np.append(ds["ETADOT"].hybrid, [len(ds["ETADOT"].hybrid) + 1])}
-        )
+        xr.DataArray(ds["U"].GRIB_pv[int(NV / 2) : NV], dims=("hybrid_pv"))
+        .assign_coords({"hybrid_pv": np.append(ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]),
+                        "time": ds["ETADOT"].time, 
+                        "step": ds["ETADOT"].step})
     )
-
 
 def fflexpart(ds, istep):
     ds_out = {}

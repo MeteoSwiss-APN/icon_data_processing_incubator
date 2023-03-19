@@ -14,6 +14,70 @@ from definitions import root_dir
 logger = logging.getLogger(__name__)
 
 
+from cfgrib import cfmessage, dataset, messages
+import itertools
+import numpy as np
+
+# This is a copy of canonical_dataarray_to_grib with modifications marked as
+# HACK CFGRIB
+def canonical_dataarray_to_grib(
+    data_var, file, grib_keys={}, default_grib_keys=cfgrib.xarray_to_grib.DEFAULT_GRIB_KEYS, **kwargs
+):
+    # type: (xr.DataArray, T.IO[bytes], T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
+    """
+    Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
+    """
+    # validate Dataset keys, DataArray names, and attr keys/values
+    detected_keys, suggested_keys = cfgrib.xarray_to_grib.detect_grib_keys(data_var, default_grib_keys, grib_keys)
+    merged_grib_keys = cfgrib.xarray_to_grib.merge_grib_keys(grib_keys, detected_keys, suggested_keys)
+    merged_grib_keys["missingValue"] = messages.MISSING_VAUE_INDICATOR
+
+    if "gridType" not in merged_grib_keys:
+        raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
+
+    template_message = cfgrib.xarray_to_grib.make_template_message(merged_grib_keys, **kwargs)
+
+    coords_names, data_var = cfgrib.xarray_to_grib.expand_dims(data_var)
+
+    header_coords_values = [list(data_var.coords[name].values) for name in coords_names]
+
+    for items in itertools.product(*header_coords_values):
+        select = {n: v for n, v in zip(coords_names, items)}
+        field_values = data_var.sel(**select).values.flat[:]
+
+        # Missing values handling
+        invalid_field_values = np.logical_not(np.isfinite(field_values))
+
+        # There's no need to save a message full of missing values
+        if invalid_field_values.all():
+            continue
+
+        missing_value = merged_grib_keys.get("GRIB_missingValue", messages.MISSING_VAUE_INDICATOR)
+        field_values[invalid_field_values] = missing_value
+
+        message = cfmessage.CfMessage.from_message(template_message)
+        for coord_name, coord_value in zip(coords_names, items):
+            if coord_name in cfgrib.xarray_to_grib.ALL_TYPE_OF_LEVELS:
+                coord_name = "level"
+            # HACK CFGRIB
+            # level is not a primary grib key. Eccodes will transform it into the equivalent pair (or more)
+            # (scaleFactorOfFirstFixedSurface, scaledValueOfFirstFixedSurface)
+            # By default, eccodes will set then a scaleFactorOfFirstFixedSurface of 2. 
+            # Flexpart can not deal with any other value than 0.
+                message["scaleFactorOfFirstFixedSurface"] = 0
+                message["scaledValueOfFirstFixedSurface"] = coord_value
+            else:
+                message[coord_name] = coord_value
+
+        if invalid_field_values.any():
+            message["bitmapPresent"] = 1
+        message["missingValue"] = missing_value
+
+        # OPTIMIZE: convert to list because Message.message_set doesn't support np.ndarray
+        message["values"] = field_values.tolist()
+
+        message.write(file)
+
 def write_to_grib(filename, ds, param_db):
 
     with open((pathlib.Path(root_dir) / "share" / "field_mappings.yml").resolve()) as f:
@@ -34,17 +98,19 @@ def write_to_grib(filename, ds, param_db):
             ds[field].attrs.pop("GRIB_name", None)
             ds[field].attrs.pop("GRIB_shortName", None)
 
-            # if "cosmo" in field_map[field] and "paramId" in field_map[field]["cosmo"]:
-            #     ds[field].attrs["GRIB_paramId"] = field_map[field]["cosmo"]["paramId"]
-
             paramId = ds[field].GRIB_paramId
-            # ds[field].attrs["GRIB_centre"] = 78
 
-            # ds[field].attrs["GRIB_subCentre"] = 0
-            # TODO need to support SDOR
-            # if field == "SDOR":
+            if ds[field].attrs["GRIB_longitudeOfFirstGridPointInDegrees"] > 180:
+                # Setting longitudeOfFirstGridPointInDegrees has no effect, therefore we need to setlongitudeOfFirstGridPoint
+                ds[field].attrs["GRIB_longitudeOfFirstGridPoint"] = ds[field].attrs["GRIB_longitudeOfFirstGridPointInDegrees"]*1e6 -360*1e6
+            if ds[field].attrs["GRIB_longitudeOfLastGridPointInDegrees"] > 180:
+                # Setting longitudeOfLastGridPointInDegrees has no effect, therefore we need to setlongitudeOfLastGridPoint
+                ds[field].attrs["GRIB_longitudeOfLastGridPoint"] = ds[field].attrs["GRIB_longitudeOfLastGridPointInDegrees"]*1e6 -360*1e6
+
+            ds[field].attrs["GRIB_localTablesVersion"] = 4
+
+            ds[field].attrs["GRIB_subCentre"] = 0
             ds[field].attrs["GRIB_centre"] = 'ecmf'
-                # continue
 
             jScansPositively = (
                 ds[field].coords["latitude"].values[-1]
@@ -59,28 +125,14 @@ def write_to_grib(filename, ds, param_db):
             )
             ds[field].attrs["GRIB_jScansPositively"] = jScansPositively * 1
 
-            if paramId in param_db and "units" in param_db[paramId]:
-                ds[field].attrs["GRIB_units"] = param_db[paramId]["units"]
-            else:
-                logger.warning(
-                    f"No units defined in eccodes definitions for field {field}. Using state units defined as: {ds[field].attrs['GRIB_units']}"
-                )
-
             if ds[field].GRIB_edition == 1:
                 ds[field].attrs["GRIB_edition"] = 2
                 # Forecast [https://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_doc/grib2_table4-3.shtml]
                 ds[field].attrs["GRIB_typeOfGeneratingProcess"] = 2
 
-            # TODO impose all compulsary keys
+            # Neccessary for grib1 input data -> grib2
             if "GRIB_productDefinitionTemplateNumber" not in ds[field].attrs:
                 ds[field].attrs["GRIB_productDefinitionTemplateNumber"] = 0
-
-            # TODO do a proper grib1 to grib2 conversion
-            if (
-                paramId in param_db
-                and "typeOfStatisticalProcessing" in param_db[paramId]["params"]
-            ):
-                ds[field].attrs["GRIB_productDefinitionTemplateNumber"] = 8
 
             if (
                 "GRIB_typeOfStatisticalProcessing" in ds[field].attrs
@@ -90,14 +142,6 @@ def write_to_grib(filename, ds, param_db):
                     "can not set typeOfStatisticalProcessing with a default productDefinitionTemplateNumber"
                     + ds[field].attrs["GRIB_productDefinitionTemplateNumer"]
                     + field
-                )
-            if (
-                paramId in param_db
-                and "typeOfStatisticalProcessing" in param_db[paramId]["params"]
-                and ds[field].GRIB_productDefinitionTemplateNumber == 0
-            ):
-                raise RuntimeError(
-                    "can not set typeOfStatisticalProcessing with a default productDefinitionTemplateNumber"
                 )
 
             # TODO remove read only values
@@ -109,7 +153,8 @@ def write_to_grib(filename, ds, param_db):
             ds[field].attrs["GRIB_generatingProcessIdentifier"] = 153
             ds[field].attrs["GRIB_bitsPerValue"] = 16
 
-            cfgrib.xarray_to_grib.canonical_dataarray_to_grib(
+            # cfgrib.xarray_to_grib.canonical_dataarray_to_grib(
+            canonical_dataarray_to_grib(
                 ds[field],
                 f,
                 template_path="/project/g110/spack-install/tsa/cosmo-eccodes-definitions/2.19.0.7/gcc/zcuyy4uduizdpxfzqmxg6bc74p2skdfp/cosmoDefinitions/samples/COSMO_GRIB2_default.tmpl",
@@ -123,7 +168,8 @@ def run_flexpart():
     eccodes.codes_set_definitions_path(eccodes_gpath)
     param_db = pp.param_db(cosmo_gpath + "/grib2")
 
-    datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/"
+    datadir = "/scratch/cosuna/flexpart_test/data/ifs-flexpart-europe/23030600"
+    nsteps=6
     datafile = datadir + "/efsf00000000"
     constants = ("FIS", "FR_LAND", "SDOR")
     inputf = (
@@ -152,28 +198,31 @@ def run_flexpart():
     )
     ds = flx.load_flexpart_data(constants + inputf, loader, datafile)
 
-    for h in range(3, 10, 3):
+    for h in range(1, nsteps):
         datafile = datadir + f"/efsf00{h:02d}0000"
         newds = flx.load_flexpart_data(inputf, loader, datafile)
 
         for field in newds:
             ds[field] = xr.concat([ds[field], newds[field]], dim="step")
 
-    flx.append_pv(ds)
+    # Hack to add pv to all fields (required by flexpart)
+    for f in ds:
+        for t in range(ds[f].coords['step'].size):
+            ds[f].attrs['GRIB_PVPresent'] = 1
+            ds[f].attrs['GRIB_pv'] = xr.concat([ds['ak'].isel(step=t), ds['bk'].isel(step=t)], dim="hybrid_pv").data
 
     eccodes.codes_set_definitions_path(cosmo_gpath)
-    ds_out = {}
+    ds_const = {}
     for field in ("FIS", "FR_LAND", "SDOR"):
-        ds_out[field] = ds[field]
+        ds_const[field] = ds[field]
 
-    write_to_grib("flexpart_out.grib", ds_out, param_db)
-
-    for i in range(1, 4):
-        h = i * 3
-
+    for i in range(1, nsteps):
         ds_out = flx.fflexpart(ds, i)
+        for a in ds_const:
+            ds_out[a] = ds_const[a]
+
         print("i........ ", i)
-        write_to_grib("flexpart_out.grib", ds_out, param_db)
+        write_to_grib("dispf202303060"+str(i), ds_out, param_db)
 
 
 if __name__ == "__main__":

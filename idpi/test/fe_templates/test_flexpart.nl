@@ -58,11 +58,11 @@
  out_type = "NETCDF"
  tstart = 0, tstop = 9, tincr = 3, out_tstart=3, out_tincr=3, tlag=-3
 /
-&Process in_field = "U",levmin=40,levmax=60  /
-&Process in_field = "V",levmin=40,levmax=60  /
-&Process in_field = "ETADOT",levmin=1,levmax=60 /
-&Process in_field = "T", levmin=40,levmax=60  /
-&Process in_field = "QV",levmin=40,levmax=60  /
+&Process in_field = "U",levmin=40,levmax=137  /
+&Process in_field = "V",levmin=40,levmax=137  /
+&Process in_field = "ETADOT",levmin=1,levmax=137 /
+&Process in_field = "T", levmin=40,levmax=137  /
+&Process in_field = "QV",levmin=40,levmax=137  /
 &Process in_field = "PS"/ 
 &Process in_field = "U_10M" /
 &Process in_field = "V_10M" /
@@ -86,7 +86,7 @@
 &Process out_field = "U" /
 &Process out_field = "V" /
 ! TODO recover
-&Process out_field = "OMEGA_SLOPE", new_field_id="ETADOT", levmin=40,levmax=60 /
+&Process out_field = "OMEGA_SLOPE", new_field_id="ETADOT", levmin=40,levmax=137 /
 !&Process out_field = "OMEGA_SLOPE", new_field_id="ETADOT" /
 &Process out_field = "T" /
 &Process out_field = "QV" /
