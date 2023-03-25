@@ -10,7 +10,7 @@ from cfgrib import abc
 from definitions import root_dir
 from operators.omega_slope import omega_slope
 from operators.time_operators import time_rate
-
+import cfgrib.xarray_to_grib
 
 def read_keys(
     first: abc.Field, keys: T.List[str], optional=False
@@ -270,6 +270,6 @@ def fflexpart(ds, istep):
 
     ds_out["OMEGA"] = omega_slope(
         ds["PS"].isel(step=istep), ds["ETADOT"].isel(step=istep), ds["ak"], ds["bk"]
-    ).isel(hybrid=slice(39, 61))
+    ).isel(hybrid=slice(39, 137))
 
     return ds_out
