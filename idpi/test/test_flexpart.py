@@ -4,18 +4,19 @@ import pathlib
 import shutil
 import subprocess
 
-# Third-party
-import eccodes
 import jinja2
 import numpy as np
 import operators.flexpart as flx
 import xarray as xr
 from definitions import root_dir
 
+# Third-party
+import eccodes
+
 
 def test_flexpart():
     gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
-    eccodes_gpath = [p for p in gpaths if "cosmoDefinitions" not in p][0]
+    eccodes_gpath = [p for p in gpaths if "eccodes-cosmo-resources" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
 
     datadir = "/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/"
