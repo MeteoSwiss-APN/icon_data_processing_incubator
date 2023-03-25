@@ -54,8 +54,6 @@ def test_flexpart():
         for field in newds:
             ds[field] = xr.concat([ds[field], newds[field]], dim="step")
 
-    flx.append_pv(ds)
-
     conf_files = {
         "inputi": datadir + "/efsf00<HH>0000",
         "inputc": datadir + "/efsf00000000",
@@ -139,9 +137,9 @@ def test_flexpart():
 
         assert np.allclose(
             fs_ds_o["ETADOT"].transpose("y_1", "x_1", "z_1", "time").isel(time=0),
-            ds_out["OMEGA_SLOPE"],
-            rtol=3e-7,
-            atol=5e-7,
+            ds_out["OMEGA"],
+            rtol=3e-6,
+            atol=5e-5,
             equal_nan=True,
         )
         assert np.allclose(

@@ -1,40 +1,49 @@
+import itertools
 import logging
 import os
 import pathlib
+import typing
+from typing import Any
 
 import cfgrib
 import cfgrib.xarray_to_grib
 import eccodes
+import numpy as np
 import operators.flexpart as flx
 import xarray as xr
-import yaml
+from cfgrib import cfmessage, messages
 from definitions import root_dir
 
 logger = logging.getLogger(__name__)
 
-
-from cfgrib import cfmessage, dataset, messages
-import itertools
-import numpy as np
-
 # This is a copy of canonical_dataarray_to_grib with modifications marked as
 # HACK CFGRIB
+
+
 def canonical_dataarray_to_grib(
-    data_var, file, grib_keys={}, default_grib_keys=cfgrib.xarray_to_grib.DEFAULT_GRIB_KEYS, **kwargs
+    data_var: xr.DataArray,
+    file: typing.IO,
+    default_grib_keys: dict[str, Any] = cfgrib.xarray_to_grib.DEFAULT_GRIB_KEYS,
+    **kwargs,
 ):
-    # type: (xr.DataArray, T.IO[bytes], T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
-    """
-    Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
-    """
+    """Write a ``xr.DataArray`` in *canonical* form to a GRIB file."""
+    grib_keys: dict[str, str] = {}
+
     # validate Dataset keys, DataArray names, and attr keys/values
-    detected_keys, suggested_keys = cfgrib.xarray_to_grib.detect_grib_keys(data_var, default_grib_keys, grib_keys)
-    merged_grib_keys = cfgrib.xarray_to_grib.merge_grib_keys(grib_keys, detected_keys, suggested_keys)
+    detected_keys, suggested_keys = cfgrib.xarray_to_grib.detect_grib_keys(
+        data_var, default_grib_keys, grib_keys
+    )
+    merged_grib_keys = cfgrib.xarray_to_grib.merge_grib_keys(
+        grib_keys, detected_keys, suggested_keys
+    )
     merged_grib_keys["missingValue"] = messages.MISSING_VAUE_INDICATOR
 
     if "gridType" not in merged_grib_keys:
         raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
 
-    template_message = cfgrib.xarray_to_grib.make_template_message(merged_grib_keys, **kwargs)
+    template_message = cfgrib.xarray_to_grib.make_template_message(
+        merged_grib_keys, **kwargs
+    )
 
     coords_names, data_var = cfgrib.xarray_to_grib.expand_dims(data_var)
 
@@ -51,18 +60,20 @@ def canonical_dataarray_to_grib(
         if invalid_field_values.all():
             continue
 
-        missing_value = merged_grib_keys.get("GRIB_missingValue", messages.MISSING_VAUE_INDICATOR)
+        missing_value = merged_grib_keys.get(
+            "GRIB_missingValue", messages.MISSING_VAUE_INDICATOR
+        )
         field_values[invalid_field_values] = missing_value
 
         message = cfmessage.CfMessage.from_message(template_message)
         for coord_name, coord_value in zip(coords_names, items):
             if coord_name in cfgrib.xarray_to_grib.ALL_TYPE_OF_LEVELS:
                 coord_name = "level"
-            # HACK CFGRIB
-            # level is not a primary grib key. Eccodes will transform it into the equivalent pair (or more)
-            # (scaleFactorOfFirstFixedSurface, scaledValueOfFirstFixedSurface)
-            # By default, eccodes will set then a scaleFactorOfFirstFixedSurface of 2. 
-            # Flexpart can not deal with any other value than 0.
+                # HACK CFGRIB
+                # level is not a primary grib key. Eccodes will transform it into the equivalent pair (or more)
+                # scaleFactorOfFirstFixedSurface, scaledValueOfFirstFixedSurface
+                # By default, eccodes will set then a scaleFactorOfFirstFixedSurface of 2.
+                # Flexpart can not deal with any other value than 0.
                 message["scaleFactorOfFirstFixedSurface"] = 0
                 message["scaledValueOfFirstFixedSurface"] = coord_value
             else:
@@ -76,6 +87,7 @@ def canonical_dataarray_to_grib(
         message["values"] = field_values.tolist()
 
         message.write(file)
+
 
 def write_to_grib(filename: str, ds: xr.Dataset, sample_file: str):
 
@@ -94,19 +106,23 @@ def write_to_grib(filename: str, ds: xr.Dataset, sample_file: str):
             ds[field].attrs.pop("GRIB_name", None)
             ds[field].attrs.pop("GRIB_shortName", None)
 
-            paramId = ds[field].GRIB_paramId
-
             if ds[field].attrs["GRIB_longitudeOfFirstGridPointInDegrees"] > 180:
                 # Setting longitudeOfFirstGridPointInDegrees has no effect, therefore we need to setlongitudeOfFirstGridPoint
-                ds[field].attrs["GRIB_longitudeOfFirstGridPoint"] = ds[field].attrs["GRIB_longitudeOfFirstGridPointInDegrees"]*1e6 -360*1e6
+                ds[field].attrs["GRIB_longitudeOfFirstGridPoint"] = (
+                    ds[field].attrs["GRIB_longitudeOfFirstGridPointInDegrees"] * 1e6
+                    - 360 * 1e6
+                )
             if ds[field].attrs["GRIB_longitudeOfLastGridPointInDegrees"] > 180:
                 # Setting longitudeOfLastGridPointInDegrees has no effect, therefore we need to setlongitudeOfLastGridPoint
-                ds[field].attrs["GRIB_longitudeOfLastGridPoint"] = ds[field].attrs["GRIB_longitudeOfLastGridPointInDegrees"]*1e6 -360*1e6
+                ds[field].attrs["GRIB_longitudeOfLastGridPoint"] = (
+                    ds[field].attrs["GRIB_longitudeOfLastGridPointInDegrees"] * 1e6
+                    - 360 * 1e6
+                )
 
             ds[field].attrs["GRIB_localTablesVersion"] = 4
 
             ds[field].attrs["GRIB_subCentre"] = 0
-            ds[field].attrs["GRIB_centre"] = 'ecmf'
+            ds[field].attrs["GRIB_centre"] = "ecmf"
 
             jScansPositively = (
                 ds[field].coords["latitude"].values[-1]
@@ -162,10 +178,10 @@ def run_flexpart():
     cosmo_gpath = [p for p in gpaths if "eccodes-cosmo-resources" in p][0]
     eccodes_gpath = [p for p in gpaths if "eccodes-cosmo-resources" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
-    sample_file = cosmo_gpath+'/../samples/COSMO_GRIB2_default.tmpl'
+    sample_file = cosmo_gpath + "/../samples/COSMO_GRIB2_default.tmpl"
 
     datadir = "/scratch/cosuna/flexpart_test/data/ifs-flexpart-europe/23030600"
-    nsteps=6
+    nsteps = 6
     datafile = datadir + "/efsf00000000"
     constants = ("FIS", "FR_LAND", "SDOR")
     inputf = (
@@ -203,9 +219,11 @@ def run_flexpart():
 
     # Hack to add pv to all fields (required by flexpart)
     for f in ds:
-        for t in range(ds[f].coords['step'].size):
-            ds[f].attrs['GRIB_PVPresent'] = 1
-            ds[f].attrs['GRIB_pv'] = xr.concat([ds['ak'].isel(step=t), ds['bk'].isel(step=t)], dim="hybrid_pv").data
+        for t in range(ds[f].coords["step"].size):
+            ds[f].attrs["GRIB_PVPresent"] = 1
+            ds[f].attrs["GRIB_pv"] = xr.concat(
+                [ds["ak"].isel(step=t), ds["bk"].isel(step=t)], dim="hybrid_pv"
+            ).data
 
     eccodes.codes_set_definitions_path(cosmo_gpath)
     ds_const = {}
@@ -218,7 +236,7 @@ def run_flexpart():
             ds_out[a] = ds_const[a]
 
         print("i........ ", i)
-        write_to_grib("dispf202303060"+str(i), ds_out, sample_file)
+        write_to_grib("dispf202303060" + str(i), ds_out, sample_file)
 
 
 if __name__ == "__main__":

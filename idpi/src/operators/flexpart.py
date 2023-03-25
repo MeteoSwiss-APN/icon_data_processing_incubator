@@ -3,6 +3,7 @@ import pathlib
 import typing as T
 
 import cfgrib
+import cfgrib.xarray_to_grib
 import numpy as np
 import xarray as xr
 import yaml
@@ -10,7 +11,7 @@ from cfgrib import abc
 from definitions import root_dir
 from operators.omega_slope import omega_slope
 from operators.time_operators import time_rate
-import cfgrib.xarray_to_grib
+
 
 def read_keys(
     first: abc.Field, keys: T.List[str], optional=False
@@ -215,18 +216,29 @@ def append_pv_raw(ds):
     """Compute ak, bk (weights that define the vertical coordinate) from pv."""
     NV = ds["U"].GRIB_NV
 
-    ds["ak"] = (
-        xr.DataArray(ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid_pv"))
-        .assign_coords({"hybrid_pv": np.append(ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]),
-                        "time": ds["ETADOT"].time, 
-                        "step": ds["ETADOT"].step})
+    ds["ak"] = xr.DataArray(
+        ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid_pv")
+    ).assign_coords(
+        {
+            "hybrid_pv": np.append(
+                ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]
+            ),
+            "time": ds["ETADOT"].time,
+            "step": ds["ETADOT"].step,
+        }
     )
-    ds["bk"] = (
-        xr.DataArray(ds["U"].GRIB_pv[int(NV / 2) : NV], dims=("hybrid_pv"))
-        .assign_coords({"hybrid_pv": np.append(ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]),
-                        "time": ds["ETADOT"].time, 
-                        "step": ds["ETADOT"].step})
+    ds["bk"] = xr.DataArray(
+        ds["U"].GRIB_pv[int(NV / 2) : NV], dims=("hybrid_pv")
+    ).assign_coords(
+        {
+            "hybrid_pv": np.append(
+                ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]
+            ),
+            "time": ds["ETADOT"].time,
+            "step": ds["ETADOT"].step,
+        }
     )
+
 
 def fflexpart(ds, istep):
     ds_out = {}
