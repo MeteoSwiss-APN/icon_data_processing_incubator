@@ -7,6 +7,7 @@ from typing import Any
 
 import cfgrib
 import cfgrib.xarray_to_grib
+import click
 import numpy as np
 import operators.flexpart as flx
 import xarray as xr
@@ -91,10 +92,8 @@ def canonical_dataarray_to_grib(
 
 
 def write_to_grib(filename: str, ds: xr.Dataset, sample_file: str):
-
     with open(filename, "ab") as f:
         for field in ds:
-
             # cfgrib tries to extend_dims to cover all coordinates, but
             # Xarray complains that valid_time is a variable (not scalar) and can not extend dims
             ds[field] = ds[field].drop_vars("valid_time")
@@ -174,16 +173,30 @@ def write_to_grib(filename: str, ds: xr.Dataset, sample_file: str):
             )
 
 
-def run_flexpart():
+@click.command()
+@click.option(
+    "--data_dir",
+    required=True,
+    type=str,
+    help="directory that contains input grib files",
+)
+@click.option("--data_prefix", type=str, default="efsf", help="grib data files prefix")
+@click.option(
+    "--rhour",
+    type=int,
+    required=True,
+    help="hour of reference datetime",
+)
+@click.option("--rdate", required=True, type=str, help="date of reference datetime")
+@click.option("--nsteps", required=True, type=int, help="number of lead times")
+def run_flexpart(data_dir, data_prefix, rhour, rdate, nsteps):
     gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
     cosmo_gpath = [p for p in gpaths if "eccodes-cosmo-resources" in p][0]
     eccodes_gpath = [p for p in gpaths if "eccodes-cosmo-resources" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
     sample_file = cosmo_gpath + "/../samples/COSMO_GRIB2_default.tmpl"
 
-    datadir = "/scratch/cosuna/flexpart_test/data/ifs-flexpart-europe/23030600"
-    nsteps = 6
-    datafile = datadir + "/efsf00000000"
+    datafile = data_dir + f"/{data_prefix}00{rhour:02d}0000"
     constants = ("FIS", "FR_LAND", "SDOR")
     inputf = (
         "ETADOT",
@@ -212,7 +225,7 @@ def run_flexpart():
     ds = flx.load_flexpart_data(constants + inputf, loader, datafile)
 
     for h in range(1, nsteps):
-        datafile = datadir + f"/efsf00{h:02d}0000"
+        datafile = data_dir + f"/{data_prefix}00{h+rhour:02d}0000"
         newds = flx.load_flexpart_data(inputf, loader, datafile)
 
         for field in newds:
@@ -237,7 +250,7 @@ def run_flexpart():
             ds_out[a] = ds_const[a]
 
         print("i........ ", i)
-        write_to_grib("dispf202303060" + str(i), ds_out, sample_file)
+        write_to_grib(f"dispf{rdate}{i:02d}", ds_out, sample_file)
 
 
 if __name__ == "__main__":
