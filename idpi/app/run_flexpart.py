@@ -77,7 +77,7 @@ def canonical_dataarray_to_grib(
 
         message.write(file)
 
-def write_to_grib(filename, ds):
+def write_to_grib(filename: str, ds: xr.Dataset, sample_file: str):
 
     with open(filename, "ab") as f:
         for field in ds:
@@ -153,15 +153,16 @@ def write_to_grib(filename, ds):
             canonical_dataarray_to_grib(
                 ds[field],
                 f,
-                template_path="/project/g110/spack-install/tsa/cosmo-eccodes-definitions/2.19.0.7/gcc/zcuyy4uduizdpxfzqmxg6bc74p2skdfp/cosmoDefinitions/samples/COSMO_GRIB2_default.tmpl",
+                template_path=sample_file,
             )
 
 
 def run_flexpart():
     gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
-    cosmo_gpath = [p for p in gpaths if "cosmoDefinitions" in p][0]
-    eccodes_gpath = [p for p in gpaths if "cosmoDefinitions" not in p][0]
+    cosmo_gpath = [p for p in gpaths if "eccodes-cosmo-resources" in p][0]
+    eccodes_gpath = [p for p in gpaths if "eccodes-cosmo-resources" not in p][0]
     eccodes.codes_set_definitions_path(eccodes_gpath)
+    sample_file = cosmo_gpath+'/../samples/COSMO_GRIB2_default.tmpl'
 
     datadir = "/scratch/cosuna/flexpart_test/data/ifs-flexpart-europe/23030600"
     nsteps=6
@@ -217,7 +218,7 @@ def run_flexpart():
             ds_out[a] = ds_const[a]
 
         print("i........ ", i)
-        write_to_grib("dispf202303060"+str(i), ds_out)
+        write_to_grib("dispf202303060"+str(i), ds_out, sample_file)
 
 
 if __name__ == "__main__":
