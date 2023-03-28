@@ -19,3 +19,4 @@ dependencies:
 - isort>=5.10.1
 - mypy>=0.942
 - click
+- pre-commit
