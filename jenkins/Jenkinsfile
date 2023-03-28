@@ -31,7 +31,7 @@ pipeline {
                 cd idpi/test
                 source setup.sh
                 export PYTHONPATH=$WORKSPACE/idpi/src
-                pytest -s
+                conda run -n idpi pytest -s
                 '''
             }
         }
