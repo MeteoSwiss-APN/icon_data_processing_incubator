@@ -30,6 +30,7 @@ jobs:
         conda run -n idpi_env mamba env  update -n idpi_env --file environment_dev.yml
     - name: Install pre-commit hooks
       run: |
+        conda run --name idpi_env conda list
         conda run --name idpi_env pre-commit install-hooks
     - name: Run pre-commit hooks
       run: |
