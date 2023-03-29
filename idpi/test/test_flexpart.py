@@ -4,14 +4,13 @@ import pathlib
 import shutil
 import subprocess
 
+# Third-party
+import eccodes
 import jinja2
 import numpy as np
 import operators.flexpart as flx
 import xarray as xr
 from definitions import root_dir
-
-# Third-party
-import eccodes
 
 
 def test_flexpart():

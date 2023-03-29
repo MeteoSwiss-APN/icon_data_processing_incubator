@@ -8,13 +8,12 @@ from typing import Any
 import cfgrib
 import cfgrib.xarray_to_grib
 import click
+import eccodes
 import numpy as np
 import operators.flexpart as flx
 import xarray as xr
 from cfgrib import cfmessage, messages
 from definitions import root_dir
-
-import eccodes
 
 logger = logging.getLogger(__name__)
 
