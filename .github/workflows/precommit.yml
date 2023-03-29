@@ -23,11 +23,10 @@ jobs:
         channels: conda-forge
         channel-priority: flexible
         show-channel-urls: true
+        use-mamba: true
     - name: Create env from unpinned reqs
       run: |
-        conda create -n idpi_dev
-        conda install -n idpi_dev -c conda-forge mamba
-        conda env  update -n idpi_dev --file environment_dev.yml
+        conda env create -f environment_dev.yml
     - name: Install pre-commit hooks
       run: |
         conda run --name idpi_dev pre-commit install-hooks
