@@ -19,7 +19,7 @@ pipeline {
                 sh 'bash miniconda.sh -b -p $WORKSPACE/miniconda'
                 sh 'conda config --set always_yes yes --set changeps1 no'
                 sh 'conda config --add channels conda-forge'
-                sh 'conda env create -f environment.yml'
+                sh 'conda env create -f environment_dev.yml'
                 sh 'rm miniconda.sh'
             }        
         }
@@ -27,11 +27,11 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/env bash
                 source $WORKSPACE/miniconda/etc/profile.d/conda.sh
-                conda activate idpi
+                conda activate idpi_dev
                 cd idpi/test
                 source setup.sh
                 export PYTHONPATH=$WORKSPACE/idpi/src
-                conda run -n idpi pytest -s
+                pytest -s
                 '''
             }
         }
