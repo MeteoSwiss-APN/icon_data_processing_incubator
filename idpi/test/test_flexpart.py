@@ -11,8 +11,9 @@ import numpy as np
 import operators.flexpart as flx
 import xarray as xr
 from definitions import root_dir
+import pytest
 
-
+@pytest.mark.ifs
 def test_flexpart():
     gpaths = os.environ["GRIB_DEFINITION_PATH"].split(":")
     eccodes_gpath = [p for p in gpaths if "eccodes-cosmo-resources" not in p][0]
