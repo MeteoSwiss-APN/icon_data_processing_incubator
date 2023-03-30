@@ -12,7 +12,6 @@ from definitions import root_dir
 from operators.omega_slope import omega_slope
 from operators.time_operators import time_rate
 
-
 def read_keys(
     first: abc.Field, keys: T.List[str], optional=False
 ) -> T.Dict[str, T.Any]:
@@ -23,10 +22,10 @@ def read_keys(
             if value is not None:
                 attributes["GRIB_" + key] = value
             elif not optional:
-                raise RuntimeError("key not found", key)
+                raise RuntimeError("key not found.", key)
         except Exception:
             if not optional:
-                raise RuntimeError("key not found", key)
+                raise RuntimeError("key not found:", key)
     return attributes
 
 
@@ -35,7 +34,7 @@ def myread_data_var_attrs(
 ) -> T.Dict[str, T.Any]:
     attributes = read_keys(first, extra_keys)
 
-    if attributes["GRIB_edition"] == 1:
+    if attributes.get("GRIB_edition",2) == 1:
         # TODO support grib1
         return attributes
 
@@ -56,9 +55,6 @@ def myread_data_var_attrs(
     rkeys += ["productDefinitionTemplateNumber"]
 
     attributes |= read_keys(first, rkeys)
-
-    import yaml
-
     product_conf = None
     with open(
         (
@@ -86,7 +82,7 @@ def myread_data_var_attrs(
                 if "opt" in refid:
                     resopt += [refid["opt"]]
                 elif "ref" in refid:
-                    res += get_deps(refid["ref"])
+                    res += get_deps(refid["ref"])[0]
                 else:
                     raise RuntimeError("unkown key in dependency:", refid)
             else:
@@ -99,35 +95,6 @@ def myread_data_var_attrs(
     attributes |= read_keys(first, opt_deps, optional=True)
 
     return attributes
-
-
-cfgrib.dataset.read_data_var_attrs = myread_data_var_attrs
-cfgrib.dataset.EXTRA_DATA_ATTRIBUTES_KEYS = [
-    "shortName",
-    "units",
-    "name",
-    "cfName",
-    "cfVarName",
-    "missingValue",
-    # "totalNumber",
-    # TODO check these two
-    # "numberOfDirections",
-    # "numberOfFrequencies",
-    "NV",
-    "gridDefinitionDescription",
-]
-
-cfgrib.xarray_to_grib.MESSAGE_DEFINITION_KEYS = [
-    # for the GRIB 2 sample we must set this before setting 'totalNumber'
-    "productDefinitionTemplateNumber",
-    # We need to set the centre before the units
-    "centre",
-    # NO IDEA WHAT IS GOING ON HERE: saving regular_ll_msl.grib results in the wrong `paramId`
-    #   unless `units` is set before some other unknown key, this happens at random and only in
-    #   Python 3.5, so it must be linked to dict key stability.
-    "units",
-]
-
 
 def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
     coords_names = []  # type: T.List[str]
@@ -157,6 +124,34 @@ class ifs_data_loader:
     def __init__(self, field_mapping_file: str):
         with open(field_mapping_file) as f:
             self._field_map = yaml.safe_load(f)
+            
+        cfgrib.dataset.read_data_var_attrs = myread_data_var_attrs
+        cfgrib.dataset.EXTRA_DATA_ATTRIBUTES_KEYS = [
+            "shortName",
+            "units",
+            "name",
+            "cfName",
+            "cfVarName",
+            "missingValue",
+            # "totalNumber",
+            # TODO check these two
+            # "numberOfDirections",
+            # "numberOfFrequencies",
+            "NV",
+            "gridDefinitionDescription",
+        ]
+
+        cfgrib.xarray_to_grib.MESSAGE_DEFINITION_KEYS = [
+            # for the GRIB 2 sample we must set this before setting 'totalNumber'
+            "productDefinitionTemplateNumber",
+            # We need to set the centre before the units
+            "centre",
+            # NO IDEA WHAT IS GOING ON HERE: saving regular_ll_msl.grib results in the wrong `paramId`
+            #   unless `units` is set before some other unknown key, this happens at random and only in
+            #   Python 3.5, so it must be linked to dict key stability.
+            "units",
+        ]
+
 
     def open_ifs_to_cosmo(self, datafile: str, fields: list[str]):
         ds = {}
