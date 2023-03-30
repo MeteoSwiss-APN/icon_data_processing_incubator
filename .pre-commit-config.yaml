@@ -16,8 +16,6 @@ repos:
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
-  - id: pretty-format-toml
-    args: [--autofix]
   - id: pretty-format-yaml
     args: [--autofix, --preserve-quotes, --indent, '2']
 
