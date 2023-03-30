@@ -12,6 +12,7 @@ from definitions import root_dir
 from operators.omega_slope import omega_slope
 from operators.time_operators import time_rate
 
+
 def read_keys(
     first: abc.Field, keys: T.List[str], optional=False
 ) -> T.Dict[str, T.Any]:
@@ -34,7 +35,7 @@ def myread_data_var_attrs(
 ) -> T.Dict[str, T.Any]:
     attributes = read_keys(first, extra_keys)
 
-    if attributes.get("GRIB_edition",2) == 1:
+    if attributes.get("GRIB_edition", 2) == 1:
         # TODO support grib1
         return attributes
 
@@ -96,6 +97,7 @@ def myread_data_var_attrs(
 
     return attributes
 
+
 def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
     coords_names = []  # type: T.List[str]
     for coord_name in (
@@ -124,7 +126,7 @@ class ifs_data_loader:
     def __init__(self, field_mapping_file: str):
         with open(field_mapping_file) as f:
             self._field_map = yaml.safe_load(f)
-            
+
         cfgrib.dataset.read_data_var_attrs = myread_data_var_attrs
         cfgrib.dataset.EXTRA_DATA_ATTRIBUTES_KEYS = [
             "shortName",
@@ -151,7 +153,6 @@ class ifs_data_loader:
             #   Python 3.5, so it must be linked to dict key stability.
             "units",
         ]
-
 
     def open_ifs_to_cosmo(self, datafile: str, fields: list[str]):
         ds = {}

@@ -1,6 +1,7 @@
 import flexpart_cli
-from click.testing import CliRunner
 import pytest
+from click.testing import CliRunner
+
 
 class _TestCLI:
     """Base class to test the command line interface."""
@@ -10,6 +11,7 @@ class _TestCLI:
         result = runner.invoke(flexpart_cli.run_flexpart, args)
         assert result.exit_code == exit_
         return result
+
 
 @pytest.mark.ifs
 class TestCmd(_TestCLI):
