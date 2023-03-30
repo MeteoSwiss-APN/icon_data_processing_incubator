@@ -24,15 +24,6 @@ repos:
   hooks:
   - id: black
 
-- repo: local
-  hooks:
-  - id: isort
-    name: isort
-    description: Group and sort Python imports
-    language: system
-    entry: isort
-    types_or: [python, pyi, cython]
-
 - repo: https://github.com/PyCQA/flake8
   rev: 4.0.1
   hooks:
