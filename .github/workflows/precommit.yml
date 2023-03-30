@@ -30,6 +30,7 @@ jobs:
     - name: Install pre-commit hooks
       run: |
         conda run --name idpi_dev pre-commit install-hooks
+        conda run --name idpi_dev isort --version
     - name: Run pre-commit hooks
       run: |
         conda run --name idpi_dev pre-commit run --all-files
