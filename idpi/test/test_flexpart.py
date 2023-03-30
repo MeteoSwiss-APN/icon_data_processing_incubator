@@ -4,6 +4,7 @@ import pathlib
 import shutil
 import subprocess
 
+# Third-party
 import jinja2
 import numpy as np
 import operators.flexpart as flx
@@ -11,7 +12,7 @@ import pytest
 import xarray as xr
 from definitions import root_dir
 
-# Third-party
+# First-party
 import eccodes
 
 

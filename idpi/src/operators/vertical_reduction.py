@@ -1,5 +1,6 @@
 """Vertical reduction operators."""
 
+# Third-party
 import numpy as np
 import xarray as xr
 from operators.destagger import destagger

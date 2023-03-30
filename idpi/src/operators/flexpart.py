@@ -1,7 +1,8 @@
-# Third-party
+# Standard library
 import pathlib
 import typing as T
 
+# Third-party
 import cfgrib
 import cfgrib.xarray_to_grib
 import numpy as np

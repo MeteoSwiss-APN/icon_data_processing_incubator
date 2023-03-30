@@ -1,7 +1,9 @@
+# Standard library
 import os
 import shutil
 import subprocess
 
+# Third-party
 import grib_decoder
 import jinja2
 import numpy as np

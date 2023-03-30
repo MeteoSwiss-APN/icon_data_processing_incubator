@@ -1,5 +1,6 @@
 """Vertical interpolation operators."""
 
+# Third-party
 import numpy as np
 import xarray as xr
 from operators.support_operators import init_field_with_vcoord

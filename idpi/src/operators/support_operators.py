@@ -1,7 +1,9 @@
 """Algorithms to support operations on a field."""
 
+# Standard library
 import typing
 
+# Third-party
 import numpy as np
 import xarray as xr
 

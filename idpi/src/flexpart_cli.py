@@ -1,3 +1,4 @@
+# Standard library
 import itertools
 import logging
 import os
@@ -5,15 +6,18 @@ import pathlib
 import typing
 from typing import Any
 
+# Third-party
 import cfgrib
 import cfgrib.xarray_to_grib
 import click
 import numpy as np
 import operators.flexpart as flx
 import xarray as xr
-from cfgrib import cfmessage, messages
+from cfgrib import cfmessage
+from cfgrib import messages
 from definitions import root_dir
 
+# First-party
 import eccodes
 
 logger = logging.getLogger(__name__)
