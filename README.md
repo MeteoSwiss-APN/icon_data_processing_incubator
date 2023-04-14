@@ -4,7 +4,7 @@ Prototype for a data post-processing framework on the basis of xarray.
 ## How to install the conda environment and run the tests
 ```
 conda env create --file environment_dev.yml
-conda activate idpi_env
+conda activate idpi_dev
 
 cd idpi/test
 source setup.sh
