@@ -34,6 +34,10 @@ def read_keys(
 def myread_data_var_attrs(
     first: abc.Field, extra_keys: T.List[str]
 ) -> T.Dict[str, T.Any]:
+    """Hack the read_data_var_attrs function of cfgrib in order to properly load all grib keys for all production definition template numbers.
+
+    https://github.com/ecmwf/cfgrib/issues/323
+    """
     attributes = read_keys(first, extra_keys)
 
     if attributes.get("GRIB_edition", 2) == 1:
@@ -156,6 +160,13 @@ class ifs_data_loader:
         ]
 
     def open_ifs_to_cosmo(self, datafile: str, fields: list[str]):
+        """Load IFS data in a dictionary where the keys are COSMO variables.
+
+        IFS and COSMO use different shortNames. IFS are lower case,
+        while COSMO are upper case. In order to have a more homogenous data management
+        in idpi and operators, we convert the keys from IFS to COSMO conventions.
+        Additionally it applies unit conversions from IFS to COSMO.
+        """
         ds = {}
 
         read_keys = [
