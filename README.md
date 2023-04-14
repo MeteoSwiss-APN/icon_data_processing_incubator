@@ -1,5 +1,6 @@
 # icon_data_processing_incubator
 Prototype for a data post-processing framework on the basis of xarray.
+Test setup relies on CSCS, since it needs data and fieldextra executable.
 
 ## How to install the conda environment and run the tests
 ```
