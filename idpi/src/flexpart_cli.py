@@ -243,12 +243,11 @@ def run_flexpart(data_dir, data_prefix, rhour, rdate, nsteps):
                 [ds["ak"].isel(step=t), ds["bk"].isel(step=t)], dim="hybrid_pv"
             ).data
 
-    eccodes.codes_set_definitions_path(cosmo_gpath)
     ds_const = {}
     for field in ("FIS", "FR_LAND", "SDOR"):
         ds_const[field] = ds[field]
 
-    for i in range(1, nsteps):
+    for i in range(0, nsteps):
         ds_out = flx.fflexpart(ds, i)
         for a in ds_const:
             ds_out[a] = ds_const[a]
