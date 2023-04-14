@@ -170,7 +170,7 @@ class ifs_data_loader:
 
         ifs_multi_ds = cfgrib.open_datasets(
             datafile,
-            backend_kwargs={"read_keys": read_keys},
+            backend_kwargs={"read_keys": read_keys, "indexpath":'',},
             encode_cf=("time", "geography", "vertical"),
         )
 
