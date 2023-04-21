@@ -1,17 +1,12 @@
-# Standard library
-import pathlib
-import typing as T
-
 # Third-party
 import cfgrib
 import cfgrib.xarray_to_grib
 import numpy as np
 import xarray as xr
 import yaml
-from cfgrib import abc
-from definitions import root_dir
 from operators.omega_slope import omega_slope
 from operators.time_operators import time_rate
+
 
 class ifs_data_loader:
     """Class for loading data from ifs and convert conventions to COSMO."""
