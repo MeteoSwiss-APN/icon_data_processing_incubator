@@ -17,12 +17,12 @@ repos:
   - id: pretty-format-yaml
     args: [--autofix, --preserve-quotes, --indent, '2']
 
-- repo: https://github.com/psf/black
+- repo: local
   rev: 22.3.0
   hooks:
   - id: black
 
-- repo: https://github.com/PyCQA/flake8
+- repo: local
   rev: 4.0.1
   hooks:
   - id: flake8
@@ -39,7 +39,7 @@ repos:
       (?x)^(
       setup.py |
       )$
-- repo: https://github.com/pre-commit/mirrors-mypy
+- repo: local
   rev: v0.812
   hooks:
   - id: mypy
