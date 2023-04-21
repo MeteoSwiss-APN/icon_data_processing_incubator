@@ -21,3 +21,4 @@ dependencies:
 - click
 - pre-commit
 - yaml
+- typed-ast
