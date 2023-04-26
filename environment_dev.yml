@@ -18,3 +18,4 @@ dependencies:
 - flake8-rst-docstrings>=0.2.5
 - isort>=5.10.1
 - mypy>=0.942
+- numba
