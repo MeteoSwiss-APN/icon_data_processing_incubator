@@ -94,16 +94,28 @@ def fpotvortic(
     # the output array is missing the border
     mask = {"x": slice(1, -1), "y": slice(1, -1)}
     lat = P["latitude"][mask]
-    lon = P["longitude"][mask]
 
     # FD (finite differences) weights
     wi = 0.5 * inv_dlon
     wj = 0.5 * inv_dlat
     wk = 0.5 if diff_type == "center" else 1.0
 
-    # remove coordinates
+    zmax = U.sizes.get("generalVerticalLayer")
+
+    def prepare_array(array):
+        if "generalVertical" in array.dims:
+            return (
+                array.rename(generalVertical="z")
+                .isel({"z": slice(zmax)})
+                .drop_indexes("z")
+            )
+        elif "generalVerticalLayer" in array.dims:
+            return array.rename(generalVerticalLayer="z").drop_indexes("z")
+        return array
+
     U, V, W, P, T, HHL, QV, QC, QI = map(
-        lambda a: a.drop_indexes("z"), (U, V, W, P, T, HHL, QV, QC, QI)
+        prepare_array,
+        (U, V, W, P, T, HHL, QV, QC, QI),
     )
     if QW_load:
         QW_load = QW_load.drop_indexes("z")
@@ -148,15 +160,12 @@ def fpotvortic(
     rho = f_rho_tot(T, P, QV, QC, QI, QW_load)
 
     # potential vorticity
-    out = (
+    out = xr.full_like(rho, np.nan)
+    out[stpt("ccc")] = (
         ((t("pcc") - t("mcc")) * wi + (t("ccp") - t("ccm")) * wk * dzeta_dlam) * curl1
         + ((t("cpc") - t("cmc")) * wj + (t("ccp") - t("ccm")) * wk * dzeta_dphi)
         * (curl2 + cor2)
         + ((t("ccp") - t("ccm")) * wk * (-sqrtg_r_s)) * (curl3 + cor3)
     ) / rho[stpt("ccc")]
 
-    # set coordinates of output
-    out["longitude"] = lon
-    out["latitude"] = lat
-
-    return out
+    return out.rename(z="generalVerticalLayer")
