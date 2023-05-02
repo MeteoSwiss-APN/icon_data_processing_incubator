@@ -24,7 +24,7 @@
 /
 &Process in_field="FIS" /
 &Process in_field="HSURF", tag='GRID' /
-&Process in_field="HEIGHT", tag="hhl_c1e", levmin=1, levmax=80, level_class="k_half" /
+&Process in_field="HEIGHT", tag="hhl_c1e", levmin=1, levmax=81, level_class="k_half" /
 
 &Process
   in_type="INCORE"
@@ -32,7 +32,7 @@
   out_file="{{ file.output }}", out_type="NETCDF"
   tstart=0, tstop=0, tincr=1
 /
-&Process in_field="HEIGHT", use_tag="hhl_c1e", tag="HHL", level_class="k_half", levmin=1, levmax=80 /
+&Process in_field="HEIGHT", use_tag="hhl_c1e", tag="HHL", level_class="k_half", levmin=1, levmax=81 /
 
 &Process
   in_file="{{ file.inputi }}"
@@ -43,15 +43,13 @@
 
 &Process in_field="U", levmin=1, levmax=80 /
 &Process in_field="V", levmin=1, levmax=80 /
-&Process in_field="W", levmin=1, levmax=80 /
+&Process in_field="W", levmin=1, levmax=81 /
 &Process in_field="P", levmin=1, levmax=80 /
 &Process in_field="T", levmin=1, levmax=80 /
 &Process in_field="QV", levmin=1, levmax=80 /
 &Process in_field="QC", levmin=1, levmax=80 /
 &Process in_field="QI", levmin=1, levmax=80 /
 
-&Process tmp1_field="POT_VORTIC", levmin=2, levmax=79 /
-&Process tmp1_field="T", levmin=2, levmax=79 /
+&Process tmp1_field="POT_VORTIC", levmin=1, levmax=80 /
 
 &Process out_field="POT_VORTIC" /
-&Process out_field="T" /
