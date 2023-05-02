@@ -29,9 +29,9 @@ def f_rho_tot(
         QP (xr.DataArray, optional): Specific precipitable components content [kg/kg].
 
     """
-    q = QV - QC
+    q = QC
     if QI is not None:
-        q -= QI
+        q += QI
     if QP is not None:
-        q -= QP
-    return P / (const.pc_r_d * T * (1.0 + const.pc_rvd_o * q))
+        q += QP
+    return P / (const.pc_r_d * T * (1.0 + const.pc_rvd_o * QV - q))
