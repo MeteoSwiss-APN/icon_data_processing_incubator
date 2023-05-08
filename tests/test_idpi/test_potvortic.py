@@ -1,9 +1,13 @@
 # Third-party
 import numpy as np
 import xarray as xr
+from xarray.testing import assert_allclose
 
 # First-party
 import idpi.operators.pot_vortic as pv
+from idpi.operators.theta import ftheta
+from idpi.operators.rho import f_rho_tot
+from idpi.operators.stencils import TotalDiff
 from idpi import grib_decoder
 
 
@@ -17,22 +21,28 @@ def test_pv(data_dir, fieldextra, grib_defs):
     )
     grib_decoder.load_data(ds, ["HHL", "HSURF"], cdatafile, chunk_size=None)
 
-    potv = pv.fpotvortic(
-        ds["U"],
-        ds["V"],
-        ds["W"],
-        ds["P"],
-        ds["T"],
-        ds["HHL"],
-        ds["QV"],
-        ds["QC"],
-        ds["QI"],
-    )
+    theta = ftheta(ds["P"], ds["T"])
+    rho_tot = f_rho_tot(ds["T"], ds["P"], ds["QV"], ds["QC"], ds["QI"])
+
+    dlon = ds["HHL"].attrs["GRIB_iDirectionIncrementInDegrees"]
+    dlat = ds["HHL"].attrs["GRIB_jDirectionIncrementInDegrees"]
+    deg2rad = np.pi / 180
+
+    total_diff = TotalDiff(dlon * deg2rad, dlat * deg2rad, ds["HHL"])
+
+    observed = pv.fpotvortic(ds["U"], ds["V"], ds["W"], theta, rho_tot, total_diff)
+
+    observed[{"x": 0}] = np.nan
+    observed[{"y": 0}] = np.nan
+    observed[{"x": -1}] = np.nan
+    observed[{"y": -1}] = np.nan
 
     fs_ds = fieldextra("POT_VORTIC")
+    expected = fs_ds.rename(
+        {"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"}
+    ).squeeze(drop=True)
 
-    pv_ref = fs_ds.rename({"x_1": "x", "y_1": "y", "z_1": "z"}).squeeze(drop=True)
-    assert np.allclose(pv_ref, potv, rtol=3e-3, atol=1e-6, equal_nan=True)
+    assert_allclose(observed, expected)
 
 
 if __name__ == "__main__":
