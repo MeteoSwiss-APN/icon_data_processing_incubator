@@ -6,9 +6,6 @@ from typing import Protocol
 # Third-party
 import xarray as xr
 
-# Local
-from .destagger import destagger
-
 Dim = Literal["x", "y", "z"]
 
 STENCILS = {
@@ -87,16 +84,21 @@ class StaggeredField:
         return self.padded.dz()
 
 
+def destagger_z(field):
+    return 0.5 * (field + field.shift(z=-1)).dropna("z")
+
+
 class TotalDiff:
     def __init__(self, dlon: float, dlat: float, hhl: xr.DataArray):
-        hfl = destagger(hhl, "generalVertical").rename(generalVerticalLayer="z")
-        hfl_pad = PaddedField(hfl)
         self.dlon = dlon
         self.dlat = dlat
         z = "generalVertical"
+        hhl_pad = PaddedField(hhl.rename({z: "z"}))
+        dh_dx = destagger_z(hhl_pad.dx())  # order is important
+        dh_dy = destagger_z(hhl_pad.dy())  # diff then destagger
         self.sqrtg_r_s = -1 / hhl.diff(dim=z, label="lower").rename({z: "z"})
-        self.dzeta_dlam = self.sqrtg_r_s * hfl_pad.dx() / dlon
-        self.dzeta_dphi = self.sqrtg_r_s * hfl_pad.dy() / dlat
+        self.dzeta_dlam = self.sqrtg_r_s / dlon * dh_dx
+        self.dzeta_dphi = self.sqrtg_r_s / dlat * dh_dy
 
     def d_dlam(self, field: Field) -> xr.DataArray:
         return field.dx() / self.dlon + field.dz() * self.dzeta_dlam
