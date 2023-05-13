@@ -11,7 +11,7 @@ import pytest
 import xarray as xr
 
 # First-party
-import eccodes # type: ignore
+import eccodes  # type: ignore
 import idpi.operators.flexpart as flx
 from idpi.system_definition import root_dir
 
