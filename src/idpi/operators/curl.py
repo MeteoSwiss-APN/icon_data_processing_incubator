@@ -19,13 +19,13 @@ def curl(
     u: xr.DataArray,
     v: xr.DataArray,
     w: xr.DataArray,
-    lat: xr.DataArray,
+    rlat: xr.DataArray,
     total_diff: TotalDiff,
 ) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
     """Compute the curl of the velocity field."""
     r_earth_inv = 1 / const.earth_radius
-    acrlat = cast(xr.DataArray, 1 / (np.cos(lat) * const.earth_radius))
-    tgrlat = cast(xr.DataArray, np.tan(lat))
+    acrlat = cast(xr.DataArray, 1 / (np.cos(rlat) * const.earth_radius))
+    tgrlat = cast(xr.DataArray, np.tan(rlat))
 
     # compute weighted derivatives for FD
     z_f = "generalVerticalLayer"

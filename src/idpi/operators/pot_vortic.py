@@ -8,6 +8,7 @@ import xarray as xr
 from .. import constants as const
 from .curl import curl
 from .stencils import TotalDiff, PaddedField
+from .support_operators import get_rotated_latitude
 
 
 def fpotvortic(
@@ -53,9 +54,10 @@ def fpotvortic(
     # target coordinates
     deg2rad = np.pi / 180
     lat = (rho_tot["latitude"] * deg2rad).astype(np.float32)
+    rlat = get_rotated_latitude(rho_tot)
 
     # compute curl
-    curl1, curl2, curl3 = curl(u, v, w, lat, total_diff)
+    curl1, curl2, curl3 = curl(u, v, w, rlat, total_diff)
 
     # coriolis terms
     cor2 = 2 * const.pc_omega / const.earth_radius * np.cos(lat)
