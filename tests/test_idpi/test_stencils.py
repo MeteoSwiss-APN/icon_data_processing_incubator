@@ -20,9 +20,13 @@ def test_padded_field(data_dir, grib_defs):
     t = stencils.PaddedField(theta.rename(generalVerticalLayer="z"))
 
     tp = np.pad(theta, 1, mode="edge")
+    tp[:, :, 0] = tp[:, :, -1] = np.nan
+    tp[:, 0, :] = tp[:, -1, :] = np.nan
     dt_dx = 0.5 * (tp[1:-1, 1:-1, 2:] - tp[1:-1, 1:-1, :-2])
     dt_dy = 0.5 * (tp[1:-1, 2:, 1:-1] - tp[1:-1, :-2, 1:-1])
     dt_dz = 0.5 * (tp[2:, 1:-1, 1:-1] - tp[:-2, 1:-1, 1:-1])
+    dt_dz[0, :, :] *= 2
+    dt_dz[-1, :, :] *= 2
 
     assert_allclose(t.dx(), dt_dx)
     assert_allclose(t.dy(), dt_dy)
@@ -63,7 +67,7 @@ def test_total_diff(data_dir, grib_defs):
 
     inv_dlon = 1 / dlon
     inv_dlat = 1 / dlat
-    hhlp = np.pad(hhl, ((0, 0), (1, 1), (1, 1)), mode="edge")
+    hhlp = np.pad(hhl, ((0, 0), (1, 1), (1, 1)), constant_values=np.nan)
 
     sqrtg_r_s = 1 / (hhl[:-1] - hhl[1:])
     dzeta_dlam = (
@@ -100,6 +104,8 @@ def test_total_diff(data_dir, grib_defs):
     dt_dx = 0.5 * (tp[1:-1, 1:-1, 2:] - tp[1:-1, 1:-1, :-2])
     dt_dy = 0.5 * (tp[1:-1, 2:, 1:-1] - tp[1:-1, :-2, 1:-1])
     dt_dz = 0.5 * (tp[2:, 1:-1, 1:-1] - tp[:-2, 1:-1, 1:-1])
+    dt_dz[0] *= 2
+    dt_dz[-1] *= 2
 
     dt_dlam = dt_dx / dlon + dzeta_dlam * dt_dz
     dt_dphi = dt_dy / dlat + dzeta_dphi * dt_dz

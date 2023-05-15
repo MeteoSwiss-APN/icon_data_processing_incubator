@@ -5,6 +5,7 @@ from typing import Protocol
 
 # Third-party
 import xarray as xr
+import numpy as np
 
 Dim = Literal["x", "y", "z"]
 
@@ -36,7 +37,8 @@ class Field(Protocol):
 class PaddedField:
     def __init__(self, field: xr.DataArray):
         self.indexes = field.indexes
-        self.field = field.pad({dim: 1 for dim in list("xyz")}, mode="edge")
+        tmp = field.pad({"z": 1}, mode="edge")
+        self.field = tmp.pad({dim: 1 for dim in ("x", "y")}, constant_values=np.nan)
 
     def __getitem__(self, indices: tuple[int, int, int]) -> xr.DataArray:
         i, j, k = indices
@@ -50,7 +52,9 @@ class PaddedField:
         return 0.5 * (self[0, 1, 0] - self[0, -1, 0])
 
     def dz(self) -> xr.DataArray:
-        return 0.5 * (self[0, 0, 1] - self[0, 0, -1])
+        result = self[0, 0, 1] - self[0, 0, -1]
+        result[{"z": slice(1, -1)}] *= 0.5
+        return result
 
 
 class StaggeredField:
@@ -84,8 +88,8 @@ class StaggeredField:
         return self.padded.dz()
 
 
-def destagger_z(field):
-    return 0.5 * (field + field.shift(z=-1)).dropna("z")
+def destagger_z(field: xr.DataArray) -> xr.DataArray:
+    return 0.5 * (field + field.shift(z=-1)).dropna("z", how="all")
 
 
 class TotalDiff:

@@ -32,21 +32,16 @@ def test_pv(data_dir, fieldextra, grib_defs):
 
     observed = pv.fpotvortic(ds["U"], ds["V"], ds["W"], theta, rho_tot, total_diff)
 
-    observed[{"x": 0}] = np.nan
-    observed[{"y": 0}] = np.nan
-    observed[{"x": -1}] = np.nan
-    observed[{"y": -1}] = np.nan
-
     fs_ds = fieldextra("POT_VORTIC")
     expected = fs_ds.rename(
         {"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"}
     ).squeeze(drop=True)
 
     assert_allclose(
-        observed.isel(generalVerticalLayer=slice(1, -1)),
-        expected.isel(generalVerticalLayer=slice(1, -1)),
-        rtol=1e-1,
-        atol=1e-4,
+        observed,
+        expected,
+        rtol=1e-4,
+        atol=1e-8,
     )
 
 
