@@ -28,15 +28,12 @@ def curl(
     tgrlat = cast(xr.DataArray, np.tan(rlat))
 
     # compute weighted derivatives for FD
-    z_f = "generalVerticalLayer"
-    u_f = destagger(u, "x").rename({z_f: "z"})
-    v_f = destagger(v, "y").rename({z_f: "z"})
-    w_f = destagger(w, "generalVertical").rename({z_f: "z"})
+    u_f = destagger(u, "x")
+    v_f = destagger(v, "y")
 
     u_p = PaddedField(u_f)
     v_p = PaddedField(v_f)
-    w_p = PaddedField(w_f)
-    w_s = StaggeredField(w.rename(generalVertical="z"), w_p, "z")
+    w_s = StaggeredField(w)
 
     du_dphi = total_diff.d_dphi(u_p)
     du_dzeta = total_diff.d_dzeta(u_p)

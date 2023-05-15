@@ -54,7 +54,7 @@ def fpotvortic(
     # target coordinates
     deg2rad = np.pi / 180
     lat = (rho_tot["latitude"] * deg2rad).astype(np.float32)
-    rlat = get_rotated_latitude(rho_tot)
+    rlat = get_rotated_latitude(w)
 
     # compute curl
     curl1, curl2, curl3 = curl(u, v, w, rlat, total_diff)
@@ -63,7 +63,7 @@ def fpotvortic(
     cor2 = 2 * const.pc_omega / const.earth_radius * np.cos(lat)
     cor3 = 2 * const.pc_omega * np.sin(lat)
 
-    t = PaddedField(theta.rename(generalVerticalLayer="z"))
+    t = PaddedField(theta)
     dt_dlam = total_diff.d_dlam(t)
     dt_dphi = total_diff.d_dphi(t)
     dt_dzeta = total_diff.d_dzeta(t)
@@ -71,6 +71,6 @@ def fpotvortic(
     # potential vorticity
     out = (
         dt_dlam * curl1 + dt_dphi * (curl2 + cor2) - dt_dzeta * (curl3 + cor3)
-    ) / rho_tot.rename(generalVerticalLayer="z")
+    ) / rho_tot
 
-    return out.rename(z="generalVerticalLayer")
+    return out
