@@ -3,54 +3,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 # First-party
-from idpi.operators import stencils
-from idpi.operators.theta import ftheta
-from idpi.operators.destagger import destagger
 from idpi import grib_decoder
-
-
-def test_padded_field(data_dir, grib_defs):
-    datafile = data_dir / "lfff00000000.ch"
-
-    ds = {}
-    grib_decoder.load_data(ds, ["P", "T"], datafile, chunk_size=None)
-
-    theta = ftheta(ds["P"], ds["T"])
-
-    t = stencils.PaddedField(theta)
-
-    tp = np.pad(theta, 1, mode="edge")
-    tp[:, :, 0] = tp[:, :, -1] = np.nan
-    tp[:, 0, :] = tp[:, -1, :] = np.nan
-    dt_dx = 0.5 * (tp[1:-1, 1:-1, 2:] - tp[1:-1, 1:-1, :-2])
-    dt_dy = 0.5 * (tp[1:-1, 2:, 1:-1] - tp[1:-1, :-2, 1:-1])
-    dt_dz = 0.5 * (tp[2:, 1:-1, 1:-1] - tp[:-2, 1:-1, 1:-1])
-    dt_dz[0, :, :] *= 2
-    dt_dz[-1, :, :] *= 2
-
-    assert_allclose(t.dx(), dt_dx)
-    assert_allclose(t.dy(), dt_dy)
-    assert_allclose(t.dz(), dt_dz)
-
-
-def test_staggered_field(data_dir, grib_defs):
-    datafile = data_dir / "lfff00000000.ch"
-
-    ds = {}
-    grib_decoder.load_data(ds, ["W"], datafile, chunk_size=None)
-
-    wf = destagger(ds["W"], "generalVertical")
-    wp = stencils.PaddedField(wf)
-    ws = stencils.StaggeredField(ds["W"])
-
-    wn = ds["W"].to_numpy()
-    dw_dx = wp.dx()
-    dw_dy = wp.dy()
-    dw_dz = wn[1:] - wn[:-1]
-
-    assert_allclose(ws.dx(), dw_dx)
-    assert_allclose(ws.dy(), dw_dy)
-    assert_allclose(ws.dz(), dw_dz)
+from idpi.operators import diff
+from idpi.operators.theta import ftheta
+from idpi.operators.total_diff import TotalDiff
 
 
 def test_total_diff(data_dir, grib_defs):
@@ -89,7 +45,7 @@ def test_total_diff(data_dir, grib_defs):
         )
     )
 
-    total_diff = stencils.TotalDiff(dlon, dlat, ds["HHL"])
+    total_diff = TotalDiff(dlon, dlat, ds["HHL"])
 
     assert_allclose(total_diff.sqrtg_r_s.values, sqrtg_r_s)
     assert_allclose(total_diff.dzeta_dlam.values, dzeta_dlam, rtol=1e-6)
@@ -111,7 +67,10 @@ def test_total_diff(data_dir, grib_defs):
     dt_dphi = dt_dy / dlat + dzeta_dphi * dt_dz
     dt_dzeta = dt_dz * sqrtg_r_s
 
-    t = stencils.PaddedField(theta)
-    assert_allclose(dt_dlam, total_diff.d_dlam(t), rtol=1e-5, atol=1e-2)
-    assert_allclose(dt_dphi, total_diff.d_dphi(t), rtol=1e-5, atol=1e-2)
-    assert_allclose(dt_dzeta, total_diff.d_dzeta(t), rtol=1e-5, atol=1e-3)
+    assert_allclose(
+        dt_dlam, total_diff.d_dlam(diff.dx(theta), diff.dz(theta)), rtol=1e-5, atol=1e-2
+    )
+    assert_allclose(
+        dt_dphi, total_diff.d_dphi(diff.dy(theta), diff.dz(theta)), rtol=1e-5, atol=1e-2
+    )
+    assert_allclose(dt_dzeta, total_diff.d_dzeta(diff.dz(theta)), rtol=1e-5, atol=1e-3)

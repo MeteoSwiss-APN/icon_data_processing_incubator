@@ -9,10 +9,9 @@ import xarray as xr
 
 # Local
 from .. import constants as const
+from . import diff
 from .destagger import destagger
-from .stencils import PaddedField
-from .stencils import StaggeredField
-from .stencils import TotalDiff
+from .total_diff import TotalDiff
 
 
 def curl(
@@ -30,17 +29,19 @@ def curl(
     # compute weighted derivatives for FD
     u_f = destagger(u, "x")
     v_f = destagger(v, "y")
+    w_f = destagger(w, "generalVertical")
 
-    u_p = PaddedField(u_f)
-    v_p = PaddedField(v_f)
-    w_s = StaggeredField(w)
+    du_dz = diff.dz(u_f)
+    du_dphi = total_diff.d_dphi(diff.dy(u_f), du_dz)
+    du_dzeta = total_diff.d_dzeta(du_dz)
 
-    du_dphi = total_diff.d_dphi(u_p)
-    du_dzeta = total_diff.d_dzeta(u_p)
-    dv_dlam = total_diff.d_dlam(v_p)
-    dv_dzeta = total_diff.d_dzeta(v_p)
-    dw_dlam = total_diff.d_dlam(w_s)
-    dw_dphi = total_diff.d_dphi(w_s)
+    dv_dz = diff.dz(v_f)
+    dv_dlam = total_diff.d_dlam(diff.dx(v_f), dv_dz)
+    dv_dzeta = total_diff.d_dzeta(dv_dz)
+
+    dw_dz = diff.dz_staggered(w)
+    dw_dlam = total_diff.d_dlam(diff.dx(w_f), dw_dz)
+    dw_dphi = total_diff.d_dphi(diff.dy(w_f), dw_dz)
 
     # compute curl
     curl1 = acrlat * (r_earth_inv * dw_dphi + dv_dzeta - r_earth_inv * v_f)

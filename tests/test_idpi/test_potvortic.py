@@ -1,21 +1,20 @@
 # Third-party
 import numpy as np
-import xarray as xr
 from numpy.testing import assert_allclose
 
 # First-party
 import idpi.operators.pot_vortic as pv
-from idpi.operators.theta import ftheta
-from idpi.operators.rho import f_rho_tot
-from idpi.operators.stencils import TotalDiff
 from idpi import grib_decoder
+from idpi.operators.rho import f_rho_tot
+from idpi.operators.theta import ftheta
+from idpi.operators.total_diff import TotalDiff
 
 
 def test_pv(data_dir, fieldextra, grib_defs):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
-    ds: dict[str, xr.DataArray] = {}
+    ds = {}
     grib_decoder.load_data(
         ds, ["U", "V", "W", "P", "T", "QV", "QC", "QI"], datafile, chunk_size=None
     )
@@ -43,7 +42,3 @@ def test_pv(data_dir, fieldextra, grib_defs):
         rtol=1e-4,
         atol=1e-8,
     )
-
-
-if __name__ == "__main__":
-    test_pv()  # type: ignore[call-arg]

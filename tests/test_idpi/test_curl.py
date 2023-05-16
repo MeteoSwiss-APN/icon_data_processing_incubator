@@ -1,3 +1,4 @@
+# Standard library
 import time
 from contextlib import contextmanager
 
@@ -6,9 +7,9 @@ import numpy as np
 from xarray.testing import assert_allclose
 
 # First-party
-from idpi.operators import curl
-from idpi.operators.stencils import TotalDiff
 from idpi import grib_decoder
+from idpi.operators import curl
+from idpi.operators.total_diff import TotalDiff
 
 
 @contextmanager

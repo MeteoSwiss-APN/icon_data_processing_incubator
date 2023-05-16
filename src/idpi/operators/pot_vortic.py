@@ -6,9 +6,10 @@ import xarray as xr
 
 # Local
 from .. import constants as const
+from . import diff
 from .curl import curl
-from .stencils import TotalDiff, PaddedField
 from .support_operators import get_rotated_latitude
+from .total_diff import TotalDiff
 
 
 def fpotvortic(
@@ -33,22 +34,25 @@ def fpotvortic(
     :math:`c_v` is the curl of the wind in y direction and
     :math`\Omega` is the coriolis term.
 
-    Args:
-        U (xr.DataArray): Wind in x direction
-        V (xr.DataArray): Wind in y direction
-        W (xr.DataArray): Wind in z direction
-        P (xr.DataArray): Pressure
-        T (xr.DataArray): Temperature
-        HHL (xr.DataArray): Height of half-layers
-        QV (xr.DataArray): Specific humidity [kg/kg]
-        QC (xr.DataArray): Specific cloud water content [kg/kg]
-        QI (xr.DataArray): Specific cloud ice content [kg/kg].
-        QW_load (xr.DataArray, optional): Specific precipitable components
-            content [kg/kg]. Defaults to None.
-        diff_type (str, optional): The type of differentiation. Defaults to None.
+    Parameters
+    ----------
+    u: xr.DataArray
+        Wind in x direction [m/s]
+    v: xr.DataArray
+        Wind in y direction [m/s]
+    w: xr.DataArray
+        Wind in z direction [m/s]
+    theta: xr.DataArray
+        Potential Temperature [K]
+    rho_tot: xr.DataArray
+        Total density [kg m-3]
+    total_diff: TotalDiff
+        Terrain following grid derivative helper
 
-    Returns:
-        xr.DataArray: The potential vorticity
+    Returns
+    -------
+    xr.DataArray:
+        The potential vorticity
 
     """
     # target coordinates
@@ -63,10 +67,9 @@ def fpotvortic(
     cor2 = 2 * const.pc_omega / const.earth_radius * np.cos(lat)
     cor3 = 2 * const.pc_omega * np.sin(lat)
 
-    t = PaddedField(theta)
-    dt_dlam = total_diff.d_dlam(t)
-    dt_dphi = total_diff.d_dphi(t)
-    dt_dzeta = total_diff.d_dzeta(t)
+    dt_dlam = total_diff.d_dlam(diff.dx(theta), diff.dz(theta))
+    dt_dphi = total_diff.d_dphi(diff.dy(theta), diff.dz(theta))
+    dt_dzeta = total_diff.d_dzeta(diff.dz(theta))
 
     # potential vorticity
     out = (
