@@ -5,13 +5,13 @@ import shutil
 import subprocess
 
 # Third-party
+import eccodes  # type: ignore
 import jinja2
 import numpy as np
 import pytest
 import xarray as xr
 
 # First-party
-import eccodes  # type: ignore
 import idpi.operators.flexpart as flx
 from idpi.system_definition import root_dir
 
