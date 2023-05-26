@@ -12,6 +12,7 @@ import xarray as xr
 from idpi import grib_decoder
 from idpi.operators.destagger import destagger
 from idpi.iarray import Iarray
+import time
 
 
 def test_destagger():
@@ -34,9 +35,12 @@ def test_destagger():
         dims=["z", "y", "x"], coords={"x": 0, "y": 0, "z": -0.5}, data=ds["HHL"].values
     )
 
+    now = time.time()
     U = destagger(Ui, "x")
     V = destagger(Vi, "y")
     HFL = destagger(HHLi, "z")
+    end = time.time()
+    print("Total time", end - now)
 
     # U = destagger(ds["U"], "x")
     # V = destagger(ds["V"], "y")
