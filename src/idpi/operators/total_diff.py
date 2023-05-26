@@ -1,6 +1,7 @@
 """Finite difference stencils on xarray dataarrays."""
 # Standard library
 import dataclasses as dc
+from typing import Final
 
 # Third-party
 import xarray as xr
@@ -22,7 +23,7 @@ class TotalDiff:
     dzeta_dphi: xr.DataArray = dc.field(init=False)
 
     def __post_init__(self, hhl: xr.DataArray):
-        z = "generalVertical"
+        z: Final = "generalVertical"
         dh_dx = destagger(diff.dx(hhl), z)  # order is important
         dh_dy = destagger(diff.dy(hhl), z)  # diff then destagger
         dh_dz = diff.dz_staggered(hhl)
