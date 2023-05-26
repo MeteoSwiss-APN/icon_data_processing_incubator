@@ -6,35 +6,67 @@ from typing import Literal
 import numpy as np
 import xarray as xr
 
+from idpi.iarray import Iarray
+
 ExtendArg = Literal["left", "right", "both"] | None
 
 
-def _intrp_mid(a: np.ndarray) -> np.ndarray:
-    return 0.5 * (a[..., :-1] + a[..., 1:])
+# def _intrp_mid(a: np.ndarray) -> np.ndarray:
+#     return 0.5 * (a[..., :-1] + a[..., 1:])
 
 
-def _left(a: np.ndarray) -> np.ndarray:
+# def _left(a: np.ndarray) -> np.ndarray:
+#     t = a.copy()
+#     t[..., 1:] = _intrp_mid(a)
+#     return t
+
+
+# def _right(a: np.ndarray) -> np.ndarray:
+#     t = a.copy()
+#     t[..., :-1] = _intrp_mid(a)
+#     return t
+
+
+# def _both(a: np.ndarray) -> np.ndarray:
+#     *m, n = a.shape
+#     t = np.empty((*m, n + 1))
+#     t[..., 0] = a[..., 0]
+#     t[..., -1] = a[..., -1]
+#     t[..., 1:-1] = _intrp_mid(a)
+#     return t
+
+
+def _intrp_mid(a: Iarray, dim: str) -> Iarray:
+    return 0.5 * (a.isel({dim: slice(0, -1)}) + a.isel({dim: slice(1, None)}))
+
+
+def _left(a: Iarray, dim: str) -> Iarray:
     t = a.copy()
-    t[..., 1:] = _intrp_mid(a)
+    t[{dim: slice(1, None)}] = _intrp_mid(a, dim)
     return t
 
 
-def _right(a: np.ndarray) -> np.ndarray:
+def _right(a: Iarray, dim: str) -> Iarray:
     t = a.copy()
-    t[..., :-1] = _intrp_mid(a)
+    t[{dim: slice(0, -1)}] = _intrp_mid(a, dim)
     return t
 
 
-def _both(a: np.ndarray) -> np.ndarray:
-    *m, n = a.shape
-    t = np.empty((*m, n + 1))
-    t[..., 0] = a[..., 0]
+def _both(a: Iarray, dim: str) -> Iarray:
+    index_dim = a.dims(dim)
+    shape = [x if idx != index_dim else x + 1 for idx, x in enumerate(a.shape)]
+    dim_index = a.dims.index(dim)
+    shape[dim_index] = shape[dim_index] + 1
+    t = Iarray(dims=a.dims, coords=a.coords, data=np.empty(shape))
+    t[{dim: 0}] = a.isel({dim: 0})
+    t[{dim: 0}] = a.isel({dim: 0})
+
     t[..., -1] = a[..., -1]
-    t[..., 1:-1] = _intrp_mid(a)
+    t[..., 1:-1] = _intrp_mid(a, dim)
     return t
 
 
-def interpolate_midpoint(array: np.ndarray, extend: ExtendArg = None) -> np.ndarray:
+def interpolate_midpoint(array: Iarray, dim: str, extend: ExtendArg = None) -> Iarray:
     """Interpolate field values onto the midpoints.
 
     The interpolation is only done on the last dimension of the given array.
@@ -67,13 +99,13 @@ def interpolate_midpoint(array: np.ndarray, extend: ExtendArg = None) -> np.ndar
     }
     if extend not in f_map:
         raise ValueError(f"extend arg not in {tuple(f_map.keys())}")
-    return f_map[extend](array)
+    return f_map[extend](array, dim)
 
 
 def destagger(
-    field: xr.DataArray,
-    dim: Literal["x", "y", "generalVertical"],
-) -> xr.DataArray:
+    field: Iarray,
+    dim: Literal["x", "y", "z"],
+) -> Iarray:
     """Destagger a field.
 
     Note that, in the x and y directions, it is assumed that one element
@@ -82,45 +114,27 @@ def destagger(
 
     Parameters
     ----------
-    field : xr.DataArray
+    field : Iarray
         Field to destagger
-    dim : Literal["x", "y", "generalVertical"]
+    dim : Literal["x", "y", "z"]
         Dimension along which to destagger
 
     Raises
     ------
     ValueError
         Raises ValueError if dim argument is not one of
-        {"x","y","generalVerticalLayer"}.
+        {"x","y","z"}.
 
     Returns
     -------
-    xr.DataArray
+    Iarray
         destaggered field with dimensions in
-        {"x","y","generalVerticalLayer"}
+        {"x","y","z"}
 
     """
-    dims = list(field.sizes.keys())
     if dim == "x" or dim == "y":
-        return xr.apply_ufunc(
-            interpolate_midpoint,
-            field.reset_coords(drop=True),
-            input_core_dims=[[dim]],
-            output_core_dims=[[dim]],
-            kwargs={"extend": "left"},
-        ).transpose(*dims)
-    elif dim == "generalVertical":
-        return (
-            xr.apply_ufunc(
-                interpolate_midpoint,
-                field,
-                input_core_dims=[[dim]],
-                output_core_dims=[[dim]],
-                exclude_dims={dim},
-            )
-            .transpose(*dims)
-            .assign_coords({dim: field.generalVertical[:-1]})
-            .rename({"generalVertical": "generalVerticalLayer"})
-        )
+        return interpolate_midpoint(field, dim=dim, extend="left")
+    elif dim == "z":
+        return interpolate_midpoint(field, dim=dim, extend=None)
 
     raise ValueError("Unknown dimension", dim)
