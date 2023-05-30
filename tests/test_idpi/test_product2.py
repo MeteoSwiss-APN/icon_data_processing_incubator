@@ -58,9 +58,9 @@ def test_product2(data_dir, fieldextra, grib_defs):
         rtol=1e-5,
     )
 
-    # assert_allclose(
-    #     observed_at_theta["v"],
-    #     expected["V"].squeeze(drop=True),
-    #     atol=1e-9,
-    #     rtol=1e-5,
-    # )
+    assert_allclose(
+        observed_at_theta["v"],
+        expected["V"].squeeze(drop=True),
+        atol=5e-4,
+        rtol=1e-4,
+    )

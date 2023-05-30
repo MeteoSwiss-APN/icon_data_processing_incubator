@@ -29,7 +29,7 @@ def template_env():
     """Jinja input namelist template environment."""
     test_dir = Path(__file__).parent
     loader = FileSystemLoader(test_dir / "fieldextra_templates")
-    return Environment(loader=loader)
+    return Environment(loader=loader, keep_trailing_newline=True)
 
 
 @pytest.fixture
