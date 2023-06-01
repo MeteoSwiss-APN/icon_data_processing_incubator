@@ -8,7 +8,7 @@ from idpi.operators import diff
 from idpi.operators.theta import ftheta
 
 
-def test_padded_field(data_dir, grib_defs):
+def test_masspoint_field(data_dir, grib_defs):
     datafile = data_dir / "lfff00000000.ch"
 
     ds = {}

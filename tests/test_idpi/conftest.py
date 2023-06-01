@@ -46,7 +46,6 @@ def fieldextra(tmp_path, data_dir, template_env, fieldextra_executable):
         nl_path = tmp_path / f"test_{field_name}.nl"
         nl_path.write_text(template.render(file=conf_files))
 
-        print(fieldextra_executable)
         subprocess.run([fieldextra_executable, str(nl_path)], check=True, cwd=tmp_path)
 
         return xr.open_dataset(tmp_path / f"00_{field_name}.nc")[field_name]
