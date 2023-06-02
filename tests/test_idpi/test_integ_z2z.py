@@ -41,7 +41,7 @@ def test_integ_z2z(field, k_max, operator, fx_op, data_dir, fieldextra, grib_def
     f_bar = integrate_k(ds[field], operator, mode, hhl, h_bounds)
 
     fx_ds = fieldextra(
-        "integ_z2z",
+        "integ_z2z_for_h_k",
         operator=fx_op,
         field=field,
         mode=mode,
