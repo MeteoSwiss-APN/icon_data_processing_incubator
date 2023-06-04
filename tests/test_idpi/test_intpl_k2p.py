@@ -91,16 +91,8 @@ def test_intpl_k2p(mode):
 
     # compare numerical results
     assert np.allclose(
-        t_ref[
-            {
-                "z": 2,
-            }
-        ],
-        T[
-            {
-                "z": 2,
-            }
-        ],
+        t_ref,
+        T,
         rtol=rtolerances[mode],
         atol=atolerances[mode],
         equal_nan=True,
