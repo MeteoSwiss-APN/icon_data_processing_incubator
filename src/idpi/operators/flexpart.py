@@ -83,10 +83,7 @@ class ifs_data_loader:
 def load_flexpart_data(fields, loader, datafile):
     fields_ = list(fields)
     fields_.remove("U")
-    print("KKK", fields, "....", list(fields), fields_)
     ds = loader.open_ifs_to_cosmo(datafile, fields_)
-    aa = loader.open_ifs_to_cosmo(datafile, ["U"], load_pv=True)
-    print("UUUU", aa)
     ds.update(loader.open_ifs_to_cosmo(datafile, ["U"], load_pv=True))
     append_pv_raw(ds)
 
