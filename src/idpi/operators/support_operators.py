@@ -14,7 +14,7 @@ import xarray as xr
 
 def init_field_with_vcoord(
     parent: xr.DataArray,
-    vcoord: Mapping[str, Any],
+    tc_values: np.ndarray,
     fill_value: Any,
     dtype: Optional[np.dtype] = None,
 ) -> xr.DataArray:
@@ -40,42 +40,18 @@ def init_field_with_vcoord(
         xr.DataArray: new field
 
     """
-    # TODO: test that vertical dim of parent is named "generalVerticalLayer"
-    # or take vertical dim to replace as argument
-    #       be aware that vcoord contains also xr.DataArray GRIB attributes;
-    #  one should separate these from coordinate properties
-    #       in the interface
-    # check vcoord keys
-    expected_vcoord_keys = ("typeOfLevel", "NV", "values", "attrs")
-    for k in expected_vcoord_keys:
-        if k not in vcoord:
-            raise KeyError("init_field: missing vcoord key ", k)
-    # attrs
-    attrs = parent.attrs.copy()
-    attrs["GRIB_typeOfLevel"] = vcoord["typeOfLevel"]
-    if "GRIB_NV" in attrs:
-        attrs["GRIB_NV"] = vcoord["NV"]
     # dims
-    shape = list(
-        len(parent[d]) if d != "generalVerticalLayer" else len(vcoord["values"])
-        for d in parent.dims
-    )
-    remap: Callable[[str], str] = lambda x: x.replace(
-        "generalVerticalLayer", vcoord["typeOfLevel"]
-    )
-    dims = list(
-        map(
-            remap,  # type: ignore
-            parent.dims,
-        )
-    )
+    shape = list(len(parent[d]) if d != "z" else len(tc_values) for d in parent.dims)
+    dims = parent.dims
     # coords
-    # ... inherit all except for the vertical coordinates
-    coords = {c: v for c, v in parent.coords.items() if c != "generalVerticalLayer"}
-    # ... initialize the vertical target coordinates
-    coords[vcoord["typeOfLevel"]] = xr.IndexVariable(
-        vcoord["typeOfLevel"], vcoord["values"], attrs=vcoord["attrs"]
-    )
+    coords = {"z": tc_values}
+
+    # attrs
+    attrs = dict()
+    attrs["vcoord_type"] = "pressure"
+    # TODO does this algorithm works also for staggered U,V?
+    attrs["origin"] = parent.origin
+
     # dtype
     if dtype is None:
         dtype = parent.data.dtype

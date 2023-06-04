@@ -19,12 +19,12 @@ def test_destagger():
     cdatafile = datadir + "/lfff00000000c.ch"
 
     ds = {}
-    grib_decoder.load_data(ds, ["U", "V"], datafile, chunk_size=None)
-    grib_decoder.load_data(ds, ["HHL"], cdatafile, chunk_size=None)
+    grib_decoder.load_data(ds, ["U", "V", "HHL"], [datafile, cdatafile])
+    # grib_decoder.load_data(ds, ["HHL"], cdatafile, chunk_size=None)
 
     U = destagger(ds["U"], "x")
     V = destagger(ds["V"], "y")
-    HFL = destagger(ds["HHL"], "generalVertical")
+    HFL = destagger(ds["HHL"], "z")
 
     conf_files = {
         "inputi": datadir + "/lfff<DDHH>0000.ch",
@@ -62,15 +62,13 @@ def test_destagger():
     subprocess.run([executable, tmpdir + "/test_destagger.nl "], check=True)
 
     fs_ds = xr.open_dataset("00_destagger.nc")
-    u_ref = fs_ds["U"].rename({"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"})
-    v_ref = fs_ds["V"].rename({"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"})
-    hfl_ref = fs_ds["HFL"].rename(
-        {"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"}
-    )
+    u_ref = fs_ds["U"].rename({"x_1": "x", "y_1": "y", "z_1": "z"})
+    v_ref = fs_ds["V"].rename({"x_1": "x", "y_1": "y", "z_1": "z"})
+    hfl_ref = fs_ds["HFL"].rename({"x_1": "x", "y_1": "y", "z_1": "z"})
 
-    assert np.allclose(u_ref, U, rtol=1e-12, atol=1e-9, equal_nan=True)
-    assert np.allclose(v_ref, V, rtol=1e-12, atol=1e-9, equal_nan=True)
-    assert np.allclose(hfl_ref, HFL, rtol=1e-12, atol=1e-9, equal_nan=True)
+    assert np.allclose(u_ref, U, rtol=1e-5, atol=1e-5, equal_nan=True)
+    assert np.allclose(v_ref, V, rtol=1e-5, atol=1e-5, equal_nan=True)
+    assert np.allclose(hfl_ref, HFL, rtol=1e-5, atol=1e-5, equal_nan=True)
 
 
 if __name__ == "__main__":

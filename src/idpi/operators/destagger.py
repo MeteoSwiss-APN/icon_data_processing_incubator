@@ -72,7 +72,7 @@ def interpolate_midpoint(array: np.ndarray, extend: ExtendArg = None) -> np.ndar
 
 def destagger(
     field: xr.DataArray,
-    dim: Literal["x", "y", "generalVertical"],
+    dim: Literal["x", "y", "z"],
 ) -> xr.DataArray:
     """Destagger a field.
 
@@ -84,24 +84,27 @@ def destagger(
     ----------
     field : xr.DataArray
         Field to destagger
-    dim : Literal["x", "y", "generalVertical"]
+    dim : Literal["x", "y", "z"]
         Dimension along which to destagger
 
     Raises
     ------
     ValueError
         Raises ValueError if dim argument is not one of
-        {"x","y","generalVerticalLayer"}.
+        {"x","y","z"}.
 
     Returns
     -------
     xr.DataArray
         destaggered field with dimensions in
-        {"x","y","generalVerticalLayer"}
+        {"x","y","z"}
 
     """
     dims = list(field.sizes.keys())
     if dim == "x" or dim == "y":
+        if field.origin[dim] != 0.5:
+            raise RuntimeError("field is not staggered")
+
         return xr.apply_ufunc(
             interpolate_midpoint,
             field.reset_coords(drop=True),
@@ -109,18 +112,16 @@ def destagger(
             output_core_dims=[[dim]],
             kwargs={"extend": "left"},
         ).transpose(*dims)
-    elif dim == "generalVertical":
-        return (
-            xr.apply_ufunc(
-                interpolate_midpoint,
-                field,
-                input_core_dims=[[dim]],
-                output_core_dims=[[dim]],
-                exclude_dims={dim},
-            )
-            .transpose(*dims)
-            .assign_coords({dim: field.generalVertical[:-1]})
-            .rename({"generalVertical": "generalVerticalLayer"})
-        )
+    elif dim == "z":
+        if field.origin[dim] != -0.5:
+            raise RuntimeError("field is not staggered")
+        
+        return xr.apply_ufunc(
+            interpolate_midpoint,
+            field,
+            input_core_dims=[[dim]],
+            output_core_dims=[[dim]],
+            exclude_dims={dim},
+        ).transpose(*dims)
 
     raise ValueError("Unknown dimension", dim)

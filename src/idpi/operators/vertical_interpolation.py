@@ -19,12 +19,12 @@ def interpolate_k2p(field, mode, p_field, p_tc_values, p_tc_units):
     Parameters
     ----------
     field : xarray.DataArray
-        field to interpolate (only typeOfLevel="generalVerticalLayer" is supported)
+        field to interpolate (only typeOfLevel="z" is supported)
     mode : str
         interpolation algorithm, one of {"linear_in_p", "linear_in_lnp", "nearest_sfc"}
     p_field : xarray.DataArray
         pressure field on k levels in Pa
-        (only typeOfLevel="generalVerticalLayer" is supported)
+        (only typeOfLevel="z" is supported)
     p_tc_values : list of float
         pressure target coordinate values
     p_tc_units : str
@@ -59,15 +59,14 @@ def interpolate_k2p(field, mode, p_field, p_tc_values, p_tc_units):
     p_tc_min = 1.0
     p_tc_max = 120000.0
     # ... supported vertical coordinate type for field and p_field
-    supported_vc_type = "generalVerticalLayer"
+    supported_origin = 0
 
     # Define vertical target coordinates (tc)
-    tc = dict()
     tc_values = p_tc_values.copy()
     tc_values.sort(reverse=False)
     tc_factor = p_tc_unit_conversions[p_tc_units]
-    tc["values"] = np.array(tc_values) * tc_factor
-    if min(tc["values"]) < p_tc_min or max(tc["values"]) > p_tc_max:
+    tc_values = np.array(tc_values) * tc_factor
+    if min(tc_values) < p_tc_min or max(tc_values) > p_tc_max:
         raise RuntimeError(
             "interpolate_k2p: target coordinate value out of range "
             "(must be in interval [",
@@ -76,25 +75,17 @@ def interpolate_k2p(field, mode, p_field, p_tc_values, p_tc_units):
             p_tc_max,
             "]Pa)",
         )
-    tc["attrs"] = {
-        "units": "Pa",
-        "positive": "down",
-        "standard_name": "air_pressure",
-        "long_name": "pressure",
-    }
-    tc["typeOfLevel"] = "isobaricInPa"
-    tc["NV"] = 0
 
     # Check that typeOfLevel is supported and equal for both field and p_field
-    if supported_vc_type not in field.dims:
+    if supported_origin != field.origin["z"]:
         raise RuntimeError(
-            "interpolate_k2p: field to interpolate must be defined for typeOfLevel=",
-            supported_vc_type,
+            "interpolate_k2p: field to interpolate must be defined for origin=",
+            supported_origin,
         )
-    if supported_vc_type not in p_field.dims:
+    if supported_origin != p_field.origin["z"]:
         raise RuntimeError(
             "interpolate_k2p: pressure field must be defined for typeOfLevel=",
-            supported_vc_type,
+            supported_origin,
         )
     # Check that dimensions are the same for field and p_field
     if field.dims != p_field.dims or field.size != p_field.size:
@@ -103,35 +94,19 @@ def interpolate_k2p(field, mode, p_field, p_tc_values, p_tc_units):
         )
 
     # Prepare output field field_on_tc on target coordinates
-    field_on_tc = init_field_with_vcoord(field, tc, np.nan)
+    field_on_tc = init_field_with_vcoord(field, tc_values, np.nan)
 
     # Interpolate
     # ... prepare interpolation
     pkm1 = p_field.copy()
-    pkm1[{"generalVerticalLayer": slice(1, None)}] = p_field[
-        {"generalVerticalLayer": slice(0, -1)}
-    ].assign_coords(
-        {
-            "generalVerticalLayer": p_field[
-                {"generalVerticalLayer": slice(1, None)}
-            ].generalVerticalLayer
-        }
-    )
-    pkm1[{"generalVerticalLayer": 0}] = np.nan
+    pkm1[{"z": slice(1, None)}] = p_field[{"z": slice(0, -1)}]
+    pkm1[{"z": 0}] = np.nan
     fkm1 = field.copy()
-    fkm1[{"generalVerticalLayer": slice(1, None)}] = field[
-        {"generalVerticalLayer": slice(0, -1)}
-    ].assign_coords(
-        {
-            "generalVerticalLayer": field[
-                {"generalVerticalLayer": slice(1, None)}
-            ].generalVerticalLayer
-        }
-    )
-    fkm1[{"generalVerticalLayer": 0}] = np.nan
+    fkm1[{"z": slice(1, None)}] = field[{"z": slice(0, -1)}]
+    fkm1[{"z": 0}] = np.nan
 
     # ... loop through tc values
-    for tc_idx, p0 in enumerate(tc["values"]):
+    for tc_idx, p0 in enumerate(tc_values):
         # ... find the 3d field where pressure is > p0 on level k
         # and was <= p0 on level k-1
         p2 = p_field.where((p_field > p0) & (pkm1 <= p0))
@@ -139,14 +114,14 @@ def interpolate_k2p(field, mode, p_field, p_tc_values, p_tc_units):
         #     (corresponds to search from top of atmosphere to bottom)
         # ... note that if the condition above is not fulfilled, minind will
         # be set to k_top
-        minind = p2.fillna(p_tc_max).argmin(dim=["generalVerticalLayer"])
+        minind = p2.fillna(p_tc_max).argmin(dim=["z"])
         # ... extract pressure and field at level k
-        p2 = p2[{"generalVerticalLayer": minind["generalVerticalLayer"]}]
-        f2 = field[{"generalVerticalLayer": minind["generalVerticalLayer"]}]
+        p2 = p2[{"z": minind["z"]}]
+        f2 = field[{"z": minind["z"]}]
         # ... extract pressure and field at level k-1
         # ... note that f1 and p1 are both undefined, if minind equals k_top
-        f1 = fkm1[{"generalVerticalLayer": minind["generalVerticalLayer"]}]
-        p1 = pkm1[{"generalVerticalLayer": minind["generalVerticalLayer"]}]
+        f1 = fkm1[{"z": minind["z"]}]
+        p1 = pkm1[{"z": minind["z"]}]
 
         # ... compute the interpolation weights
         if mode == "linear_in_p":
@@ -167,7 +142,7 @@ def interpolate_k2p(field, mode, p_field, p_tc_values, p_tc_units):
             ratio = xr.where(np.abs(p0 - p1) >= np.abs(p0 - p2), 1.0, 0.0)
 
         # ... interpolate and update field_on_tc
-        field_on_tc[{tc["typeOfLevel"]: tc_idx}] = (1.0 - ratio) * f1 + ratio * f2
+        field_on_tc[{"z": tc_idx}] = (1.0 - ratio) * f1 + ratio * f2
 
     return field_on_tc
 
