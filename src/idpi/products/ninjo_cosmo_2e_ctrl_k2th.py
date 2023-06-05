@@ -1,3 +1,5 @@
+"""Ninjo product."""
+
 # Standard library
 import logging
 import sys
@@ -110,8 +112,8 @@ def ninjo_cosmo_2e_ctrl_k2th(
     xr.DataArray
         Mean values of potential vorticity between isobaric levels 700hPa and 900hPa
     dict[str, xr.DataArray]
-        Values of pressure, horizontal wind velocity and potential vorticity interpolated
-        to potential temperature levels 310K through 335K every 5K.
+        Values of pressure, horizontal wind velocity and potential vorticity
+        interpolated to potential temperature levels 310K through 335K every 5K.
 
     """
     logger.info("Computing potential temperature")
