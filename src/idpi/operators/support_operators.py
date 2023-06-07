@@ -73,7 +73,7 @@ def init_field_with_vcoord(
     attrs = parent.attrs.copy()
     attrs["GRIB_typeOfLevel"] = vcoord.type_of_level
     if "GRIB_NV" in attrs:
-        attrs["GRIB_NV"] = vcoord.nv
+        attrs["GRIB_NV"] = 0
     # dims
     sizes = {dim: size for dim, size in parent.sizes.items() if str(dim) in "xy"}
     sizes[vcoord.type_of_level] = vcoord.size
