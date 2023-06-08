@@ -83,7 +83,8 @@ def init_field_with_vcoord(
         for dim, size in items:
             if dim == "generalVerticalLayer":
                 yield vcoord.type_of_level, vcoord.size
-            yield dim, size
+            else:
+                yield dim, size
 
     # ... make sure to maintain the ordering of the dims
     sizes = {dim: size for dim, size in replace_vertical(parent.sizes.items())}
