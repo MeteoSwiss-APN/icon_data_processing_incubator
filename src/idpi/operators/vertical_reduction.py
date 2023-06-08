@@ -319,6 +319,7 @@ def integrate_k(field, operator, mode, height, h_bounds, hsurf=None):
             (field_in_h_bounds * dh_in_h_bounds)
             .sum(dim="generalVerticalLayer")
             .where(~field_in_h_bounds.isnull().all(dim="generalVerticalLayer"))
+            # the line above reverts all nan columns to nan value instead of zero
         )
         if operator == "normed_integral":
             rfield /= h_top - h_bottom
