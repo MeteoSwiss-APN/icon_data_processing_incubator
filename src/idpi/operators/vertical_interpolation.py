@@ -274,7 +274,7 @@ def interpolate_k2theta(
 
     # Interpolate
     # ... prepare interpolation
-    thkm1 = th_field.shift(generalVerticalLevel=1)
+    thkm1 = th_field.shift(generalVerticalLayer=1)
     fkm1 = field.shift(generalVerticalLayer=1)
 
     # ... loop through tc values
