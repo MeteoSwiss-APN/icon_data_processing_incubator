@@ -74,9 +74,16 @@ def init_field_with_vcoord(
     attrs["GRIB_typeOfLevel"] = vcoord.type_of_level
     if "GRIB_NV" in attrs:
         attrs["GRIB_NV"] = 0
+
     # dims
-    sizes = {dim: size for dim, size in parent.sizes.items() if str(dim) in "xy"}
-    sizes[vcoord.type_of_level] = vcoord.size
+    def replace_vertical(items):
+        for dim, size in items:
+            if dim == "generalVerticalLayer":
+                yield vcoord.type_of_level, vcoord.size
+            yield dim, size
+
+    # ... make sure to maintain the ordering of the dims
+    sizes = {dim: size for dim, size in replace_vertical(parent.sizes.items())}
     # coords
     # ... inherit all except for the vertical coordinates
     coords = {c: v for c, v in parent.coords.items() if c != "generalVerticalLayer"}
