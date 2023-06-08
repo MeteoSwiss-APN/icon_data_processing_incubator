@@ -47,21 +47,23 @@ def init_field_with_vcoord(
     Properties except for those related to the vertical coordinates,
     and optionally dtype, are inherited from the parent xarray.DataArray.
 
-    Args:
-        parent (xr.DataArray): parent field
-        vcoord (dict[str, Any]): dictionary specifying new vertical coordinates;
-            expected keys: "typeOfLevel" (string), "values" (list),
-                "NV" (int), "attrs" (dict)
-        fill_value (Any): value the data array of the new field
-            is initialized with
-        dtype (np.dtype, optional): fill value data type; defaults to None (in this case
-            the data type is inherited from the parent field). Defaults to None.
+    Parameters
+    ----------
+    parent : xr.DataArray
+        parent field
+    vcoord: TargetCoordinates
+        target vertical coordinates for the output field
+    fill_value : Any
+        value the data array of the new field is initialized with
+    dtype : np.dtype, optional
+        fill value data type; defaults to None (in this case
+        the data type is inherited from the parent field)
 
-    Raises:
-        KeyError: _description_
-
-    Returns:
-        xr.DataArray: new field
+    Returns
+    -------
+    xr.DataArray
+        new field located at the parent field horizontal coordinates, the target
+        coordinates in the vertical and filled with the given value
 
     """
     # TODO: test that vertical dim of parent is named "generalVerticalLayer"
@@ -73,6 +75,7 @@ def init_field_with_vcoord(
     attrs = parent.attrs.copy()
     attrs["GRIB_typeOfLevel"] = vcoord.type_of_level
     if "GRIB_NV" in attrs:
+        # NV is only non-zero when hybrid coordinates are in use
         attrs["GRIB_NV"] = 0
 
     # dims
