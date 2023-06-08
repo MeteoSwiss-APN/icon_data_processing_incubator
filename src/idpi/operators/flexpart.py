@@ -165,7 +165,10 @@ def fflexpart(ds, istep):
     ds_out["EWSS"].attrs = ds["EWSS"].attrs
 
     ds_out["OMEGA"] = omega_slope(
-        ds["PS"].isel(step=istep), ds["ETADOT"].isel(step=istep), ds["ak"], ds["bk"]
+        ds["PS"].isel(step=istep),
+        ds["ETADOT"].isel(step=istep),
+        ds["ak"].isel(step=istep),
+        ds["bk"].isel(step=istep),
     ).isel(hybrid=slice(39, 137))
 
     return ds_out
