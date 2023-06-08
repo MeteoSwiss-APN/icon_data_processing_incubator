@@ -4,8 +4,8 @@
 # Standard library
 import dataclasses as dc
 from typing import Any
-from typing import Optional
 from typing import Literal
+from typing import Optional
 from typing import Sequence
 
 # Third-party
