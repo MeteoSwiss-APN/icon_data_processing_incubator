@@ -2,7 +2,7 @@
 from numpy.testing import assert_allclose
 
 # First-party
-import idpi.products.ninjo_cosmo_2e_ctrl_k2th as ninjo
+import idpi.products.ninjo_k2th as ninjo
 from idpi import grib_decoder
 
 
@@ -16,7 +16,7 @@ def test_product2(data_dir, fieldextra, grib_defs):
     )
     grib_decoder.load_data(ds, ["HHL", "HSURF"], cdatafile, chunk_size=None)
 
-    observed_mean, observed_at_theta = ninjo.ninjo_cosmo_2e_ctrl_k2th(
+    observed_mean, observed_at_theta = ninjo.ninjo_k2th(
         ds["U"],
         ds["V"],
         ds["W"],
@@ -28,7 +28,7 @@ def test_product2(data_dir, fieldextra, grib_defs):
         ds["HHL"],
     )
 
-    fs_ds = fieldextra("ninjo_cosmo_2e_ctrl_k2th")
+    fs_ds = fieldextra("ninjo_k2th")
     expected = fs_ds.rename({"x_1": "x", "y_1": "y", "z_2": "theta"})
 
     assert_allclose(

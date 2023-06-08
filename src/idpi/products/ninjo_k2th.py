@@ -69,7 +69,7 @@ def _compute_at_theta(
     }
 
 
-def ninjo_cosmo_2e_ctrl_k2th(
+def ninjo_k2th(
     U: xr.DataArray,
     V: xr.DataArray,
     W: xr.DataArray,
