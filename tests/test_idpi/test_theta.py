@@ -6,11 +6,14 @@ import idpi.operators.theta as mtheta
 from idpi import grib_decoder
 
 
-def test_theta(data_dir, fieldextra, grib_defs):
+def test_theta(data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
 
-    ds = {}
-    grib_decoder.load_data(ds, ["P", "T"], datafile, chunk_size=None)
+    ds = grib_decoder.load_cosmo_data(
+        ["P", "T"],
+        [datafile],
+        ref_param="P",
+    )
 
     theta = mtheta.ftheta(ds["P"], ds["T"])
 

@@ -13,7 +13,7 @@ from idpi.operators.vertical_reduction import integrate_k
     "operator,fx_op",
     [("integral", "integ"), ("normed_integral", "norm_integ")],
 )
-def test_integ_z2z(field, k_max, operator, fx_op, data_dir, fieldextra, grib_defs):
+def test_integ_z2z(field, k_max, operator, fx_op, data_dir, fieldextra):
     # modes
     mode = "z2z"
 
@@ -26,9 +26,10 @@ def test_integ_z2z(field, k_max, operator, fx_op, data_dir, fieldextra, grib_def
     cdatafile = data_dir / "lfff00000000c.ch"
 
     # load input data set
-    ds = {}
-    grib_decoder.load_data(ds, [field], datafile, chunk_size=None)
-    grib_decoder.load_data(ds, ["HHL"], cdatafile, chunk_size=None)
+    ds = grib_decoder.load_cosmo_data(
+        [field, "HHL"],
+        [datafile, cdatafile],
+    )
     hhl = ds["HHL"]
     hfl = destagger(hhl, "generalVertical")
     # ATTENTION: attributes are lost in destagger operation

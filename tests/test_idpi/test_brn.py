@@ -6,13 +6,14 @@ import idpi.operators.brn as mbrn
 from idpi import grib_decoder
 
 
-def test_brn(data_dir, fieldextra, grib_defs):
+def test_brn(data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
-    ds = {}
-    grib_decoder.load_data(ds, ["P", "T", "QV", "U", "V"], datafile, chunk_size=None)
-    grib_decoder.load_data(ds, ["HHL", "HSURF"], cdatafile, chunk_size=None)
+    ds = grib_decoder.load_cosmo_data(
+        ["P", "T", "QV", "U", "V", "HHL", "HSURF"],
+        [datafile, cdatafile],
+    )
 
     brn = mbrn.fbrn(
         ds["P"], ds["T"], ds["QV"], ds["U"], ds["V"], ds["HHL"], ds["HSURF"]

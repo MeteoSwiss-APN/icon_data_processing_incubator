@@ -16,7 +16,7 @@ from idpi.operators.vertical_interpolation import interpolate_k2p
         ("linear_in_lnp", "lin_lnp", 1e-5),
     ],
 )
-def test_intpl_hk2p(mode, fx_mode, rtol, data_dir, fieldextra, grib_defs):
+def test_intpl_hk2p(mode, fx_mode, rtol, data_dir, fieldextra):
     # define target coordinates
     tc_values = [300.0, 700.0, 900.0, 1100.0]
     fx_voper_lev = ",".join(str(int(v)) for v in tc_values)
@@ -27,9 +27,10 @@ def test_intpl_hk2p(mode, fx_mode, rtol, data_dir, fieldextra, grib_defs):
     cdatafile = data_dir / "lfff00000000c.ch"
 
     # load input data set
-    ds = {}
-    grib_decoder.load_data(ds, ["P"], datafile, chunk_size=None)
-    grib_decoder.load_data(ds, ["HHL"], cdatafile, chunk_size=None)
+    ds = grib_decoder.load_cosmo_data(
+        ["P", "HHL"],
+        [datafile, cdatafile],
+    )
     hhl = ds["HHL"]
     hfl = destagger(hhl, "generalVertical")
     # ATTENTION: attributes are lost in destagger operation

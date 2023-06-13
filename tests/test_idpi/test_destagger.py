@@ -6,13 +6,14 @@ from idpi import grib_decoder
 from idpi.operators.destagger import destagger
 
 
-def test_destagger(data_dir, fieldextra, grib_defs):
+def test_destagger(data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
-    ds = {}
-    grib_decoder.load_data(ds, ["U", "V"], datafile, chunk_size=None)
-    grib_decoder.load_data(ds, ["HHL"], cdatafile, chunk_size=None)
+    ds = grib_decoder.load_cosmo_data(
+        ["U", "V", "HHL"],
+        [datafile, cdatafile],
+    )
 
     u = destagger(ds["U"], "x")
     v = destagger(ds["V"], "y")

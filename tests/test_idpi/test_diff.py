@@ -8,11 +8,14 @@ from idpi.operators import diff
 from idpi.operators.theta import ftheta
 
 
-def test_masspoint_field(data_dir, grib_defs):
+def test_masspoint_field(data_dir):
     datafile = data_dir / "lfff00000000.ch"
 
-    ds = {}
-    grib_decoder.load_data(ds, ["P", "T"], datafile, chunk_size=None)
+    ds = grib_decoder.load_cosmo_data(
+        ["P", "T"],
+        [datafile],
+        ref_param="P",
+    )
 
     theta = ftheta(ds["P"], ds["T"])
 
@@ -30,11 +33,14 @@ def test_masspoint_field(data_dir, grib_defs):
     assert_allclose(diff.dz(theta), dt_dz)
 
 
-def test_staggered_field(data_dir, grib_defs):
+def test_staggered_field(data_dir):
     datafile = data_dir / "lfff00000000.ch"
 
-    ds = {}
-    grib_decoder.load_data(ds, ["W"], datafile, chunk_size=None)
+    ds = grib_decoder.load_cosmo_data(
+        ["W"],
+        [datafile],
+        ref_param="W",
+    )
 
     w = ds["W"]
     wn = w.to_numpy()

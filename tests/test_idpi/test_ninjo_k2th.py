@@ -6,15 +6,14 @@ import idpi.products.ninjo_k2th as ninjo
 from idpi import grib_decoder
 
 
-def test_product2(data_dir, fieldextra, grib_defs):
+def test_ninjo_k2th(data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
-    ds = {}
-    grib_decoder.load_data(
-        ds, ["U", "V", "W", "P", "T", "QV", "QC", "QI"], datafile, chunk_size=None
+    ds = grib_decoder.load_cosmo_data(
+        ["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"],
+        [datafile, cdatafile],
     )
-    grib_decoder.load_data(ds, ["HHL", "HSURF"], cdatafile, chunk_size=None)
 
     observed_mean, observed_at_theta = ninjo.ninjo_k2th(
         ds["U"],

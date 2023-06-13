@@ -38,8 +38,9 @@ def _compute_pot_vortic(
     rho_tot = f_rho_tot(T, P, QV, QC, QI)
 
     logger.info("Computing terrain following grid deformation factors")
-    dlon = HHL.attrs["GRIB_iDirectionIncrementInDegrees"]
-    dlat = HHL.attrs["GRIB_jDirectionIncrementInDegrees"]
+    geo = HHL.attrs["geography"]
+    dlon = geo["iDirectionIncrementInDegrees"]
+    dlat = geo["jDirectionIncrementInDegrees"]
     deg2rad = np.pi / 180
     total_diff = TotalDiff(dlon * deg2rad, dlat * deg2rad, HHL)
 
