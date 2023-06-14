@@ -39,7 +39,7 @@ namespaces = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"idpi.data" = ["*.yaml"]
+"idpi.data" = ["*.yml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
