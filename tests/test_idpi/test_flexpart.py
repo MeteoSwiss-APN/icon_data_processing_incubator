@@ -1,6 +1,5 @@
 # Standard library
 import os
-import pathlib
 import shutil
 import subprocess
 from importlib.resources import files
@@ -14,7 +13,6 @@ import xarray as xr
 
 # First-party
 import idpi.operators.flexpart as flx
-from idpi.system_definition import root_dir
 
 
 @pytest.mark.ifs
