@@ -1,5 +1,7 @@
 """Flexpart operators."""
 
+import io
+
 # Third-party
 import cfgrib  # type: ignore
 import numpy as np
@@ -14,15 +16,14 @@ from idpi.operators.time_operators import time_rate
 class ifs_data_loader:
     """Class for loading data from ifs and convert conventions to COSMO."""
 
-    def __init__(self, field_mapping_file: str):
+    def __init__(self, field_mapping_file: io.TextIOWrapper):
         """Initialize the data loader.
 
         Args:
             field_mapping_file: mappings between IFS and internal var names
 
         """
-        with open(field_mapping_file) as f:
-            self._field_map = yaml.safe_load(f)
+        self._field_map = yaml.safe_load(field_mapping_file)
 
     def open_ifs_to_cosmo(
         self, datafile: str, fields: list[str], load_pv: bool = False

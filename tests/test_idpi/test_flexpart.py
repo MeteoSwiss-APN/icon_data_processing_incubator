@@ -3,6 +3,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+from importlib.resources import files
 
 # Third-party
 import eccodes  # type: ignore
@@ -47,7 +48,7 @@ def test_flexpart():
     )
 
     loader = flx.ifs_data_loader(
-        (pathlib.Path(root_dir) / ".." / "share" / "field_mappings.yml").resolve()
+        files("idpi.data").joinpath("field_mappings.yml").open()
     )
     ds = flx.load_flexpart_data(constants + inputf, loader, datafile)
 
