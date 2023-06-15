@@ -141,7 +141,7 @@ def fflexpart(ds, istep):
         "CLCT",
         "W_SNOW",
     ):
-        ds_out[field] = ds[field].isel(step=istep)
+        ds_out[field] = ds[field].isel(step=istep).expand_dims(dim="step")
 
     ds_out["TOT_CON"] = time_rate(
         ds["TOT_CON"].isel(step=slice(istep - 1, istep + 1)), np.timedelta64(1, "h")
