@@ -51,8 +51,7 @@ def fieldextra(tmp_path, data_dir, template_env, fieldextra_executable):
 
         if isinstance(hh, int):
             return xr.open_dataset(tmp_path / f"{hh:02d}_{field_name}.nc")
-        for h in hh:
-            yield xr.open_dataset(tmp_path / f"{h:02d}_{field_name}.nc")
+        return [xr.open_dataset(tmp_path / f"{h:02d}_{field_name}.nc") for h in hh]
 
     return f
 
