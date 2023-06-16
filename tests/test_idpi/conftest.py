@@ -71,4 +71,7 @@ def grib_defs():
     for path in paths:
         assert path.exists(), f"{path} does not exist"
     defs_path = ":".join(map(str, paths))
+    restore = eccodes.codes_definition_path()
     eccodes.codes_set_definitions_path(defs_path)
+    yield
+    eccodes.codes_set_definitions_path(restore)
