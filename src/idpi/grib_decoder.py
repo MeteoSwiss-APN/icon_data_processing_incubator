@@ -67,36 +67,46 @@ def load_data(
     hcoords = None
     metadata = {}
     level_types = {}
-    data: dict[str, dict[int, np.ndarray]] = {}
-    for f in fs.sel(param=params):
-        param = f.metadata("param")
-        levels = data.setdefault(param, {})
-        levels[f.metadata("level")] = f.to_numpy(dtype=np.float32)
+    data: dict[str, dict[tuple[int, int], np.ndarray]] = {}
+    for field in fs.sel(param=params):
+        param = field.metadata("param")
+        field_map = data.setdefault(param, {})
+        field_map[field.metadata("step", "level")] = field.to_numpy(dtype=np.float32)
 
         if param not in level_types:
-            level_types[param] = f.metadata("typeOfLevel")
+            level_types[param] = field.metadata("typeOfLevel")
 
         if param not in metadata:
-            metadata[param] = f.metadata(
+            metadata[param] = field.metadata(
                 namespace=["ls", "geography", "parameter", "time"]
             )
 
         if hcoords is None and param == ref_param:
             hcoords = {
-                dim: (("y", "x"), values) for dim, values in f.to_points().items()
+                dim: (("y", "x"), values) for dim, values in field.to_points().items()
             }
 
     if not set(params) == data.keys():
-        raise RuntimeError("Not all parameters were loaded")
+        raise RuntimeError(f"Missing params: {set(params) - data.keys()}")
+
+    shapes = {}
+    for param, field_map in data.items():
+        steps, levels = zip(*field_map)
+        n_steps = len(set(steps))
+        n_levels = len(set(levels))
+        ny, nx = next(iter(field_map.values())).shape
+        shapes[param] = n_steps, n_levels, ny, nx
 
     return {
         param: xr.DataArray(
-            np.array([levels.pop(k) for k in sorted(levels)]),
+            np.array([field_map.pop(key) for key in sorted(field_map)]).reshape(
+                shapes[param]
+            ),
             coords=hcoords,
-            dims=[level_types[param], "y", "x"],
+            dims=["step", level_types[param], "y", "x"],
             attrs=metadata[param],
         )
-        for param, levels in data.items()
+        for param, field_map in data.items()
     }
 
 
