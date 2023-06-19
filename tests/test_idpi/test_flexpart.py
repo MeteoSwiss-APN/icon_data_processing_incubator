@@ -16,6 +16,7 @@ def data_dir(data_dir):
     return Path("/project/s83c/rz+/icon_data_processing_incubator/data/flexpart/")
 
 
+@pytest.mark.ifs
 def test_flexpart(data_dir, fieldextra):
     datafile = data_dir / "efsf00000000"
     constants = ("FIS", "FR_LAND", "SDOR")
