@@ -32,6 +32,22 @@ def cosmo_grib_defs():
         eccodes.codes_set_definitions_path(restore)
 
 
+def _is_ensemble(field) -> bool:
+    try:
+        return field.metadata("typeOfEnsembleForecast") == 192
+    except KeyError:
+        return False
+
+
+def _gather_coords(field_map, dims):
+    coord_values = zip(*field_map)
+    unique = (sorted(set(values)) for values in coord_values)
+    coords = {dim: c for dim, c in zip(dims[:-2], unique)}
+    ny, nx = next(iter(field_map.values())).shape
+    shape = tuple(len(v) for v in coords.values()) + (ny, nx)
+    return coords, shape
+
+
 def load_data(
     params: list[str], datafiles: list[Path], ref_param: str
 ) -> dict[str, xr.DataArray]:
@@ -66,15 +82,20 @@ def load_data(
 
     hcoords = None
     metadata = {}
-    level_types = {}
-    data: dict[str, dict[tuple[int, int], np.ndarray]] = {}
+    dims: dict[str, tuple[str, ...]] = {}
+    data: dict[str, dict[tuple[int, ...], np.ndarray]] = {}
     for field in fs.sel(param=params):
         param = field.metadata("param")
         field_map = data.setdefault(param, {})
-        field_map[field.metadata("step", "level")] = field.to_numpy(dtype=np.float32)
+        dim_keys = (
+            ("perturbationNumber", "step", "level")
+            if _is_ensemble(field)
+            else ("step", "level")
+        )
+        field_map[field.metadata(*dim_keys)] = field.to_numpy(dtype=np.float32)
 
-        if param not in level_types:
-            level_types[param] = field.metadata("typeOfLevel")
+        if param not in dims:
+            dims[param] = dim_keys[:-1] + (field.metadata("typeOfLevel"), "y", "x")
 
         if param not in metadata:
             metadata[param] = field.metadata(
@@ -89,25 +110,16 @@ def load_data(
     if not set(params) == data.keys():
         raise RuntimeError(f"Missing params: {set(params) - data.keys()}")
 
-    shapes = {}
+    result = {}
     for param, field_map in data.items():
-        steps, levels = zip(*field_map)
-        n_steps = len(set(steps))
-        n_levels = len(set(levels))
-        ny, nx = next(iter(field_map.values())).shape
-        shapes[param] = n_steps, n_levels, ny, nx
-
-    return {
-        param: xr.DataArray(
-            np.array([field_map.pop(key) for key in sorted(field_map)]).reshape(
-                shapes[param]
-            ),
-            coords=hcoords,
-            dims=["step", level_types[param], "y", "x"],
+        coords, shape = _gather_coords(field_map, dims[param])
+        result[param] = xr.DataArray(
+            np.array([field_map.pop(key) for key in sorted(field_map)]).reshape(shape),
+            coords=coords | hcoords,
+            dims=dims[param],
             attrs=metadata[param],
         )
-        for param, field_map in data.items()
-    }
+    return result
 
 
 def load_cosmo_data(
