@@ -18,10 +18,9 @@ def test_hzerocl(data_dir, fieldextra):
     hzerocl = fhzerocl(ds["T"], ds["HHL"])
 
     fs_ds = fieldextra("hzerocl")
-    hzerocl_ref = fs_ds["HZEROCL"].rename({"x_1": "x", "y_1": "y"}).squeeze()
 
     assert_allclose(
-        hzerocl_ref,
+        fs_ds["HZEROCL"],
         hzerocl,
         rtol=1e-6,
         atol=1e-5,

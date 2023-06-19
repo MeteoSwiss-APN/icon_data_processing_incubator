@@ -44,11 +44,5 @@ def test_intpl_hk2p(mode, fx_mode, rtol, data_dir, fieldextra):
         voper_lev=fx_voper_lev,
     )
 
-    h_ref = (
-        fx_ds["HEIGHT"]
-        .rename({"x_1": "x", "y_1": "y", "z_1": "isobaricInPa", "epsd_1": "number"})
-        .squeeze()
-    )
-
     # compare numerical results
-    assert_allclose(h_ref, hpl, rtol=rtol, atol=0, equal_nan=True)
+    assert_allclose(fx_ds["HEIGHT"], hpl, rtol=rtol, atol=0, equal_nan=True)

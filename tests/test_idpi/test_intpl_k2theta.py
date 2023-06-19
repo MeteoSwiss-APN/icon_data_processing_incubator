@@ -39,11 +39,6 @@ def test_intpl_k2theta(mode, data_dir, fieldextra):
         voper_lev=fx_voper_lev,
         voper_lev_units=tc_units,
     )
-    t_ref = (
-        fx_ds["T"]
-        .rename({"x_1": "x", "y_1": "y", "z_1": "theta", "epsd_1": "number"})
-        .squeeze()
-    )
 
     # compare numerical results
-    assert_allclose(t_ref, t, rtol=1e-4, atol=1e-4, equal_nan=True)
+    assert_allclose(fx_ds["T"], t, rtol=1e-4, atol=1e-4, equal_nan=True)

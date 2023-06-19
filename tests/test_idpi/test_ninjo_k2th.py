@@ -28,38 +28,37 @@ def test_ninjo_k2th(data_dir, fieldextra):
     )
 
     fs_ds = fieldextra("ninjo_k2th")
-    expected = fs_ds.rename({"x_1": "x", "y_1": "y", "z_2": "theta"})
 
     assert_allclose(
+        fs_ds["POT_VORTIC_MEAN"],
         observed_mean,
-        expected["POT_VORTIC_MEAN"].squeeze(drop=True),
         atol=1e-6,
     )
 
     assert_allclose(
+        fs_ds["POT_VORTIC_AT_THETA"],
         observed_at_theta["pot_vortic"],
-        expected["POT_VORTIC_AT_THETA"].squeeze(drop=True),
         atol=1e-9,
         rtol=1e-5,
     )
 
     assert_allclose(
+        fs_ds["P"],
         observed_at_theta["p"],
-        expected["P"].squeeze(drop=True),
         atol=1e-3,
         rtol=1e-4,
     )
 
     assert_allclose(
+        fs_ds["U"],
         observed_at_theta["u"],
-        expected["U"].squeeze(drop=True),
         atol=1e-9,
         rtol=1e-5,
     )
 
     assert_allclose(
+        fs_ds["V"],
         observed_at_theta["v"],
-        expected["V"].squeeze(drop=True),
         atol=5e-4,
         rtol=1e-4,
     )

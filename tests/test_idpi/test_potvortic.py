@@ -32,13 +32,10 @@ def test_pv(data_dir, fieldextra):
     observed = pv.fpotvortic(ds["U"], ds["V"], ds["W"], theta, rho_tot, total_diff)
 
     fs_ds = fieldextra("POT_VORTIC")
-    expected = fs_ds.rename(
-        {"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"}
-    ).squeeze(drop=True)
 
     assert_allclose(
+        fs_ds["POT_VORTIC"],
         observed,
-        expected["POT_VORTIC"],
         rtol=1e-4,
         atol=1e-8,
     )

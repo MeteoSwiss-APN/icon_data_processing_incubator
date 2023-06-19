@@ -17,6 +17,6 @@ def test_thetav(data_dir, fieldextra):
 
     thetav = mthetav.fthetav(ds["P"], ds["T"], ds["QV"])
 
-    fs_ds = fieldextra("THETAV").squeeze()
+    fs_ds = fieldextra("THETAV")
 
     assert_allclose(fs_ds["THETA_V"], thetav, rtol=1e-6)

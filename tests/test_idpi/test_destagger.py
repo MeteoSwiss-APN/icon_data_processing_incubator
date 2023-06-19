@@ -20,10 +20,7 @@ def test_destagger(data_dir, fieldextra):
     hfl = destagger(ds["HHL"], "generalVertical")
 
     fs_ds = fieldextra("destagger")
-    fields = ["U", "V", "HFL"]
-    name_map = {"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"}
-    ref = {k: fs_ds[k].rename(name_map).squeeze() for k in fields}
 
-    assert_allclose(ref["U"], u, rtol=1e-12, atol=1e-9, equal_nan=True)
-    assert_allclose(ref["V"], v, rtol=1e-12, atol=1e-9, equal_nan=True)
-    assert_allclose(ref["HFL"], hfl, rtol=1e-12, atol=1e-9, equal_nan=True)
+    assert_allclose(fs_ds["U"], u, rtol=1e-12, atol=1e-9)
+    assert_allclose(fs_ds["V"], v, rtol=1e-12, atol=1e-9)
+    assert_allclose(fs_ds["HFL"], hfl, rtol=1e-12, atol=1e-9)

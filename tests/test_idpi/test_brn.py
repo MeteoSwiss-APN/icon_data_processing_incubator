@@ -20,10 +20,5 @@ def test_brn(data_dir, fieldextra):
     )
 
     fs_ds = fieldextra("BRN")
-    brn_ref = (
-        fs_ds["BRN"]
-        .rename({"x_1": "x", "y_1": "y", "z_1": "generalVerticalLayer"})
-        .squeeze()
-    )
 
-    assert_allclose(brn_ref, brn, rtol=5e-3, atol=5e-2, equal_nan=True)
+    assert_allclose(fs_ds["BRN"], brn, rtol=5e-3, atol=5e-2)

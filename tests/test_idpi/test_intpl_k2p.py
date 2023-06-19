@@ -35,11 +35,6 @@ def test_intpl_k2p(mode, fx_mode, atol, rtol, data_dir, fieldextra):
     t = interpolate_k2p(ds["T"], mode, ds["P"], tc_values, tc_units)
 
     fx_ds = fieldextra("intpl_k2p", mode=fx_mode, voper_lev=fx_voper_lev)
-    t_ref = (
-        fx_ds["T"]
-        .rename({"x_1": "x", "y_1": "y", "z_1": "isobaricInPa", "epsd_1": "number"})
-        .squeeze()
-    )
 
     # compare numerical results
-    assert_allclose(t_ref, t, rtol=rtol, atol=atol, equal_nan=True)
+    assert_allclose(fx_ds["T"], t, rtol=rtol, atol=atol, equal_nan=True)

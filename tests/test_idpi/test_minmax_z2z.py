@@ -55,13 +55,9 @@ def test_minmax_z2z(operator, fx_op, field, layer, data_dir, fieldextra):
         ktop=k_top,
     )
 
-    f_minmax_ref = (
-        fx_ds[field].rename({"x_1": "x", "y_1": "y", "epsd_1": "number"}).squeeze()
-    )
-
     # compare numerical results
     assert_allclose(
-        f_minmax_ref,
+        fx_ds[field],
         f_minmax,
         rtol=1e-6,
         atol=1e-5,

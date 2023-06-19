@@ -32,7 +32,7 @@ def test_integ_sfc2z(field, k_max, operator, fx_op, atol, rtol, data_dir, fielde
     hhl = ds["HHL"]
     hfl = destagger(hhl, "generalVertical")
     hsurf = ds["HSURF"]
-    h_bounds = [hsurf.squeeze(), hfl[k_top - 1]]
+    h_bounds = [hsurf.squeeze(), hfl.isel(generalVerticalLayer=k_top - 1)]
 
     # call integral operator
     f_bar = integrate_k(ds[field], operator, mode, hhl, h_bounds)
@@ -45,13 +45,10 @@ def test_integ_sfc2z(field, k_max, operator, fx_op, atol, rtol, data_dir, fielde
         ktop=k_top,
         kmax=k_max,
     )
-    f_bar_ref = (
-        fx_ds[field].rename({"x_1": "x", "y_1": "y", "epsd_1": "number"}).squeeze()
-    )
 
     # compare numerical results
     assert_allclose(
-        f_bar_ref,
+        fx_ds[field],
         f_bar,
         rtol=rtol,
         atol=atol,

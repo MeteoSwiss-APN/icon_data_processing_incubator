@@ -17,6 +17,6 @@ def test_theta(data_dir, fieldextra):
 
     theta = mtheta.ftheta(ds["P"], ds["T"])
 
-    fs_ds = fieldextra("THETA").squeeze()
+    fs_ds = fieldextra("THETA")
 
     assert_allclose(fs_ds["THETA"], theta, rtol=1e-6)
