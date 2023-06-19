@@ -51,9 +51,10 @@ addopts = [
     # "--cov=idpi",
     # "--mypy",
 ]
-markers =
-  ifs: marks tests that use IFS grib definitions
-  cosmo: marks tests that use COSMO grib definitions
+markers = [
+  "ifs",  # marks tests that use IFS grib definitions
+  "cosmo",  # marks tests that use COSMO grib definitions
+]
 
 [tool.black]
 
