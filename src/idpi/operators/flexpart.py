@@ -9,6 +9,7 @@ import yaml
 # First-party
 from idpi.operators.omega_slope import omega_slope
 from idpi.operators.time_operators import time_rate
+from idpi import grib_decoder
 
 
 class ifs_data_loader:
@@ -36,35 +37,12 @@ class ifs_data_loader:
         """
         ds = {}
 
-        read_keys = [
-            "edition",
-            "productDefinitionTemplateNumber",
-            "uvRelativeToGrid",
-            "resolutionAndComponentFlags",
-            "section4Length",
-            "PVPresent",
-            "productionStatusOfProcessedData",
-        ]
-        if load_pv:
-            read_keys.append("pv")
+        fields_ = [self._field_map[f]["ifs"]["name"] for f in fields]
 
-        ifs_multi_ds = cfgrib.open_datasets(
-            datafile,
-            backend_kwargs={
-                "read_keys": read_keys,
-                "indexpath": "",
-            },
-            encode_cf=("time", "geography", "vertical"),
-        )
+        ifs_multi_ds = grib_decoder.load_data(fields_, [datafile], ref_param = "t")
 
         for f in fields:
-            ds[f] = self._get_da(self._field_map[f]["ifs"]["name"], ifs_multi_ds)
-            if ds[f].GRIB_edition == 1:
-                # Somehow grib1 loads a perturbationNumber=0 which sets a 'number'
-                # coordinate. That will force in cfgrib setting the
-                # productDefinitionTemplateNumber to 1
-                # https://github.com/ecmwf/cfgrib/blob/27071067bcdd7505b1abbcb2cea282cf23b36598/cfgrib/xarray_to_grib.py#L123
-                ds[f] = ds[f].drop_vars("number")
+            ds[f] = ifs_multi_ds[self._field_map[f]["ifs"]["name"]]
 
             if "cosmo" in self._field_map[f]:
                 ufact = self._field_map[f]["cosmo"].get("unit_factor")
@@ -74,17 +52,10 @@ class ifs_data_loader:
 
         return ds
 
-    def _get_da(self, field, dss):
-        for ds in dss:
-            if field in ds:
-                return ds[field]
 
 
 def load_flexpart_data(fields, loader, datafile):
-    fields_ = list(fields)
-    fields_.remove("U")
-    ds = loader.open_ifs_to_cosmo(datafile, fields_)
-    ds.update(loader.open_ifs_to_cosmo(datafile, ["U"], load_pv=True))
+    ds = loader.open_ifs_to_cosmo(datafile, fields)
     append_pv_raw(ds)
 
     ds["U"] = ds["U"].sel(hybrid=slice(40, 137))
@@ -98,28 +69,26 @@ def load_flexpart_data(fields, loader, datafile):
 
 def append_pv_raw(ds):
     """Compute ak, bk (weights that define the vertical coordinate) from pv."""
-    NV = ds["U"].GRIB_NV
+    NV = ds["U"].NV
 
     ds["ak"] = xr.DataArray(
-        ds["U"].GRIB_pv[0 : int(NV / 2)], dims=("hybrid_pv")
+        ds["U"].pv[0 : int(NV / 2)], dims=("hybrid_pv")
     ).assign_coords(
         {
             "hybrid_pv": np.append(
                 ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]
             ),
-            "time": ds["ETADOT"].time,
-            "step": ds["ETADOT"].step,
+            "step": ds["ETADOT"].step.values[0]
         }
     )
     ds["bk"] = xr.DataArray(
-        ds["U"].GRIB_pv[int(NV / 2) : NV], dims=("hybrid_pv")
+        ds["U"].pv[int(NV / 2) : NV], dims=("hybrid_pv")
     ).assign_coords(
         {
             "hybrid_pv": np.append(
                 ds["ETADOT"].hybrid.data, [len(ds["ETADOT"].hybrid) + 1]
             ),
-            "time": ds["ETADOT"].time,
-            "step": ds["ETADOT"].step,
+            "step": ds["ETADOT"].step.values[0]
         }
     )
 

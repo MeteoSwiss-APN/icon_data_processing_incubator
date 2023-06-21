@@ -2,6 +2,7 @@
 # Third-party
 import numpy as np
 import xarray as xr
+import pandas as pd
 
 
 def time_rate(var: xr.DataArray, dtime: np.timedelta64):
@@ -15,7 +16,7 @@ def time_rate(var: xr.DataArray, dtime: np.timedelta64):
         dtime: delta time of the desired output time rate
 
     """
-    coord = var.coords["step"]
+    coord = xr.apply_ufunc(pd.to_datetime, var.coords["step"], kwargs={"unit": "h"})              
     return (
         var.isel(step=slice(1, None))
         - var.isel(step=slice(0, -1)).assign_coords(
