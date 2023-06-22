@@ -59,7 +59,7 @@ def test_total_diff(data_dir):
     ds = grib_decoder.load_cosmo_data(["P", "T"], [datafile], ref_param="P")
     theta = ftheta(ds["P"], ds["T"])
 
-    padding = [(0,0)] * 2 + [(1, 1)] * 3
+    padding = [(0, 0)] * 2 + [(1, 1)] * 3
     tp = np.pad(theta, padding, mode="edge")
     dt_dx = 0.5 * (tp[..., 1:-1, 1:-1, 2:] - tp[..., 1:-1, 1:-1, :-2])
     dt_dy = 0.5 * (tp[..., 1:-1, 2:, 1:-1] - tp[..., 1:-1, :-2, 1:-1])
