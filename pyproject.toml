@@ -25,6 +25,10 @@ requires-python = ">=3.10"
 authors = [
     {name="Tobias Wicky", email="tobias.wicky@meteoswiss.ch"},
 ]
+dependencies = [
+  'earthkit-data',
+  'xarray'
+]
 
 [project.urls]
 source = "https://github.com/MeteoSwiss-APN/icon-data-processing-incubator"
