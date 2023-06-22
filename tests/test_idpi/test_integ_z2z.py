@@ -58,7 +58,7 @@ def test_integ_z2z(field, k_max, operator, fx_op, data_dir, fieldextra):
     # compare numerical results
     assert_allclose(
         f_bar_ref,
-        f_bar,
+        f_bar.squeeze(),  # fx has no eps nor step dims
         rtol=1e-6,
         atol=1e-5,
         equal_nan=True,

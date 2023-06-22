@@ -30,7 +30,7 @@ def test_ninjo_k2th(data_dir, fieldextra):
     fs_ds = fieldextra("ninjo_k2th")
 
     assert_allclose(
-        fs_ds["POT_VORTIC_MEAN"],
+        fs_ds["POT_VORTIC_MEAN"].isel(z_1=0),
         observed_mean,
         atol=1e-6,
     )

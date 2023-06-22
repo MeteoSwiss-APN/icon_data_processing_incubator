@@ -57,7 +57,7 @@ def test_minmax_z2z(operator, fx_op, field, layer, data_dir, fieldextra):
 
     # compare numerical results
     assert_allclose(
-        fx_ds[field],
+        fx_ds[field].isel(z_1=0),
         f_minmax,
         rtol=1e-6,
         atol=1e-5,

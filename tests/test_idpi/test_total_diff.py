@@ -26,7 +26,7 @@ def test_total_diff(data_dir):
 
     inv_dlon = 1 / dlon
     inv_dlat = 1 / dlat
-    hhlp = np.pad(hhl, ((0, 0), (1, 1), (1, 1)), constant_values=np.nan)
+    hhlp = np.pad(np.squeeze(hhl), ((0, 0), (1, 1), (1, 1)), constant_values=np.nan)
 
     sqrtg_r_s = 1 / (hhl[:-1] - hhl[1:])
     dzeta_dlam = (

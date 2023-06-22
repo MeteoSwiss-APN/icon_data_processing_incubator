@@ -48,7 +48,7 @@ def test_integ_sfc2z(field, k_max, operator, fx_op, atol, rtol, data_dir, fielde
 
     # compare numerical results
     assert_allclose(
-        fx_ds[field],
+        fx_ds[field].isel(z_1=0),
         f_bar,
         rtol=rtol,
         atol=atol,

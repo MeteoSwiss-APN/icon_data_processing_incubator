@@ -23,4 +23,4 @@ def test_destagger(data_dir, fieldextra):
 
     assert_allclose(fs_ds["U"], u, rtol=1e-12, atol=1e-9)
     assert_allclose(fs_ds["V"], v, rtol=1e-12, atol=1e-9)
-    assert_allclose(fs_ds["HFL"], hfl, rtol=1e-12, atol=1e-9)
+    assert_allclose(fs_ds["HFL"], hfl.isel(step=0), rtol=1e-12, atol=1e-9)
