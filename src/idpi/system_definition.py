@@ -3,13 +3,6 @@
 import os
 import pathlib
 
-# The dict access was chosen here because it should fail if FIELDEXTRA_PATH is not set
-try:
-    fieldextra_executable = os.environ["FIELDEXTRA_PATH"]
-except KeyError:
-    print("The FIELDEXTRA_PATH is not set, exiting")
-    raise
-
 try:
     input_data_directory = os.environ["INPUT_DATA_DIR"]
 except KeyError:
