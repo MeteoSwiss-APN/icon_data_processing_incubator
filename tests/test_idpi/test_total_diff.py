@@ -19,14 +19,14 @@ def test_total_diff(data_dir):
 
     deg2rad = np.pi / 180
 
-    hhl = ds["HHL"].values
+    hhl = ds["HHL"].squeeze().values
     geo = ds["HHL"].attrs["geography"]
     dlon = geo["iDirectionIncrementInDegrees"] * deg2rad
     dlat = geo["jDirectionIncrementInDegrees"] * deg2rad
 
     inv_dlon = 1 / dlon
     inv_dlat = 1 / dlat
-    hhlp = np.pad(np.squeeze(hhl), ((0, 0), (1, 1), (1, 1)), constant_values=np.nan)
+    hhlp = np.pad(hhl, ((0, 0), (1, 1), (1, 1)), constant_values=np.nan)
 
     sqrtg_r_s = 1 / (hhl[:-1] - hhl[1:])
     dzeta_dlam = (
@@ -48,7 +48,7 @@ def test_total_diff(data_dir):
         )
     )
 
-    total_diff = TotalDiff(dlon, dlat, ds["HHL"])
+    total_diff = TotalDiff(dlon, dlat, ds["HHL"].squeeze())
 
     assert_allclose(total_diff.sqrtg_r_s.values, sqrtg_r_s)
     assert_allclose(total_diff.dzeta_dlam.values, dzeta_dlam, rtol=1e-6)
@@ -59,12 +59,13 @@ def test_total_diff(data_dir):
     ds = grib_decoder.load_cosmo_data(["P", "T"], [datafile], ref_param="P")
     theta = ftheta(ds["P"], ds["T"])
 
-    tp = np.pad(theta, 1, mode="edge")
-    dt_dx = 0.5 * (tp[1:-1, 1:-1, 2:] - tp[1:-1, 1:-1, :-2])
-    dt_dy = 0.5 * (tp[1:-1, 2:, 1:-1] - tp[1:-1, :-2, 1:-1])
-    dt_dz = 0.5 * (tp[2:, 1:-1, 1:-1] - tp[:-2, 1:-1, 1:-1])
-    dt_dz[0] *= 2
-    dt_dz[-1] *= 2
+    padding = [(0,0)] * 2 + [(1, 1)] * 3
+    tp = np.pad(theta, padding, mode="edge")
+    dt_dx = 0.5 * (tp[..., 1:-1, 1:-1, 2:] - tp[..., 1:-1, 1:-1, :-2])
+    dt_dy = 0.5 * (tp[..., 1:-1, 2:, 1:-1] - tp[..., 1:-1, :-2, 1:-1])
+    dt_dz = 0.5 * (tp[..., 2:, 1:-1, 1:-1] - tp[..., :-2, 1:-1, 1:-1])
+    dt_dz[..., 0, :, :] *= 2
+    dt_dz[..., -1, :, :] *= 2
 
     dt_dlam = dt_dx / dlon + dzeta_dlam * dt_dz
     dt_dphi = dt_dy / dlat + dzeta_dphi * dt_dz
