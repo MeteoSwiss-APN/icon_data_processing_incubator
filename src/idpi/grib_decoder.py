@@ -3,6 +3,7 @@
 import os
 from contextlib import contextmanager
 from pathlib import Path
+from importlib.resources import files
 
 # Third-party
 import earthkit.data  # type: ignore

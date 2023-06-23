@@ -5,6 +5,7 @@ import cfgrib  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
+from importlib.resources import files
 
 # First-party
 from idpi.operators.omega_slope import omega_slope
@@ -15,15 +16,16 @@ from idpi import grib_decoder
 class ifs_data_loader:
     """Class for loading data from ifs and convert conventions to COSMO."""
 
-    def __init__(self, field_mapping_file: str):
+    def __init__(self):
         """Initialize the data loader.
 
         Args:
             field_mapping_file: mappings between IFS and internal var names
 
         """
-        with open(field_mapping_file) as f:
-            self._field_map = yaml.safe_load(f)
+
+        mapping_path = files("idpi.data").joinpath("field_mappings.yml")
+        self._field_map = yaml.safe_load(mapping_path.open())
 
     def open_ifs_to_cosmo(
         self, datafile: str, fields: list[str], load_pv: bool = False
