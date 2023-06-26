@@ -11,7 +11,22 @@ import earthkit.data  # type: ignore
 import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
-import yaml
+import yaml  # type: ignore
+
+
+DIM_MAP = {
+    "level": "z",
+    "perturbationNumber": "eps",
+    "step": "time",
+}
+VCOORD_TYPE = {
+    "hybrid": ("hybrid", 0.0),
+    "isobaricInPa": ("pressure", 0.0),
+    "generalVertical": ("model_level", -0.5),
+    "generalVerticalLayer": ("model_level", 0.0),
+    "surface": ("surface", 0.0),
+}
+_ifs_allowed = True
 
 
 @contextmanager
@@ -64,7 +79,7 @@ def _gather_tcoords(time_meta):
         if time is None:
             time = _parse_datetime(tm["dataDate"], tm["dataTime"])
 
-    return {"valid_time": ("step", valid_time), "time": time}
+    return {"valid_time": ("time", valid_time), "ref_time": time}
 
 
 def _extract_pv(pv):
@@ -72,9 +87,25 @@ def _extract_pv(pv):
         return {}
     i = len(pv) // 2
     return {
-        "ak": xr.DataArray(pv[:i], dims="hybrid"),
-        "bk": xr.DataArray(pv[i:], dims="hybrid"),
+        "ak": xr.DataArray(pv[:i], dims="z"),
+        "bk": xr.DataArray(pv[i:], dims="z"),
     }
+
+
+def _update_origin(metadata, ref_param):
+    x0_key = "longitudeOfFirstGridPointInDegrees"
+    y0_key = "latitudeOfFirstGridPointInDegrees"
+    ref_geo = metadata[ref_param]["geography"]
+    x0 = ref_geo[x0_key]
+    y0 = ref_geo[y0_key]
+    for m in metadata.values():
+        geo = m["geography"]
+        dx = geo["iDirectionIncrementInDegrees"]
+        dy = geo["jDirectionIncrementInDegrees"]
+        m["origin"] |= {
+            "x": np.round((geo[x0_key] - x0) / dx, 1),
+            "y": np.round((geo[y0_key] - y0) / dy, 1),
+        }
 
 
 def load_data(
@@ -112,7 +143,9 @@ def load_data(
     fs = earthkit.data.from_source("file", [str(p) for p in datafiles])
 
     if ref_param not in params:
-        raise ValueError(f"{ref_param} must be in {params}")
+        raise ValueError(f"{ref_param=} must be in {params=}")
+    if extract_pv is not None and extract_pv not in params:
+        raise ValueError(f"If set, {extract_pv=} must be in {params=}")
 
     hcoords = None
     pv = None
@@ -136,10 +169,16 @@ def load_data(
             time_meta.setdefault(param, {})[step] = field.metadata(namespace="time")
 
         if param not in dims:
-            dims[param] = dim_keys[:-1] + (field.metadata("typeOfLevel"), "y", "x")
+            dims[param] = tuple(DIM_MAP[d] for d in dim_keys) + ("y", "x")
 
         if param not in metadata:
             metadata[param] = field.metadata(namespace=["geography", "parameter"])
+            level_type = field.metadata("typeOfLevel")
+            vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
+            metadata[param] |= {
+                "vcoord_type": vcoord_type,
+                "origin": {"z": zshift},
+            }
 
         if hcoords is None and param == ref_param:
             hcoords = {
@@ -152,6 +191,8 @@ def load_data(
 
     if not set(params) == data.keys():
         raise RuntimeError(f"Missing params: {set(params) - data.keys()}")
+
+    _update_origin(metadata, ref_param)
 
     result = {}
     for param, field_map in data.items():
@@ -200,6 +241,9 @@ def load_cosmo_data(
         Mapping of fields by param name
 
     """
+    global _ifs_allowed
+    _ifs_allowed = False  # due to incompatible data in cache
+
     with cosmo_grib_defs():
         return load_data(params, datafiles, ref_param, extract_pv)
 
@@ -238,6 +282,9 @@ def load_ifs_data(
         Mapping of fields by param name
 
     """
+    if not _ifs_allowed:
+        raise RuntimeError("GRIB cache contains cosmo defs, respawn process to clear.")
+
     mapping_path = files("idpi.data").joinpath("field_mappings.yml")
     mapping = yaml.safe_load(mapping_path.open())
     missing = set(params) - mapping.keys()
