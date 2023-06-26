@@ -28,7 +28,7 @@ def fbrn(p, t, qv, u, v, hhl, hsurf):
 
     brn = (
         pc_g
-        * (hfl - hsurf.isel(z=0, drop=True))
+        * (hfl - hsurf)
         * (thetav - thetav.isel(z=nlevels - 1))
         * nlevels_xr
         / (thetav_sum * (u_**2 + v_**2))

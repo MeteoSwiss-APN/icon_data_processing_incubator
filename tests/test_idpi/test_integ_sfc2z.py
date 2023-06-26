@@ -32,7 +32,7 @@ def test_integ_sfc2z(field, k_max, operator, fx_op, atol, rtol, data_dir, fielde
     hhl = ds["HHL"]
     hfl = destagger(hhl, "z")
     hsurf = ds["HSURF"]
-    h_bounds = [hsurf.isel(z=0, drop=True), hfl.isel(z=k_top - 1)]
+    h_bounds = [hsurf, hfl.isel(z=k_top - 1)]
 
     # call integral operator
     f_bar = integrate_k(ds[field], operator, mode, hhl, h_bounds)

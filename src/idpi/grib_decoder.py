@@ -20,10 +20,10 @@ DIM_MAP = {
     "step": "time",
 }
 VCOORD_TYPE = {
-    "hybrid": ("hybrid", 0.0),
-    "isobaricInPa": ("pressure", 0.0),
     "generalVertical": ("model_level", -0.5),
     "generalVerticalLayer": ("model_level", 0.0),
+    "hybrid": ("hybrid", 0.0),
+    "isobaricInPa": ("pressure", 0.0),
     "surface": ("surface", 0.0),
 }
 _ifs_allowed = True
@@ -96,14 +96,14 @@ def _update_origin(metadata, ref_param):
     x0_key = "longitudeOfFirstGridPointInDegrees"
     y0_key = "latitudeOfFirstGridPointInDegrees"
     ref_geo = metadata[ref_param]["geography"]
-    x0 = ref_geo[x0_key]
+    x0 = ref_geo[x0_key] % 360
     y0 = ref_geo[y0_key]
     for m in metadata.values():
         geo = m["geography"]
         dx = geo["iDirectionIncrementInDegrees"]
         dy = geo["jDirectionIncrementInDegrees"]
         m["origin"] |= {
-            "x": np.round((geo[x0_key] - x0) / dx, 1),
+            "x": np.round((geo[x0_key] % 360 - x0) / dx, 1),
             "y": np.round((geo[y0_key] - y0) / dy, 1),
         }
 
@@ -198,11 +198,14 @@ def load_data(
     for param, field_map in data.items():
         coords, shape = _gather_coords(field_map, dims[param])
         tcoords = _gather_tcoords(time_meta[param])
-        result[param] = xr.DataArray(
+        array = xr.DataArray(
             np.array([field_map.pop(key) for key in sorted(field_map)]).reshape(shape),
             coords=coords | hcoords | tcoords,
             dims=dims[param],
             attrs=metadata[param],
+        )
+        result[param] = (
+            array if array.vcoord_type != "surface" else array.squeeze("z", drop=True)
         )
     return result | _extract_pv(pv)
 
