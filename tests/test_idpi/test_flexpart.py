@@ -7,8 +7,8 @@ import xarray as xr
 from numpy.testing import assert_allclose
 
 # First-party
-from idpi import grib_decoder
 import idpi.operators.flexpart as flx
+from idpi import grib_decoder
 
 
 @pytest.fixture

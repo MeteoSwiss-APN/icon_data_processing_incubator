@@ -240,6 +240,10 @@ def load_ifs_data(
     """
     mapping_path = files("idpi.data").joinpath("field_mappings.yml")
     mapping = yaml.safe_load(mapping_path.open())
+    missing = set(params) - mapping.keys()
+    if missing:
+        msg = f"Some params are not present in the field mappings: {missing}"
+        raise ValueError(msg)
     params_map = {mapping[p]["ifs"]["name"]: p for p in params}
 
     def get_unit_factor(key):

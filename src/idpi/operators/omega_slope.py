@@ -30,7 +30,6 @@ def omega_slope(
     ps: xr.DataArray, etadot: xr.DataArray, ak: xr.DataArray, bk: xr.DataArray
 ):
     """Compute omega slope."""
-
     dak_dz = ak.diff(dim="hybrid")
     dbk_dz = bk.diff(dim="hybrid")
 
