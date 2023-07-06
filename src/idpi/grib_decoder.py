@@ -33,7 +33,7 @@ _cosmo_allowed = True
 @contextmanager
 def cosmo_grib_defs():
     """Enable COSMO GRIB definitions."""
-    prefix = "/users/ckanesan/micromamba/envs/idpi/"
+    prefix = os.environ("CONDA_PREFIX")
     root_dir = Path(prefix) / "share"
     paths = (
         root_dir / "eccodes-cosmo-resources/definitions",
