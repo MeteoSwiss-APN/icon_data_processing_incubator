@@ -11,7 +11,7 @@ import earthkit.data  # type: ignore
 import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
-import yaml  # type: ignore
+import yaml
 
 
 DIM_MAP = {
@@ -27,12 +27,13 @@ VCOORD_TYPE = {
     "surface": ("surface", 0.0),
 }
 _ifs_allowed = True
+_cosmo_allowed = True
 
 
 @contextmanager
 def cosmo_grib_defs():
     """Enable COSMO GRIB definitions."""
-    prefix = os.environ["CONDA_PREFIX"]
+    prefix = "/users/ckanesan/micromamba/envs/idpi/"
     root_dir = Path(prefix) / "share"
     paths = (
         root_dir / "eccodes-cosmo-resources/definitions",
@@ -244,6 +245,9 @@ def load_cosmo_data(
         Mapping of fields by param name
 
     """
+    if not _cosmo_allowed:
+        raise RuntimeError("GRIB cache contains IFS defs, respawn process to clear.")
+
     global _ifs_allowed
     _ifs_allowed = False  # due to incompatible data in cache
 
@@ -287,6 +291,9 @@ def load_ifs_data(
     """
     if not _ifs_allowed:
         raise RuntimeError("GRIB cache contains cosmo defs, respawn process to clear.")
+
+    global _cosmo_allowed
+    _cosmo_allowed = False  # due to incompatible data in cache
 
     mapping_path = files("idpi.data").joinpath("field_mappings.yml")
     mapping = yaml.safe_load(mapping_path.open())
