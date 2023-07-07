@@ -28,7 +28,7 @@ class ifs_data_loader:
         self._field_map = yaml.safe_load(mapping_path.open())
 
     def open_ifs_to_cosmo(
-        self, datafile: str, fields: list[str], load_pv: bool = False
+        self, datafiles: list[str], fields: list[str], load_pv: bool = False
     ):
         """Load IFS data in a dictionary where the keys are COSMO variables.
 
@@ -41,7 +41,7 @@ class ifs_data_loader:
 
         fields_ = [self._field_map[f]["ifs"]["name"] for f in fields]
 
-        ifs_multi_ds = grib_decoder.load_data(fields_, [datafile], ref_param = "t")
+        ifs_multi_ds = grib_decoder.load_data(fields_, datafiles, ref_param = "t")
 
         for f in fields:
             ds[f] = ifs_multi_ds[self._field_map[f]["ifs"]["name"]]
@@ -56,8 +56,8 @@ class ifs_data_loader:
 
 
 
-def load_flexpart_data(fields, loader, datafile):
-    ds = loader.open_ifs_to_cosmo(datafile, fields)
+def load_flexpart_data(fields, loader, datafiles):
+    ds = loader.open_ifs_to_cosmo(datafiles, fields)
     append_pv_raw(ds)
 
     ds["U"] = ds["U"].sel(hybrid=slice(40, 137))
