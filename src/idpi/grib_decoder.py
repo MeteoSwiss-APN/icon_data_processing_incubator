@@ -13,7 +13,6 @@ import numpy as np
 import xarray as xr
 import yaml
 
-
 DIM_MAP = {
     "level": "z",
     "perturbationNumber": "eps",
@@ -33,7 +32,7 @@ _cosmo_allowed = True
 @contextmanager
 def cosmo_grib_defs():
     """Enable COSMO GRIB definitions."""
-    prefix = os.environ("CONDA_PREFIX")
+    prefix = os.environ["CONDA_PREFIX"]
     root_dir = Path(prefix) / "share"
     paths = (
         root_dir / "eccodes-cosmo-resources/definitions",
