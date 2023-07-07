@@ -182,7 +182,7 @@ def load_data(
 
         if hcoords is None and param == ref_param:
             hcoords = {
-                dim: (("y", "x"), values) for dim, values in field.to_points().items()
+                dim: (("y", "x"), values) for dim, values in field.to_latlon().items()
             }
 
         if extract_pv is not None and pv is None and param == extract_pv:
