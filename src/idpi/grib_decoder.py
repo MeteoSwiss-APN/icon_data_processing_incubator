@@ -8,10 +8,12 @@ from pathlib import Path
 
 # Third-party
 import earthkit.data  # type: ignore
-import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
+
+# First-party
+import eccodes  # type: ignore
 
 DIM_MAP = {
     "level": "z",
