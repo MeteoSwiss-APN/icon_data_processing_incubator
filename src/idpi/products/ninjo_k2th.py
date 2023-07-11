@@ -5,8 +5,10 @@ import logging
 import sys
 
 # Third-party
+import dask
 import numpy as np
 import xarray as xr
+from dask.delayed import delayed
 
 # First-party
 from idpi.operators.destagger import destagger
@@ -35,17 +37,23 @@ def _compute_pot_vortic(
     theta: xr.DataArray,
 ) -> xr.DataArray:
     logger.info("Computing total density")
-    rho_tot = f_rho_tot(T, P, QV, QC, QI)
+    rho_tot = delayed(f_rho_tot)(T, P, QV, QC, QI)
 
     logger.info("Computing terrain following grid deformation factors")
     geo = HHL.attrs["geography"]
     dlon = geo["iDirectionIncrementInDegrees"]
     dlat = geo["jDirectionIncrementInDegrees"]
     deg2rad = np.pi / 180
-    total_diff = TotalDiff(dlon * deg2rad, dlat * deg2rad, HHL)
+    total_diff = delayed(TotalDiff.from_hhl)(dlon * deg2rad, dlat * deg2rad, HHL)
 
     logger.info("Computing potential vorticity")
-    return fpotvortic(U, V, W, theta, rho_tot, total_diff)
+    return delayed(fpotvortic)(U, V, W, theta, rho_tot, total_diff)
+
+
+@delayed(nout=2)
+def unpack(isobars):
+    h700, h900 = isobars.transpose("pressure", ...)
+    return h700, h900
 
 
 def _compute_mean(
@@ -55,9 +63,11 @@ def _compute_mean(
     pressure: xr.DataArray,
 ) -> xr.DataArray:
     logger.info("Computing mean potential vorticity between 700 and 900 hPa")
-    isobars = interpolate_k2p(hfl, "linear_in_lnp", pressure, [700, 900], "hPa")
-    h700, h900 = isobars.transpose("pressure", ...)
-    return integrate_k(pot_vortic, "normed_integral", "z2z", hhl, (h900, h700))
+    isobars = delayed(interpolate_k2p)(
+        hfl, "linear_in_lnp", pressure, [700, 900], "hPa"
+    )
+    h700, h900 = unpack(isobars)
+    return delayed(integrate_k)(pot_vortic, "normed_integral", "z2z", hhl, (h900, h700))
 
 
 def _compute_at_theta(
@@ -66,7 +76,9 @@ def _compute_at_theta(
     logger.info(f"Interpolating {tuple(fields.keys())} at isotherms")
     theta_values = [310.0, 315.0, 320.0, 325.0, 330.0, 335.0]
     return {
-        key: interpolate_k2theta(field, "low_fold", theta, theta_values, "K", hfl)
+        key: delayed(interpolate_k2theta)(
+            field, "low_fold", theta, theta_values, "K", hfl
+        )
         for key, field in fields.items()
     }
 
@@ -119,7 +131,7 @@ def ninjo_k2th(
 
     """
     logger.info("Computing potential temperature")
-    theta = ftheta(P, T)
+    theta = delayed(ftheta)(P, T)
 
     pot_vortic = _compute_pot_vortic(U, V, W, T, P, QV, QC, QI, HHL, theta)
 
@@ -134,4 +146,4 @@ def ninjo_k2th(
         pot_vortic=pot_vortic,
     )
 
-    return output_mean, output_at_theta
+    return dask.compute(output_mean, output_at_theta)
