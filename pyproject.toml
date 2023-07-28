@@ -20,7 +20,7 @@ authors = [{ name = "Tobias Wicky", email = "tobias.wicky@meteoswiss.ch" }]
 dependencies = [
     "click",
     "earthkit-data",
-    "eccodes==2.25",
+    "eccodes",
     "pyyaml",
     "numpy",
     "xarray",
