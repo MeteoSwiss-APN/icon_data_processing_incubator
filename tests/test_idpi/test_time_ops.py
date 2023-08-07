@@ -25,6 +25,8 @@ def test_delta(data_dir, fieldextra):
     ds = grib_decoder.load_cosmo_data(["TOT_PREC"], datafiles, ref_param="TOT_PREC")
 
     tot_prec_03h = delta(ds["TOT_PREC"], np.timedelta64(3, "h"))
+
+    # Negative values are replaced by zero as these are due to numerical inaccuracies.
     cond = np.logical_or(tot_prec_03h > 0.0, tot_prec_03h.isnull())
     observed = tot_prec_03h.where(cond, 0.0)
 
