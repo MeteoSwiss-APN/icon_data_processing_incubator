@@ -78,3 +78,8 @@ def avg(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
 def sum(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
     nsteps = _nsteps(field.valid_time, dtime)
     return field.rolling(time=nsteps).sum()
+
+
+def resample(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    nsteps = _nsteps(field.valid_time, dtime)
+    return field.sel(time=slice(None, None, nsteps))
