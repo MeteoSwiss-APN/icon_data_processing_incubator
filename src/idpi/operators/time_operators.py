@@ -21,6 +21,18 @@ def time_rate(var: xr.DataArray, dtime: np.timedelta64):
     return result
 
 
+def _nsteps(valid_time, dtime):
+    condition = valid_time - valid_time[0] == dtime
+
+    try:
+        [index] = np.nonzero(condition.values)
+    except ValueError:
+        msg = "Provided dtime is not a multiple of the time step."
+        raise ValueError(msg)
+
+    return index.item()
+
+
 def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
     """Compute difference for a given delta in time.
 
@@ -42,15 +54,27 @@ def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
         The Field difference for the given time delta.
 
     """
-    coord = field.valid_time
-    condition = coord - coord[0] == dtime
-
-    try:
-        [index] = np.nonzero(condition.values)
-    except ValueError:
-        msg = "Provided dtime is not a multiple of the time step."
-        raise ValueError(msg)
-
-    result = field - field.shift(time=index.item())
+    nsteps = _nsteps(field.valid_time, dtime)
+    result = field - field.shift(time=nsteps)
     result.attrs = field.attrs
     return result
+
+
+def min(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    nsteps = _nsteps(field.valid_time, dtime)
+    return field.rolling(time=nsteps).min()
+
+
+def max(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    nsteps = _nsteps(field.valid_time, dtime)
+    return field.rolling(time=nsteps).max()
+
+
+def avg(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    nsteps = _nsteps(field.valid_time, dtime)
+    return field.rolling(time=nsteps).mean()
+
+
+def sum(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    nsteps = _nsteps(field.valid_time, dtime)
+    return field.rolling(time=nsteps).sum()
