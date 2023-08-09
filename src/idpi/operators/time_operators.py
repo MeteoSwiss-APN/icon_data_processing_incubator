@@ -21,9 +21,15 @@ def time_rate(var: xr.DataArray, dtime: np.timedelta64):
     return result
 
 
-def _nsteps(valid_time, dtime):
-    condition = valid_time - valid_time[0] == dtime
+def _nsteps(valid_time: xr.DataArray, dtime: np.timedelta64) -> int:
+    dt = valid_time.diff(dim="time")
+    uniform = np.all(dt == dt[0]).item()
 
+    if not uniform:
+        msg = "Given field has an irregular time step."
+        raise ValueError(msg)
+
+    condition = valid_time - valid_time[0] == dtime
     try:
         [index] = np.nonzero(condition.values)
     except ValueError:
