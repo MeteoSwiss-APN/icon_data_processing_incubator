@@ -52,12 +52,13 @@ def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
     Raises
     ------
     ValueError
-        if dtime is not multiple of the field time step.
+        if dtime is not multiple of the field time step
+        or if the time step is not regular.
 
     Returns
     -------
     xr.DataArray
-        The Field difference for the given time delta.
+        The field difference for the given time delta.
 
     """
     nsteps = _nsteps(field.valid_time, dtime)
@@ -67,25 +68,133 @@ def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
 
 
 def min(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    """Compute minimum aggregate for a given delta in time.
+
+    Parameters
+    ----------
+    field : xr.DataArray
+        Field that contains the input data.
+    dtime : np.timedelta64
+        Time delta for which to evaluate the minimum.
+
+    Raises
+    ------
+    ValueError
+        if dtime is not multiple of the field time step
+        or if the time step is not regular.
+
+    Returns
+    -------
+    xr.DataArray
+        The field minimum for the given time delta.
+
+    """
     nsteps = _nsteps(field.valid_time, dtime)
     return field.rolling(time=nsteps).min()
 
 
 def max(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    """Compute maximum aggregate for a given delta in time.
+
+    Parameters
+    ----------
+    field : xr.DataArray
+        Field that contains the input data.
+    dtime : np.timedelta64
+        Time delta for which to evaluate the maximum.
+
+    Raises
+    ------
+    ValueError
+        if dtime is not multiple of the field time step
+        or if the time step is not regular.
+
+    Returns
+    -------
+    xr.DataArray
+        The field maximum for the given time delta.
+
+    """
     nsteps = _nsteps(field.valid_time, dtime)
     return field.rolling(time=nsteps).max()
 
 
 def avg(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    """Compute average aggregate for a given delta in time.
+
+    Parameters
+    ----------
+    field : xr.DataArray
+        Field that contains the input data.
+    dtime : np.timedelta64
+        Time delta for which to evaluate the average.
+
+    Raises
+    ------
+    ValueError
+        if dtime is not multiple of the field time step
+        or if the time step is not regular.
+
+    Returns
+    -------
+    xr.DataArray
+        The field average for the given time delta.
+
+    """
     nsteps = _nsteps(field.valid_time, dtime)
     return field.rolling(time=nsteps).mean()
 
 
 def sum(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    """Compute sum aggregate for a given delta in time.
+
+    Parameters
+    ----------
+    field : xr.DataArray
+        Field that contains the input data.
+    dtime : np.timedelta64
+        Time delta for which to evaluate the sum.
+
+    Raises
+    ------
+    ValueError
+        if dtime is not multiple of the field time step
+        or if the time step is not regular.
+
+    Returns
+    -------
+    xr.DataArray
+        The field sum for the given time delta.
+
+    """
     nsteps = _nsteps(field.valid_time, dtime)
     return field.rolling(time=nsteps).sum()
 
 
-def resample(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
-    nsteps = _nsteps(field.valid_time, dtime)
+def resample(field: xr.DataArray, period: np.timedelta64) -> xr.DataArray:
+    """Resample field.
+
+    The period must be a multiple of the current time step.
+    No interpolation is performed.
+
+    Parameters
+    ----------
+    field : xr.DataArray
+        Field that contains the input data.
+    period : np.timedelta64
+        Output sample period.
+
+    Raises
+    ------
+    ValueError
+        if dtime is not multiple of the field time step
+        or if the time step is not regular.
+
+    Returns
+    -------
+    xr.DataArray
+        The resampled field.
+
+    """
+    nsteps = _nsteps(field.valid_time, period)
     return field.sel(time=slice(None, None, nsteps))
