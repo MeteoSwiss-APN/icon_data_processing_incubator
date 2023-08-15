@@ -18,13 +18,14 @@ def data_dir():
 
 
 def test_delta(data_dir, fieldextra):
-    steps = np.arange(0, 16, 3)
+    steps = np.arange(34)
     dd, hh = np.divmod(steps, 24)
     datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
 
     ds = grib_decoder.load_cosmo_data(["TOT_PREC"], datafiles, ref_param="TOT_PREC")
 
-    tot_prec_03h = time_ops.delta(ds["TOT_PREC"], np.timedelta64(3, "h"))
+    tot_prec = time_ops.resample(ds["TOT_PREC"], np.timedelta64(3, "h"))
+    tot_prec_03h = time_ops.delta(tot_prec, np.timedelta64(3, "h"))
 
     # Negative values are replaced by zero as these are due to numerical inaccuracies.
     cond = np.logical_or(tot_prec_03h > 0.0, tot_prec_03h.isnull())
@@ -32,7 +33,7 @@ def test_delta(data_dir, fieldextra):
 
     fx_ds_h = fieldextra(
         "time_ops_delta",
-        hh=hh.tolist(),
+        hh=steps.tolist()[::3],
         conf_files={
             "inputi": data_dir / "lfff<DDHH>0000",
             "inputc": data_dir / "lfff00000000c",

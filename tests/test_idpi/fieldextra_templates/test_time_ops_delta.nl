@@ -23,7 +23,7 @@
 
 &Process
 in_file="{{ file.inputi }}"
-tstart=0, tstop=15, tincr=3, tlag=-3,0,3
+tstart=0, tstop=33, tincr=3, tlag=-3,0,3
 out_file="{{ file.output }}"
 out_type="NETCDF"
 /
