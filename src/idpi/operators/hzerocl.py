@@ -1,5 +1,5 @@
-"""Algorithm for computation of height of zero degree isotherm.
-"""
+"""Algorithm for computation of height of zero degree isotherm."""
+
 # Standard library
 from typing import cast
 
