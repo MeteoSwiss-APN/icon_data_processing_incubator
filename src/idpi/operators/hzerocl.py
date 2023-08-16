@@ -1,6 +1,4 @@
 """Algorithm for computation of height of zero degree isotherm.
-
-This is done without extrapolation below model orography.
 """
 # Standard library
 from typing import cast
@@ -26,8 +24,9 @@ def fhzerocl(
         Air temperature in K.
     hhl : xr.DataArray
         Heights of the interfaces between vertical layers in m amsl.
-    extrapolate : bool
+    extrapolate : bool, optional
         Allow the extrapolation of the search below the lowest model layer.
+        Defaults to False.
 
     Returns
     -------
