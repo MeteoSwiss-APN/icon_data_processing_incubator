@@ -1,3 +1,5 @@
+"""Lateral operators."""
+
 # Standard library
 from typing import Literal
 
@@ -11,6 +13,38 @@ def compute_weights(
     window_type: Literal["exp", "const"],
     window_shape: Literal["disk", "square"],
 ) -> xr.DataArray:
+    """Compute weights for a convolution kernel.
+
+    Parameters
+    ----------
+    window_size : int
+        Number of grid cells the kernel. Must be an odd number.
+    window_type : {"exp", "const"}
+        The window type.
+
+        Supported types:
+         - exp: Exponential drop from the center of the window.
+         - const: All weights are set to 1.
+
+    window_shape : {"disk", "square"}
+        The window shape.
+
+        Supported shapes:
+         - disk: The kernel is confined to the circle inscribing the window.
+         - square: The kernel is defined on the entire window.
+
+    Raises
+    ------
+    ValueError
+        if `window_size` is not an odd number.
+
+    Returns
+    -------
+    xarray.DataArray
+        Weights corresponding to the `window_type` within the given `window_shape`
+        and zero outside of the shape.
+
+    """
     n = window_size
 
     if n % 2 != 1:
@@ -36,6 +70,29 @@ def compute_weights(
 def compute_cond_mask(
     windows: xr.DataArray, weights: xr.DataArray, frac_val: float
 ) -> xr.DataArray:
+    """Compute the conditional mask for which the convolution results are valid.
+
+    The function computes the ratio of undefined values to the total number values
+    in the convolution window. The computational domain and the window shape are both
+    taken into account. The mask is true for locations where the ratio is above the
+    given threshold.
+
+    Parameters
+    ----------
+    windows : xarray.DataArray
+        Values of the constructed windows for the application of the convolution.
+    weights : xarray.DataArray
+        Weights of the convolution kernel.
+    frac_val : float
+        Threshold on the ratio of undefined values.
+
+    Returns
+    -------
+    xarray.DataArray
+        Boolean mask indicating where the undefined value ratio in the convolution
+        kernel is within the acceptable threshold.
+
+    """
     mask = weights > 0
 
     loc_x = windows.x + windows.win_x - windows.sizes["win_x"] // 2
@@ -50,6 +107,25 @@ def compute_cond_mask(
 
 
 def fill_undef(field: xr.DataArray, radius: int, frac_val: float) -> xr.DataArray:
+    """Fill undefined values.
+
+    Replace undefined values with a value derived from neighbourhood.
+
+    Parameters
+    ----------
+    field : xarray.DataArray
+        Input field.
+    radius : int
+        Radius of the convolution window.
+    frac_val : float
+        Threshold of acceptable ratio of undefined values in window.
+
+    Returns
+    -------
+    xarray.DataArray
+        Input field with undefined values replaced by values derived from neighbourhood.
+
+    """
     n = 2 * radius + 1
     weights = compute_weights(n, "exp", "disk")
 
@@ -68,6 +144,20 @@ def fill_undef(field: xr.DataArray, radius: int, frac_val: float) -> xr.DataArra
 
 
 def disk_avg(field: xr.DataArray, radius: int) -> xr.DataArray:
+    """Compute disk average.
+
+    Parameters
+    ----------
+    field : xarray.DataArray
+        Input field.
+    radius : int
+        Radius of the convolution window.
+
+    Returns
+    -------
+    xarray.DataArray
+
+    """
     n = 2 * radius + 1
     weights = compute_weights(n, "const", "disk")
 
