@@ -5,6 +5,7 @@ import sys
 from contextlib import contextmanager
 from importlib.resources import files
 from pathlib import Path
+from typing import Set
 
 # Third-party
 import earthkit.data  # type: ignore
@@ -12,6 +13,9 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
+
+# First-party
+from idpi.product import Product
 
 DIM_MAP = {
     "level": "z",
@@ -108,7 +112,7 @@ def _update_origin(metadata, ref_param):
 
 
 def load_data(
-    params: list[str],
+    products: list[Product],
     datafiles: list[Path],
     ref_param: str,
     extract_pv: str | None = None,
@@ -117,8 +121,8 @@ def load_data(
 
     Parameters
     ----------
-    params : list[str]
-        List of fields to load from the data files.
+    products : list[Product]
+        List of products for which the function loads the input data.
     datafiles : list[Path]
         List of files from which to load the data.
     ref_param : str
@@ -141,10 +145,14 @@ def load_data(
     """
     fs = earthkit.data.from_source("file", [str(p) for p in datafiles])
 
-    if ref_param not in params:
-        raise ValueError(f"{ref_param=} must be in {params=}")
-    if extract_pv is not None and extract_pv not in params:
-        raise ValueError(f"If set, {extract_pv=} must be in {params=}")
+    all_input_fields: Set = set()
+    for product in products:
+        all_input_fields = all_input_fields.union(set(product.input_fields))
+    all_input_fields = all_input_fields
+    if ref_param not in all_input_fields:
+        raise ValueError(f"{ref_param=} must be in {all_input_fields=}")
+    if extract_pv is not None and extract_pv not in all_input_fields:
+        raise ValueError(f"If set, {extract_pv=} must be in {all_input_fields=}")
 
     hcoords = None
     pv = None
@@ -152,7 +160,7 @@ def load_data(
     time_meta: dict[str, dict[int, dict]] = {}
     dims: dict[str, tuple[str, ...]] = {}
     data: dict[str, dict[tuple[int, ...], np.ndarray]] = {}
-    for field in fs.sel(param=params):
+    for field in fs.sel(param=all_input_fields):
         param = field.metadata("param")
         field_map = data.setdefault(param, {})
         dim_keys = (
@@ -188,8 +196,8 @@ def load_data(
             # assume pv is constant in time and ensemble perturbations
             pv = field.metadata("pv")
 
-    if not set(params) == data.keys():
-        raise RuntimeError(f"Missing params: {set(params) - data.keys()}")
+    if not set(all_input_fields) == data.keys():
+        raise RuntimeError(f"Missing params: {set(all_input_fields) - data.keys()}")
 
     _update_origin(metadata, ref_param)
 
@@ -210,7 +218,7 @@ def load_data(
 
 
 def load_cosmo_data(
-    params: list[str],
+    params: list[Product],
     datafiles: list[Path],
     ref_param: str = "HHL",
     extract_pv: str | None = None,
@@ -221,8 +229,8 @@ def load_cosmo_data(
 
     Parameters
     ----------
-    params : list[str]
-        List of fields to load from the data files.
+    params : list[Product]
+        List of products from where to extract input fields.
     datafiles : list[Path]
         List of files from which to load the data.
     ref_param : str
