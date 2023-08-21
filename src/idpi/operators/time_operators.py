@@ -21,7 +21,28 @@ def time_rate(var: xr.DataArray, dtime: np.timedelta64):
     return result
 
 
-def _nsteps(valid_time: xr.DataArray, dtime: np.timedelta64) -> int:
+def get_nsteps(valid_time: xr.DataArray, dtime: np.timedelta64) -> int:
+    """Compute number of steps required for a given time delta.
+
+    Parameters
+    ----------
+    valid_time : xr.DataArray
+        Array of time values.
+    dtime : np.timedelta64
+        Time difference for which to search the corresponding number of steps.
+
+    Raises
+    ------
+    ValueError
+        if the time difference is not a multiple of the given time index step or
+        if the array of time values is not uniform.
+
+    Returns
+    -------
+    int
+        Number of time steps.
+
+    """
     dt = valid_time.diff(dim="time")
     uniform = np.all(dt == dt[0]).item()
 
@@ -61,114 +82,10 @@ def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
         The field difference for the given time delta.
 
     """
-    nsteps = _nsteps(field.valid_time, dtime)
+    nsteps = get_nsteps(field.valid_time, dtime)
     result = field - field.shift(time=nsteps)
     result.attrs = field.attrs
     return result
-
-
-def min(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
-    """Compute minimum aggregate for a given delta in time.
-
-    Parameters
-    ----------
-    field : xr.DataArray
-        Field that contains the input data.
-    dtime : np.timedelta64
-        Time delta for which to evaluate the minimum.
-
-    Raises
-    ------
-    ValueError
-        if dtime is not multiple of the field time step
-        or if the time step is not regular.
-
-    Returns
-    -------
-    xr.DataArray
-        The field minimum for the given time delta.
-
-    """
-    nsteps = _nsteps(field.valid_time, dtime)
-    return field.rolling(time=nsteps).min()
-
-
-def max(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
-    """Compute maximum aggregate for a given delta in time.
-
-    Parameters
-    ----------
-    field : xr.DataArray
-        Field that contains the input data.
-    dtime : np.timedelta64
-        Time delta for which to evaluate the maximum.
-
-    Raises
-    ------
-    ValueError
-        if dtime is not multiple of the field time step
-        or if the time step is not regular.
-
-    Returns
-    -------
-    xr.DataArray
-        The field maximum for the given time delta.
-
-    """
-    nsteps = _nsteps(field.valid_time, dtime)
-    return field.rolling(time=nsteps).max()
-
-
-def avg(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
-    """Compute average aggregate for a given delta in time.
-
-    Parameters
-    ----------
-    field : xr.DataArray
-        Field that contains the input data.
-    dtime : np.timedelta64
-        Time delta for which to evaluate the average.
-
-    Raises
-    ------
-    ValueError
-        if dtime is not multiple of the field time step
-        or if the time step is not regular.
-
-    Returns
-    -------
-    xr.DataArray
-        The field average for the given time delta.
-
-    """
-    nsteps = _nsteps(field.valid_time, dtime)
-    return field.rolling(time=nsteps).mean()
-
-
-def sum(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
-    """Compute sum aggregate for a given delta in time.
-
-    Parameters
-    ----------
-    field : xr.DataArray
-        Field that contains the input data.
-    dtime : np.timedelta64
-        Time delta for which to evaluate the sum.
-
-    Raises
-    ------
-    ValueError
-        if dtime is not multiple of the field time step
-        or if the time step is not regular.
-
-    Returns
-    -------
-    xr.DataArray
-        The field sum for the given time delta.
-
-    """
-    nsteps = _nsteps(field.valid_time, dtime)
-    return field.rolling(time=nsteps).sum()
 
 
 def resample(field: xr.DataArray, period: np.timedelta64) -> xr.DataArray:
@@ -196,5 +113,5 @@ def resample(field: xr.DataArray, period: np.timedelta64) -> xr.DataArray:
         The resampled field.
 
     """
-    nsteps = _nsteps(field.valid_time, period)
+    nsteps = get_nsteps(field.valid_time, period)
     return field.sel(time=slice(None, None, nsteps))

@@ -3,6 +3,7 @@ from pathlib import Path
 
 # Third-party
 import numpy as np
+import pandas as pd
 import pytest
 import xarray as xr
 from numpy.testing import assert_allclose
@@ -54,7 +55,8 @@ def test_max(data_dir, fieldextra):
     ds = grib_decoder.load_cosmo_data(["VMAX_10M"], datafiles, ref_param="VMAX_10M")
 
     f = ds["VMAX_10M"]
-    vmax_10m_24h = time_ops.max(f.where(f.time > 0), np.timedelta64(24, "h"))
+    nsteps = time_ops.get_nsteps(f.valid_time, np.timedelta64(24, "h"))
+    vmax_10m_24h = f.where(f.time > 0).rolling(time=nsteps).max()
 
     # Negative values are replaced by zero as these are due to numerical inaccuracies.
     cond = np.logical_or(vmax_10m_24h > 0.0, vmax_10m_24h.isnull())
@@ -73,3 +75,23 @@ def test_max(data_dir, fieldextra):
     expected = xr.concat([fx_ds["vmax_10m_24h"] for fx_ds in fx_ds_h], dim="time")
 
     assert_allclose(observed, expected.transpose("epsd_1", "time", ...))
+
+
+def test_get_nsteps():
+    values = pd.date_range("2000-01-01", freq="1H", periods=10)
+    valid_time = xr.DataArray(values, dims=["time"])
+    assert time_ops.get_nsteps(valid_time, np.timedelta64(5, "h")) == 5
+
+
+def test_get_nsteps_raises_non_uniform():
+    values = pd.date_range("2000-01-01", freq="1H", periods=10)
+    valid_time = xr.DataArray(values[[0, 1, 3]], dims=["time"])
+    with pytest.raises(ValueError):
+        time_ops.get_nsteps(valid_time, np.timedelta64(3, "h"))
+
+
+def test_get_nsteps_raises_non_multiple():
+    values = pd.date_range("2000-01-01", freq="2H", periods=10)
+    valid_time = xr.DataArray(values, dims=["time"])
+    with pytest.raises(ValueError):
+        time_ops.get_nsteps(valid_time, np.timedelta64(3, "h"))
