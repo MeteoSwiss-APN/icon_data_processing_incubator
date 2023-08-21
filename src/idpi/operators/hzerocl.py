@@ -17,6 +17,9 @@ def fhzerocl(
     """Height of the zero deg C isotherm in m amsl.
 
     The algorithm searches from the top of the atmosphere downwards.
+    When extrapolation is enabled, the search may extend past the lowest
+    layers of the model by means of a linear model. The resulting height
+    may be below the surface of the earth.
 
     Parameters
     ----------
