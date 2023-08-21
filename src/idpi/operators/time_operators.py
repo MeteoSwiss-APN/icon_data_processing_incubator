@@ -88,18 +88,18 @@ def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
     return result
 
 
-def resample(field: xr.DataArray, period: np.timedelta64) -> xr.DataArray:
+def resample(field: xr.DataArray, interval: np.timedelta64) -> xr.DataArray:
     """Resample field.
 
-    The period must be a multiple of the current time step.
+    The interval must be a multiple of the current time step.
     No interpolation is performed.
 
     Parameters
     ----------
     field : xr.DataArray
         Field that contains the input data.
-    period : np.timedelta64
-        Output sample period.
+    interval : np.timedelta64
+        Output sample interval.
 
     Raises
     ------
@@ -113,5 +113,5 @@ def resample(field: xr.DataArray, period: np.timedelta64) -> xr.DataArray:
         The resampled field.
 
     """
-    nsteps = get_nsteps(field.valid_time, period)
+    nsteps = get_nsteps(field.valid_time, interval)
     return field.sel(time=slice(None, None, nsteps))
