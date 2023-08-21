@@ -3,7 +3,7 @@ from pathlib import Path
 
 # Third-party
 import numpy as np
-import pandas as pd
+import pandas as pd  # type: ignore
 import pytest
 import xarray as xr
 from numpy.testing import assert_allclose
