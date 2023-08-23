@@ -9,11 +9,8 @@ from idpi import grib_decoder
 def test_thetav(data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
 
-    ds = grib_decoder.load_cosmo_data(
-        ["P", "T", "QV"],
-        [datafile],
-        ref_param="P",
-    )
+    ref_grid = grib_decoder.load_grid_reference("P", [datafile])
+    ds = grib_decoder.load_cosmo_data(ref_grid, ["P", "T", "QV"], [datafile])
 
     thetav = mthetav.fthetav(ds["P"], ds["T"], ds["QV"])
 

@@ -13,7 +13,10 @@ def test_curl(data_dir):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
-    ds = grib_decoder.load_cosmo_data(["U", "V", "W", "HHL"], [datafile, cdatafile])
+    ref_grid = grib_decoder.load_grid_reference("HHL", [cdatafile])
+    ds = grib_decoder.load_cosmo_data(
+        ref_grid, ["U", "V", "W", "HHL"], [datafile, cdatafile]
+    )
 
     geo = ds["HHL"].attrs["geography"]
     dlon = geo["iDirectionIncrementInDegrees"]

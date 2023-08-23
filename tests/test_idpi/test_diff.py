@@ -11,10 +11,11 @@ from idpi.operators.theta import ftheta
 def test_masspoint_field(data_dir):
     datafile = data_dir / "lfff00000000.ch"
 
+    ref_grid = grib_decoder.load_grid_reference("P", [datafile])
     ds = grib_decoder.load_cosmo_data(
+        ref_grid,
         ["P", "T"],
         [datafile],
-        ref_param="P",
     )
 
     theta = ftheta(ds["P"], ds["T"])
@@ -37,10 +38,11 @@ def test_masspoint_field(data_dir):
 def test_staggered_field(data_dir):
     datafile = data_dir / "lfff00000000.ch"
 
+    ref_grid = grib_decoder.load_grid_reference("W", [datafile])
     ds = grib_decoder.load_cosmo_data(
+        ref_grid,
         ["W"],
         [datafile],
-        ref_param="W",
     )
 
     w = ds["W"]

@@ -41,8 +41,9 @@ def test_flexpart(data_dir, fieldextra):
         "NSSS",
     )
 
+    ref_grid = grib_decoder.load_grid_reference("T", datafiles, ifs=True)
     ds = grib_decoder.load_ifs_data(
-        constants + inputf, datafiles, ref_param="T", extract_pv="U"
+        ref_grid, constants + inputf, datafiles, extract_pv="U"
     )
 
     conf_files = {

@@ -25,11 +25,8 @@ def test_intpl_k2p(mode, fx_mode, atol, rtol, data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
 
     # load input data set
-    ds = grib_decoder.load_cosmo_data(
-        ["P", "T"],
-        [datafile],
-        ref_param="P",
-    )
+    ref_grid = grib_decoder.load_grid_reference("P", [datafile])
+    ds = grib_decoder.load_cosmo_data(ref_grid, ["P", "T"], [datafile])
 
     # call interpolation operator
     t = interpolate_k2p(ds["T"], mode, ds["P"], tc_values, tc_units)

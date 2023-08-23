@@ -24,7 +24,9 @@ def test_integ_sfc2z(field, k_max, operator, fx_op, atol, rtol, data_dir, fielde
     k_top = 61
 
     # load input data set
+    ref_grid = grib_decoder.load_grid_reference("HHL", [cdatafile])
     ds = grib_decoder.load_cosmo_data(
+        ref_grid,
         [field, "HHL", "HSURF"],
         [datafile, cdatafile],
     )

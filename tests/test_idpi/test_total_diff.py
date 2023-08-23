@@ -11,8 +11,9 @@ from idpi.operators.total_diff import TotalDiff
 
 def test_total_diff(data_dir):
     cdatafile = data_dir / "lfff00000000c.ch"
-
+    ref_grid = grib_decoder.load_grid_reference("HHL", [cdatafile])
     ds = grib_decoder.load_cosmo_data(
+        ref_grid,
         ["HHL"],
         [cdatafile],
     )
@@ -56,7 +57,7 @@ def test_total_diff(data_dir):
 
     datafile = data_dir / "lfff00000000.ch"
 
-    ds = grib_decoder.load_cosmo_data(["P", "T"], [datafile], ref_param="P")
+    ds = grib_decoder.load_cosmo_data(ref_grid, ["P", "T"], [datafile])
     theta = ftheta(ds["P"], ds["T"])
 
     padding = [(0, 0)] * 2 + [(1, 1)] * 3

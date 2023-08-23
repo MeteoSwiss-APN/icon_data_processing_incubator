@@ -14,7 +14,9 @@ def test_pv(data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
+    ref_grid = grib_decoder.load_grid_reference("HHL", [cdatafile])
     ds = grib_decoder.load_cosmo_data(
+        ref_grid,
         ["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"],
         [datafile, cdatafile],
     )

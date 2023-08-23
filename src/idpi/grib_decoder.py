@@ -5,7 +5,7 @@ import sys
 from contextlib import contextmanager
 from importlib.resources import files
 from pathlib import Path
-from typing import Set
+import dataclasses as dc
 
 # Third-party
 import earthkit.data  # type: ignore
@@ -13,9 +13,6 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
-
-# First-party
-from idpi.product import Product
 
 DIM_MAP = {
     "level": "z",
@@ -36,7 +33,8 @@ _cosmo_allowed = True
 @contextmanager
 def cosmo_grib_defs():
     """Enable COSMO GRIB definitions."""
-    root_dir = Path(sys.prefix) / "share"
+    prefix = sys.exec_prefix
+    root_dir = Path(prefix) / "share"
     paths = (
         root_dir / "eccodes-cosmo-resources/definitions",
         root_dir / "eccodes/definitions",
@@ -95,181 +93,16 @@ def _extract_pv(pv):
     }
 
 
-def _update_origin(metadata, ref_param):
-    x0_key = "longitudeOfFirstGridPointInDegrees"
-    y0_key = "latitudeOfFirstGridPointInDegrees"
-    ref_geo = metadata[ref_param]["geography"]
-    x0 = ref_geo[x0_key] % 360
-    y0 = ref_geo[y0_key]
-    for m in metadata.values():
-        geo = m["geography"]
-        dx = geo["iDirectionIncrementInDegrees"]
-        dy = geo["jDirectionIncrementInDegrees"]
-        m["origin"] |= {
-            "x": np.round((geo[x0_key] % 360 - x0) / dx, 1),
-            "y": np.round((geo[y0_key] - y0) / dy, 1),
-        }
+@dc.dataclass
+class Grid:
+    lon: xr.DataArray
+    lat: xr.DataArray
+    longitudeOfFirstGridPointInDegrees: float
+    latitudeOfFirstGridPointInDegrees: float
 
 
-def load_data(
-    products: list[Product],
-    datafiles: list[Path],
-    ref_param: str,
-    extract_pv: str | None = None,
-) -> dict[str, xr.DataArray]:
+def load_grid_reference(ref_param: str, datafiles: list[Path], ifs=False) -> Grid:
     """Load data from GRIB files.
-
-    Parameters
-    ----------
-    products : list[Product]
-        List of products for which the function loads the input data.
-    datafiles : list[Path]
-        List of files from which to load the data.
-    ref_param : str
-        Parameter to use as a reference for the coordinates.
-    extract_pv: str | None
-        Optionally extract hybrid level coefficients from the given field.
-
-    Raises
-    ------
-    ValueError
-        if ref_param is not included in params.
-    RuntimeError
-        if not all fields are found in the given datafiles.
-
-    Returns
-    -------
-    dict[str, xr.DataArray]
-        Mapping of fields by param name
-
-    """
-    fs = earthkit.data.from_source("file", [str(p) for p in datafiles])
-
-    all_input_fields: Set = set()
-    for product in products:
-        all_input_fields = all_input_fields.union(set(product.input_fields))
-    all_input_fields = all_input_fields
-    if ref_param not in all_input_fields:
-        raise ValueError(f"{ref_param=} must be in {all_input_fields=}")
-    if extract_pv is not None and extract_pv not in all_input_fields:
-        raise ValueError(f"If set, {extract_pv=} must be in {all_input_fields=}")
-
-    hcoords = None
-    pv = None
-    metadata = {}
-    time_meta: dict[str, dict[int, dict]] = {}
-    dims: dict[str, tuple[str, ...]] = {}
-    data: dict[str, dict[tuple[int, ...], np.ndarray]] = {}
-    for field in fs.sel(param=all_input_fields):
-        param = field.metadata("param")
-        field_map = data.setdefault(param, {})
-        dim_keys = (
-            ("perturbationNumber", "step", "level")
-            if _is_ensemble(field)
-            else ("step", "level")
-        )
-        key = field.metadata(*dim_keys)
-        field_map[key] = field.to_numpy(dtype=np.float32)
-
-        step = key[-2]  # assume all members share the same time steps
-        if step not in time_meta.get(param, {}):
-            time_meta.setdefault(param, {})[step] = field.metadata(namespace="time")
-
-        if param not in dims:
-            dims[param] = tuple(DIM_MAP[d] for d in dim_keys) + ("y", "x")
-
-        if param not in metadata:
-            metadata[param] = field.metadata(namespace=["geography", "parameter"])
-            level_type = field.metadata("typeOfLevel")
-            vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
-            metadata[param] |= {
-                "vcoord_type": vcoord_type,
-                "origin": {"z": zshift},
-            }
-
-        if hcoords is None and param == ref_param:
-            hcoords = {
-                dim: (("y", "x"), values) for dim, values in field.to_latlon().items()
-            }
-
-        if extract_pv is not None and pv is None and param == extract_pv:
-            # assume pv is constant in time and ensemble perturbations
-            pv = field.metadata("pv")
-
-    if not set(all_input_fields) == data.keys():
-        raise RuntimeError(f"Missing params: {set(all_input_fields) - data.keys()}")
-
-    _update_origin(metadata, ref_param)
-
-    result = {}
-    for param, field_map in data.items():
-        coords, shape = _gather_coords(field_map, dims[param])
-        tcoords = _gather_tcoords(time_meta[param])
-        array = xr.DataArray(
-            np.array([field_map.pop(key) for key in sorted(field_map)]).reshape(shape),
-            coords=coords | hcoords | tcoords,
-            dims=dims[param],
-            attrs=metadata[param],
-        )
-        result[param] = (
-            array if array.vcoord_type != "surface" else array.squeeze("z", drop=True)
-        )
-    return result | _extract_pv(pv)
-
-
-def load_cosmo_data(
-    params: list[Product],
-    datafiles: list[Path],
-    ref_param: str = "HHL",
-    extract_pv: str | None = None,
-) -> dict[str, xr.DataArray]:
-    """Load data from GRIB files.
-
-    The COSMO definitions are enabled during the load.
-
-    Parameters
-    ----------
-    params : list[Product]
-        List of products from where to extract input fields.
-    datafiles : list[Path]
-        List of files from which to load the data.
-    ref_param : str
-        Parameter to use as a reference for the coordinates.
-    extract_pv: str | None
-        Optionally extract hybrid level coefficients from the given field.
-
-    Raises
-    ------
-    ValueError
-        if ref_param is not included in params.
-    RuntimeError
-        if not all fields are found in the given datafiles.
-
-    Returns
-    -------
-    dict[str, xr.DataArray]
-        Mapping of fields by param name
-
-    """
-    if not _cosmo_allowed:
-        raise RuntimeError("GRIB cache contains IFS defs, respawn process to clear.")
-
-    global _ifs_allowed
-    _ifs_allowed = False  # due to incompatible data in cache
-
-    with cosmo_grib_defs():
-        return load_data(params, datafiles, ref_param, extract_pv)
-
-
-def load_ifs_data(
-    params: list[str],
-    datafiles: list[Path],
-    ref_param: str,
-    extract_pv: str | None = None,
-) -> dict[str, xr.DataArray]:
-    """Load data from GRIB files.
-
-    Expects IFS data.
 
     Parameters
     ----------
@@ -286,6 +119,229 @@ def load_ifs_data(
     ------
     ValueError
         if ref_param is not included in params.
+    RuntimeError
+        if not all fields are found in the given datafiles.
+
+    Returns
+    -------
+    dict[str, xr.DataArray]
+        Mapping of fields by param name
+
+    """
+
+    if ifs:
+        mapping_path = files("idpi.data").joinpath("field_mappings.yml")
+        mapping = yaml.safe_load(mapping_path.open())
+        ref_param = mapping[ref_param]["ifs"]["name"]
+
+    fs = earthkit.data.from_source("file", [str(p) for p in datafiles])
+
+    for field in fs.sel(param=ref_param):
+        lonlat_dict = {
+            geo_dim: xr.DataArray(dims=("y", "x"), data=values)
+            for geo_dim, values in field.to_latlon().items()
+        }
+
+        grid = Grid(
+            lonlat_dict["lon"],
+            lonlat_dict["lat"],
+            *field.metadata(
+                "longitudeOfFirstGridPointInDegrees",
+                "latitudeOfFirstGridPointInDegrees",
+            ),
+        )
+
+        return grid
+
+    raise ValueError(f"reference field, {ref_param=} not found in {datafiles=}")
+
+
+def load_pv(pv_param, datafiles):
+    fs = earthkit.data.from_source("file", [str(p) for p in datafiles]).sel(
+        param=pv_param
+    )
+
+    for field in fs:
+        return field.metadata("pv")
+
+
+def load_param(
+    ref_grid: Grid,
+    param: str,
+    datafiles: list[Path],
+):
+    fs = earthkit.data.from_source("file", [str(p) for p in datafiles]).sel(param=param)
+
+    hcoords = None
+    metadata = {}
+    time_meta: dict[int, dict] = {}
+    dims: tuple[str, ...] = None
+    field_map: dict[tuple[int, ...], np.ndarray] = {}
+
+    for field in fs:
+        dim_keys = (
+            ("perturbationNumber", "step", "level")
+            if _is_ensemble(field)
+            else ("step", "level")
+        )
+        key = field.metadata(*dim_keys)
+        field_map[key] = field.to_numpy(dtype=np.float32)
+
+        step = key[-2]  # assume all members share the same time steps
+        if step not in time_meta:
+            time_meta[step] = field.metadata(namespace="time")
+
+        if not dims:
+            dims = tuple(DIM_MAP[d] for d in dim_keys) + ("y", "x")
+
+        if not metadata:
+            metadata = field.metadata(namespace=["geography", "parameter"])
+            level_type = field.metadata("typeOfLevel")
+            vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
+
+            x0 = ref_grid.longitudeOfFirstGridPointInDegrees % 360
+            y0 = ref_grid.latitudeOfFirstGridPointInDegrees
+            geo = metadata["geography"]
+            dx = geo["iDirectionIncrementInDegrees"]
+            dy = geo["jDirectionIncrementInDegrees"]
+
+            metadata |= {
+                "vcoord_type": vcoord_type,
+                "origin": {
+                    "z": zshift,
+                    "x": np.round(
+                        (geo["longitudeOfFirstGridPointInDegrees"] % 360 - x0) / dx, 1
+                    ),
+                    "y": np.round(
+                        (geo["latitudeOfFirstGridPointInDegrees"] - y0) / dy, 1
+                    ),
+                },
+            }
+
+    coords, shape = _gather_coords(field_map, dims)
+    tcoords = _gather_tcoords(time_meta)
+    hcoords = {
+        "lon": (("y", "x"), ref_grid.lon.data),
+        "lat": (("y", "x"), ref_grid.lat.data),
+    }
+
+    array = xr.DataArray(
+        np.array([field_map.pop(key) for key in sorted(field_map)]).reshape(shape),
+        coords=coords | hcoords | tcoords,
+        dims=dims,
+        attrs=metadata,
+    )
+
+    return array if array.vcoord_type != "surface" else array.squeeze("z", drop=True)
+
+
+def load_data(
+    ref_grid: Grid,
+    params: list[str],
+    datafiles: list[Path],
+    extract_pv: str | None = None,
+) -> dict[str, xr.DataArray]:
+    """Load data from GRIB files.
+
+    Parameters
+    ----------
+    params : list[str]
+        List of fields to load from the data files.
+    datafiles : list[Path]
+        List of files from which to load the data.
+    extract_pv: str | None
+        Optionally extract hybrid level coefficients from the given field.
+
+    Raises
+    ------
+    RuntimeError
+        if not all fields are found in the given datafiles.
+
+    Returns
+    -------
+    dict[str, xr.DataArray]
+        Mapping of fields by param name
+
+    """
+
+    if extract_pv is not None and extract_pv not in params:
+        raise ValueError(f"If set, {extract_pv=} must be in {params=}")
+
+    data: dict[str, dict[tuple[int, ...], np.ndarray]] = {}
+    result = {}
+
+    for param in params:
+        result[param] = load_param(ref_grid, param, datafiles)
+
+    if not set(params) == result.keys():
+        raise RuntimeError(f"Missing params: {set(params) - data.keys()}")
+
+    if extract_pv:
+        result = result | _extract_pv(load_pv(extract_pv, datafiles))
+
+    return result
+
+
+def load_cosmo_data(
+    ref_grid: Grid,
+    params: list[str],
+    datafiles: list[Path],
+) -> dict[str, xr.DataArray]:
+    """Load data from GRIB files.
+
+    The COSMO definitions are enabled during the load.
+
+    Parameters
+    ----------
+    params : list[str]
+        List of fields to load from the data files.
+    datafiles : list[Path]
+        List of files from which to load the data.
+    extract_pv: str | None
+        Optionally extract hybrid level coefficients from the given field.
+
+    Raises
+    ------
+    RuntimeError
+        if not all fields are found in the given datafiles.
+
+    Returns
+    -------
+    dict[str, xr.DataArray]
+        Mapping of fields by param name
+
+    """
+    if not _cosmo_allowed:
+        raise RuntimeError("GRIB cache contains IFS defs, respawn process to clear.")
+
+    global _ifs_allowed
+    _ifs_allowed = False  # due to incompatible data in cache
+
+    with cosmo_grib_defs():
+        return load_data(ref_grid, params, datafiles, extract_pv=None)
+
+
+def load_ifs_data(
+    ref_grid: Grid,
+    params: list[str],
+    datafiles: list[Path],
+    extract_pv: str | None = None,
+) -> dict[str, xr.DataArray]:
+    """Load data from GRIB files.
+
+    Expects IFS data.
+
+    Parameters
+    ----------
+    params : list[str]
+        List of fields to load from the data files.
+    datafiles : list[Path]
+        List of files from which to load the data.
+    extract_pv: str | None
+        Optionally extract hybrid level coefficients from the given field.
+
+    Raises
+    ------
     RuntimeError
         if not all fields are found in the given datafiles.
 
@@ -316,10 +372,9 @@ def load_ifs_data(
         return mapping[param].get("cosmo", {}).get("unit_factor", 1)
 
     ifs_params = list(params_map.keys())
-    ifs_ref_param = mapping[ref_param]["ifs"]["name"]
     ifs_extract_pv = (
         mapping[extract_pv]["ifs"]["name"] if extract_pv is not None else None
     )
-    ds = load_data(ifs_params, datafiles, ifs_ref_param, ifs_extract_pv)
+    ds = load_data(ref_grid, ifs_params, datafiles, ifs_extract_pv)
     with xr.set_options(keep_attrs=True):
         return {params_map.get(k, k): get_unit_factor(k) * v for k, v in ds.items()}

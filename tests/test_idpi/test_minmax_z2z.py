@@ -23,7 +23,9 @@ def test_minmax_z2z(operator, fx_op, field, layer, data_dir, fieldextra):
     cdatafile = data_dir / "lfff00000000c.ch"
 
     # load input data set
+    ref_grid = grib_decoder.load_grid_reference("HHL", [cdatafile])
     ds = grib_decoder.load_cosmo_data(
+        ref_grid,
         [field, "HHL"],
         [datafile, cdatafile],
     )
