@@ -68,7 +68,7 @@ def compute_weights(
 
 
 def compute_cond_mask(
-    windows: xr.DataArray, weights: xr.DataArray, frac_val: float
+    windows: xr.DataArray, weights: xr.DataArray, frac_val: float, nx: int, ny: int
 ) -> xr.DataArray:
     """Compute the conditional mask for which the convolution results are valid.
 
@@ -85,6 +85,10 @@ def compute_cond_mask(
         Weights of the convolution kernel.
     frac_val : float
         Threshold on the ratio of undefined values.
+    nx : int
+        Size of the field in the x dimension.
+    ny : int
+        Size of the field in the y dimension.
 
     Returns
     -------
@@ -96,10 +100,10 @@ def compute_cond_mask(
     mask = weights > 0
 
     loc_x = windows.x + windows.win_x - windows.sizes["win_x"] // 2
-    in_bnds_x = np.logical_and(0 <= loc_x, loc_x < windows.sizes["x"])
+    in_bnds_x = np.logical_and(0 <= loc_x, loc_x < nx)
 
     loc_y = windows.y + windows.win_y - windows.sizes["win_y"] // 2
-    in_bnds_y = np.logical_and(0 <= loc_y, loc_y < windows.sizes["y"])
+    in_bnds_y = np.logical_and(0 <= loc_y, loc_y < ny)
 
     undef = windows.isnull()
     frac_undef = undef.where(mask).where(in_bnds_x).where(in_bnds_y).mean(weights.dims)
@@ -129,18 +133,34 @@ def fill_undef(field: xr.DataArray, radius: int, frac_val: float) -> xr.DataArra
     n = 2 * radius + 1
     weights = compute_weights(n, "exp", "disk")
 
+    # select undefined grid elements
+    undef = field.isnull()
+    idx = {
+        dim: xr.DataArray(idx, dims="undef")
+        for dim, idx in zip(undef.dims, np.nonzero(undef.values))
+    }
+    xy_coords = {dim: range(field.sizes[dim]) for dim in "xy"}
+
     # construct rolling windows
     dims = {"x": "win_x", "y": "win_y"}
-    windows = field.rolling({"x": n, "y": n}, center=True).construct(dims)
+    windows = (
+        field.assign_coords(xy_coords)
+        .rolling({"x": n, "y": n}, center=True)
+        .construct(dims)
+        .sel(idx)
+    )
 
     # compute conditional mask
-    cond = compute_cond_mask(windows, weights, frac_val)
+    s = field.sizes
+    cond = compute_cond_mask(windows, weights, frac_val, s["x"], s["y"])
 
     # compute weighted mean skipping undefined values
     smoothed = windows.weighted(weights).mean(dims.values())
 
     # replace undefined values in input field
-    return xr.where(field.isnull(), smoothed.where(cond), field)
+    result = field.copy()
+    result[idx] = smoothed.where(cond)
+    return result
 
 
 def disk_avg(field: xr.DataArray, radius: int) -> xr.DataArray:
@@ -166,6 +186,7 @@ def disk_avg(field: xr.DataArray, radius: int) -> xr.DataArray:
     windows = field.rolling({"x": n, "y": n}, center=True).construct(dims)
 
     # compute weighted mean skipping undefined values
-    smoothed = windows.weighted(weights).mean(dims.values())
+    skipna = field.isnull().any().item()
+    smoothed = windows.weighted(weights).mean(dims.values(), skipna=skipna)
 
     return smoothed.where(~field.isnull())
