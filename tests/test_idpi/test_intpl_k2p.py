@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 
 # First-party
-from idpi import grib_decoder
+from idpi.grib_decoder import GribReader
 from idpi.operators.vertical_interpolation import interpolate_k2p
 
 
@@ -25,8 +25,8 @@ def test_intpl_k2p(mode, fx_mode, atol, rtol, data_dir, fieldextra):
     datafile = data_dir / "lfff00000000.ch"
 
     # load input data set
-    ref_grid = grib_decoder.load_grid_reference("P", [datafile])
-    ds = grib_decoder.load_cosmo_data(ref_grid, ["P", "T"], [datafile])
+    reader = GribReader([datafile], ref_param="P")
+    ds = reader.load_cosmo_data(["P", "T"])
 
     # call interpolation operator
     t = interpolate_k2p(ds["T"], mode, ds["P"], tc_values, tc_units)

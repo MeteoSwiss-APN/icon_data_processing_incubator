@@ -9,7 +9,7 @@ from numpy.testing import assert_allclose
 
 # First-party
 import idpi.operators.time_operators as time_ops
-from idpi import grib_decoder
+from idpi.grib_decoder import GribReader
 
 
 @pytest.fixture
@@ -22,8 +22,9 @@ def test_delta(data_dir, fieldextra):
     dd, hh = np.divmod(steps, 24)
     datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
 
-    ref_grid = grib_decoder.load_grid_reference("TOT_PREC", datafiles)
-    ds = grib_decoder.load_cosmo_data(ref_grid, ["TOT_PREC"], datafiles)
+    reader = GribReader(datafiles, ref_param="TOT_PREC")
+
+    ds = reader.load_cosmo_data(["TOT_PREC"])
 
     tot_prec_03h = time_ops.delta(ds["TOT_PREC"], np.timedelta64(3, "h"))
 
@@ -51,8 +52,8 @@ def test_max(data_dir, fieldextra):
     dd, hh = np.divmod(steps, 24)
     datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
 
-    ref_grid = grib_decoder.load_grid_reference("VMAX_10M", datafiles)
-    ds = grib_decoder.load_cosmo_data(ref_grid, ["VMAX_10M"], datafiles)
+    reader = GribReader(datafiles, ref_param="VMAX_10M")
+    ds = reader.load_cosmo_data(["VMAX_10M"])
 
     f = ds["VMAX_10M"]
     vmax_10m_24h = time_ops.max(f.where(f.time > 0), np.timedelta64(24, "h"))

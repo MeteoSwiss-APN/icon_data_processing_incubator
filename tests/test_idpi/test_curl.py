@@ -3,20 +3,18 @@ import numpy as np
 from xarray.testing import assert_allclose
 
 # First-party
-from idpi import grib_decoder
+from idpi.grib_decoder import GribReader
 from idpi.operators import curl
 from idpi.operators.support_operators import get_grid_coords
 from idpi.operators.total_diff import TotalDiff
 
 
-def test_curl(data_dir):
+def test_curl(data_dir, create_product):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
-    ref_grid = grib_decoder.load_grid_reference("HHL", [cdatafile])
-    ds = grib_decoder.load_cosmo_data(
-        ref_grid, ["U", "V", "W", "HHL"], [datafile, cdatafile]
-    )
+    reader = GribReader([cdatafile, datafile])
+    ds = reader.load_cosmo_data(["U", "V", "W", "HHL"])
 
     geo = ds["HHL"].attrs["geography"]
     dlon = geo["iDirectionIncrementInDegrees"]

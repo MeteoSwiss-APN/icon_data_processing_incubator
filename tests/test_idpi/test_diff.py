@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 # First-party
-from idpi import grib_decoder
+from idpi.grib_decoder import GribReader
 from idpi.operators import diff
 from idpi.operators.theta import ftheta
 
@@ -11,12 +11,9 @@ from idpi.operators.theta import ftheta
 def test_masspoint_field(data_dir):
     datafile = data_dir / "lfff00000000.ch"
 
-    ref_grid = grib_decoder.load_grid_reference("P", [datafile])
-    ds = grib_decoder.load_cosmo_data(
-        ref_grid,
-        ["P", "T"],
-        [datafile],
-    )
+    reader = GribReader([datafile], ref_param="P")
+
+    ds = reader.load_cosmo_data(["P", "T"])
 
     theta = ftheta(ds["P"], ds["T"])
 
@@ -38,12 +35,9 @@ def test_masspoint_field(data_dir):
 def test_staggered_field(data_dir):
     datafile = data_dir / "lfff00000000.ch"
 
-    ref_grid = grib_decoder.load_grid_reference("W", [datafile])
-    ds = grib_decoder.load_cosmo_data(
-        ref_grid,
-        ["W"],
-        [datafile],
-    )
+    reader = GribReader([datafile], ref_param="W")
+
+    ds = reader.load_cosmo_data(["W"])
 
     w = ds["W"]
     wn = w.to_numpy()
