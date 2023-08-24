@@ -97,6 +97,13 @@ def compute_cond_mask(
         kernel is within the acceptable threshold.
 
     """
+    # For each window, `x` is the coordinate of the center of the window in the parent
+    # field. `win_x` is the local coordinate of the current element in the window.
+    # `loc_x` represents the location of the window element in the coordinates of the
+    # parent field. This is needed to filter out nans that are introduced by the
+    # padding of the field by the rolling method. Only the nans that are present within
+    # the bound of the field should count towards the `frac_val` threshold.
+
     mask = weights > 0
 
     loc_x = windows.x + windows.win_x - windows.sizes["win_x"] // 2
@@ -114,6 +121,8 @@ def fill_undef(field: xr.DataArray, radius: int, frac_val: float) -> xr.DataArra
     """Fill undefined values.
 
     Replace undefined values with a value derived from neighbourhood.
+    The values are obtained by applying a Gaussian filter to the field
+    around the undefined elements.
 
     Parameters
     ----------
@@ -123,6 +132,8 @@ def fill_undef(field: xr.DataArray, radius: int, frac_val: float) -> xr.DataArra
         Radius of the convolution window.
     frac_val : float
         Threshold of acceptable ratio of undefined values in window.
+        If the ratio of undefined to total elements in the window is
+        below the threshold then the output value remains undefined.
 
     Returns
     -------
