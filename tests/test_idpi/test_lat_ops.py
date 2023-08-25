@@ -1,6 +1,6 @@
 # Third-party
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 
 # First-party
