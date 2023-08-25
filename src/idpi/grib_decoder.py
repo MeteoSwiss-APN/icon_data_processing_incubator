@@ -104,6 +104,10 @@ class Grid:
     latitudeOfFirstGridPointInDegrees: float
 
 
+def _check_string_arg(obj):
+    return bool(obj) and all(isinstance(elem, str) for elem in obj)
+
+
 class GribReader:
     def __init__(
         self,
@@ -238,6 +242,10 @@ class GribReader:
                     },
                 }
 
+        # TODO unittest this assertion
+        if not field_map:
+            raise ValueError(f"requested {param=} not found.")
+
         coords, shape = _gather_coords(field_map, dims)
         tcoords = _gather_tcoords(time_meta)
         hcoords = {
@@ -283,6 +291,10 @@ class GribReader:
             Mapping of fields by param name
 
         """
+
+        if not _check_string_arg(params):
+            raise ValueError(f"wrong type for arg {params=}. Expected str")
+
         _params = set(params)
         if extract_pv is not None and extract_pv not in _params:
             raise ValueError(f"If set, {extract_pv=} must be in {_params=}")
