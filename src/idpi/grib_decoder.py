@@ -36,8 +36,7 @@ _cosmo_allowed = True
 @contextmanager
 def cosmo_grib_defs():
     """Enable COSMO GRIB definitions."""
-    prefix = sys.exec_prefix
-    root_dir = Path(prefix) / "share"
+    root_dir = Path(sys.prefix) / "share"
     paths = (
         root_dir / "eccodes-cosmo-resources/definitions",
         root_dir / "eccodes/definitions",
