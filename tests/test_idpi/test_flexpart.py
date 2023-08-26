@@ -17,7 +17,7 @@ def data_dir(data_dir):
 
 
 @pytest.mark.ifs
-def test_flexpart(data_dir, fieldextra, create_product):
+def test_flexpart(data_dir, fieldextra):
     datafiles = list(data_dir.glob("efs*"))
     constants = ("FIS", "FR_LAND", "SDOR")
     inputf = (

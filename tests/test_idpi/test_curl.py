@@ -9,7 +9,7 @@ from idpi.operators.support_operators import get_grid_coords
 from idpi.operators.total_diff import TotalDiff
 
 
-def test_curl(data_dir, create_product):
+def test_curl(data_dir):
     datafile = data_dir / "lfff00000000.ch"
     cdatafile = data_dir / "lfff00000000c.ch"
 
