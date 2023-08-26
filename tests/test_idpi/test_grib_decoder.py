@@ -13,7 +13,7 @@ earthkit = Mock()
 
 @patch("idpi.grib_decoder.earthkit.data.from_source")
 def test_ref_param_not_found(mock_from_source):
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         GribReader([])
 
 
