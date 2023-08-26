@@ -242,7 +242,6 @@ class GribReader:
                     },
                 }
 
-        # TODO unittest this assertion
         if not field_map:
             raise ValueError(f"requested {param=} not found.")
 
