@@ -23,16 +23,23 @@ class Register:
         return self.regdict.setdefault(key, delayed(fn)(*arg))
 
 
-class Product(ABC):
-    """Abstract base class for products."""
+class Product:
+    """Base class for products."""
 
-    def __init__(self, reg: Register | None = None):
+    def __init__(self, input_fields: list[str], reg: Register | None = None):
+        self._input_fields = input_fields
         if not reg:
             self.reg = Register()
         else:
             self.reg = reg
 
-    @property
     @abstractmethod
+    def _run(self, **args):
+        pass
+
+    def __call__(self, *args):
+        return self._run(*args)
+
+    @property
     def input_fields(self):
-        ...
+        return self._input_fields
