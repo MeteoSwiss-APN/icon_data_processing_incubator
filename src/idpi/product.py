@@ -1,7 +1,8 @@
 """Product base classes."""
 
 # Standard library
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 from itertools import accumulate
 
 # Third-party
