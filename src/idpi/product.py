@@ -1,6 +1,7 @@
 """Product base classes."""
 
 # Standard library
+import typing
 from abc import ABCMeta
 from abc import abstractmethod
 from itertools import accumulate
@@ -13,7 +14,7 @@ class Register:
     """Register methods that are (dask) delayed for caching."""
 
     def __init__(self, delay: bool = False):
-        self.regdict = {}
+        self.regdict: dict[str, typing.Any] = {}
         self._delayed = dask.delayed if delay else lambda x: x
 
     def reg(self, fn, *arg):
