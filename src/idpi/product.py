@@ -1,12 +1,11 @@
 """Product base classes."""
 
 # Standard library
-from abc import ABC
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from itertools import accumulate
 
 # Third-party
-from dask import delayed
+import dask
 
 
 class Register:
@@ -20,24 +19,29 @@ class Register:
             accumulate([hash(id(x)) for x in arg], lambda x, acc: hash(x ^ acc))
         )[-1]
 
-        return self.regdict.setdefault(key, delayed(fn)(*arg))
+        return self.regdict.setdefault(key, dask.delayed(fn)(*arg))
 
 
-class Product:
+class Product(metaclass=ABCMeta):
     """Base class for products."""
 
-    def __init__(self, input_fields: list[str], reg: Register | None = None):
+    def __init__(
+        self, input_fields: list[str], reg: Register | None = None, delay: bool = False
+    ):
         self._input_fields = input_fields
         if not reg:
             self.reg = Register()
         else:
             self.reg = reg
+        self._delay = delay
 
     @abstractmethod
     def _run(self, **args):
         pass
 
     def __call__(self, *args):
+        if self._delay:
+            return dask.delayed(self._run)(*args)
         return self._run(*args)
 
     @property
