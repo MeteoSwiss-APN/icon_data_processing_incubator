@@ -297,7 +297,7 @@ class GribReader:
             raise RuntimeError(f"Missing params: {_params - data.keys()}")
 
         if extract_pv:
-            result = result | _extract_pv(self.load_pv(extract_pv))
+            result = result | _extract_pv(self._load_pv(extract_pv))
 
         return result
 
