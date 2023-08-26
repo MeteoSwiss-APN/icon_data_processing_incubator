@@ -1,7 +1,9 @@
 """Decoder for grib data."""
 # Standard library
+import dataclasses as dc
 import datetime as dt
 import sys
+import typing
 from contextlib import contextmanager
 from importlib.resources import files
 from pathlib import Path
@@ -9,6 +11,7 @@ import dataclasses as dc
 import dask
 
 # Third-party
+import dask
 import earthkit.data  # type: ignore
 import eccodes  # type: ignore
 import numpy as np
@@ -115,39 +118,49 @@ class GribReader:
         ifs: bool = False,
         delay: bool = False,
     ):
+        """Initialize a grib reader from a list of grib files.
+
+        Parameters
+        ----------
+        datafiles : list[str]
+            List of grib input filenames
+        ref_param : str
+            name of parameter used to construct a reference grid
+        ifs : bool
+            True for setting up a grib reader for IFS data
+        delay : bool
+            if True, it will (dask) delay the functions that load parameters
+
+        Raises
+        ------
+        ValueError
+            if the grid can not be constructed from the ref_param
+
+        """
         self._datafiles = datafiles
         self._ifs = ifs
         self._delayed = dask.delayed if delay else (lambda x: x)
         self._grid = self.load_grid_reference(ref_param)
 
     def load_grid_reference(self, ref_param: str) -> Grid:
-        """Load data from GRIB files.
+        """Construct a grid from a reference parameter.
 
         Parameters
         ----------
-        params : list[str]
-            List of fields to load from the data files.
-        datafiles : list[Path]
-            List of files from which to load the data.
         ref_param : str
-            Parameter to use as a reference for the coordinates.
-        extract_pv: str | None
-            Optionally extract hybrid level coefficients from the given field.
+            name of parameter used to construct a reference grid.
 
         Raises
         ------
         ValueError
-            if ref_param is not included in params.
-        RuntimeError
-            if not all fields are found in the given datafiles.
+            if ref_param is not found in the input dataset
 
         Returns
         -------
-        dict[str, xr.DataArray]
-            Mapping of fields by param name
+        Grid
+            reference grid
 
         """
-
         if self._ifs:
             mapping_path = files("idpi.data").joinpath("field_mappings.yml")
             mapping = yaml.safe_load(mapping_path.open())
@@ -172,11 +185,11 @@ class GribReader:
 
             return grid
 
-        raise ValueError(
+        raise RuntimeError(
             f"reference field, {ref_param=} not found in {self._datafiles=}"
         )
 
-    def load_pv(self, pv_param: str):
+    def _load_pv(self, pv_param: str):
         if not self._ifs:
             raise ValueError("load_pv only available for IFS data")
         fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles]).sel(
@@ -195,9 +208,9 @@ class GribReader:
         )
 
         hcoords = None
-        metadata = {}
+        metadata: dict[str, typing.Any] = {}
         time_meta: dict[int, dict] = {}
-        dims: tuple[str, ...] = None
+        dims: tuple[str, ...] | None = None
         field_map: dict[tuple[int, ...], np.ndarray] = {}
 
         for field in fs:
@@ -242,7 +255,7 @@ class GribReader:
                 }
 
         if not field_map:
-            raise ValueError(f"requested {param=} not found.")
+            raise RuntimeError(f"requested {param=} not found.")
 
         coords, shape = _gather_coords(field_map, dims)
         tcoords = _gather_tcoords(time_meta)
@@ -262,34 +275,11 @@ class GribReader:
             array if array.vcoord_type != "surface" else array.squeeze("z", drop=True)
         )
 
-    def load_dataset(
+    def _load_dataset(
         self,
         params: list[str],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
-        """Load data from GRIB files.
-
-        Parameters
-        ----------
-        params : list[str]
-            List of fields to load from the data files.
-        datafiles : list[Path]
-            List of files from which to load the data.
-        extract_pv: str | None
-            Optionally extract hybrid level coefficients from the given field.
-
-        Raises
-        ------
-        RuntimeError
-            if not all fields are found in the given datafiles.
-
-        Returns
-        -------
-        dict[str, xr.DataArray]
-            Mapping of fields by param name
-
-        """
-
         if not _check_string_arg(params):
             raise ValueError(f"wrong type for arg {params=}. Expected str")
 
@@ -331,18 +321,12 @@ class GribReader:
         self,
         params: list[str],
     ) -> dict[str, xr.DataArray]:
-        """Load data from GRIB files.
-
-        The COSMO definitions are enabled during the load.
+        """Load a COSMO dataset with the requested parameters.
 
         Parameters
         ----------
         params : list[str]
             List of fields to load from the data files.
-        datafiles : list[Path]
-            List of files from which to load the data.
-        extract_pv: str | None
-            Optionally extract hybrid level coefficients from the given field.
 
         Raises
         ------
@@ -364,23 +348,19 @@ class GribReader:
         _ifs_allowed = False  # due to incompatible data in cache
 
         with cosmo_grib_defs():
-            return self.load_dataset(params, extract_pv=None)
+            return self._load_dataset(params, extract_pv=None)
 
     def load_ifs_data(
         self,
         params: list[str],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
-        """Load data from GRIB files.
-
-        Expects IFS data.
+        """Load an IFS dataset with the requested parameters.
 
         Parameters
         ----------
         params : list[str]
             List of fields to load from the data files.
-        datafiles : list[Path]
-            List of files from which to load the data.
         extract_pv: str | None
             Optionally extract hybrid level coefficients from the given field.
 
@@ -421,6 +401,6 @@ class GribReader:
         ifs_extract_pv = (
             mapping[extract_pv]["ifs"]["name"] if extract_pv is not None else None
         )
-        ds = self.load_dataset(ifs_params, ifs_extract_pv)
+        ds = self._load_dataset(ifs_params, ifs_extract_pv)
         with xr.set_options(keep_attrs=True):
             return {params_map.get(k, k): get_unit_factor(k) * v for k, v in ds.items()}

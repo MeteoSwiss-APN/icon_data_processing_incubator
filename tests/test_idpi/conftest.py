@@ -1,6 +1,4 @@
 """Test configuration."""
-from idpi.product import Product
-
 # Standard library
 import subprocess
 from pathlib import Path
