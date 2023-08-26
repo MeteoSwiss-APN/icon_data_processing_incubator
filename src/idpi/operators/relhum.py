@@ -1,3 +1,7 @@
+"""Relative humidity operators."""
+# Standard library
+from typing import Literal
+
 # Third-party
 import xarray as xr
 
@@ -6,7 +10,35 @@ from idpi.operators.atmo import pv_sw
 from idpi.operators.atmo import qv_pvp
 
 
-def relhum(qv, t, p, clipping=True):
+def relhum(
+    qv, t, p, clipping=True, phase: Literal["water", "ice", "water+ic"] = "water"
+):
+    """Calculate relative humidity.
+
+    Parameters
+    ----------
+    qv : xr.DataArray
+        waver vapor mixing ratio
+    t : xr.DataArray
+        temperature
+    p : xr.DataArray
+        pressure
+    clipping : bool
+        clips the relative humidity to [0,100] interval
+    phase : Literal["water", "ice", "water+ic"]
+        Customizes how relative humidity is computed.
+        'water'        over water
+        'ice'          over ice
+        'water+ice'    over mixed phase
+
+    Returns
+    -------
+    xr.DataArray
+        relative humidity field
+
+    """
+    if phase != "water":
+        raise ValueError(f"{phase=} not implemented")
     attrs = t.attrs.copy()
     max = 100 if clipping else None
 
