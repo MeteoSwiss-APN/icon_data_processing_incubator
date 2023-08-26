@@ -10,7 +10,6 @@ from numpy.testing import assert_allclose
 
 # First-party
 import idpi.operators.time_operators as time_ops
-
 from idpi.grib_decoder import GribReader
 
 
