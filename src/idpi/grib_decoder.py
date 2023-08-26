@@ -139,7 +139,11 @@ class GribReader:
         self._datafiles = datafiles
         self._ifs = ifs
         self._delayed = dask.delayed if delay else (lambda x: x)
-        self._grid = self.load_grid_reference(ref_param)
+        if not self._ifs:
+            with cosmo_grib_defs():
+                self._grid = self.load_grid_reference(ref_param)
+        else:
+            self._grid = self.load_grid_reference(ref_param)
 
     def load_grid_reference(self, ref_param: str) -> Grid:
         """Construct a grid from a reference parameter.
