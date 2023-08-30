@@ -133,7 +133,7 @@ class GribReader:
             if the grid can not be constructed from the ref_param
 
         """
-        self._datafiles = datafiles
+        self._datafiles = [str(p) for p in datafiles]
         self._ifs = ifs
         self._delayed = dask.delayed if delay else (lambda x: x)
         if not self._ifs:
