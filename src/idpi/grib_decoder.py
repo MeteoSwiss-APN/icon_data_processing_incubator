@@ -168,7 +168,11 @@ class GribReader:
 
         fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles])
 
-        for field in fs.sel(param=ref_param):
+        it = iter(fs.sel(param=ref_param))
+        field = next(it, None)
+        if field is None:
+            msg = f"reference field, {ref_param=} not found in {self._datafiles=}"
+            raise RuntimeError(msg)
             lonlat_dict = {
                 geo_dim: xr.DataArray(dims=("y", "x"), data=values)
                 for geo_dim, values in field.to_latlon().items()
