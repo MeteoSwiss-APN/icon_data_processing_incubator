@@ -139,7 +139,7 @@ def load_data(
         Mapping of fields by param name
 
     """
-    fs = earthkit.data.from_source("file", [str(p) for p in datafiles])
+    fs = earthkit.data.from_source("file", [str(p) for p in datafiles], indexing=True)
 
     if ref_param not in params:
         raise ValueError(f"{ref_param=} must be in {params=}")
