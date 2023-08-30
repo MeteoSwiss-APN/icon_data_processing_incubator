@@ -98,8 +98,8 @@ def _extract_pv(pv):
 class Grid:
     lon: xr.DataArray
     lat: xr.DataArray
-    longitudeOfFirstGridPointInDegrees: float
-    latitudeOfFirstGridPointInDegrees: float
+    lon_first_grid_point: float
+    lat_first_grid_point: float
 
 
 def _check_string_arg(obj):
@@ -110,7 +110,7 @@ class GribReader:
     def __init__(
         self,
         datafiles: list[Path],
-        ref_param="HHL",
+        ref_param: str = "HHL",
         ifs: bool = False,
         delay: bool = False,
     ):
@@ -118,7 +118,7 @@ class GribReader:
 
         Parameters
         ----------
-        datafiles : list[str]
+        datafiles : list[Path]
             List of grib input filenames
         ref_param : str
             name of parameter used to construct a reference grid
@@ -137,6 +137,9 @@ class GribReader:
         self._ifs = ifs
         self._delayed = dask.delayed if delay else (lambda x: x)
         if not self._ifs:
+            global _ifs_allowed
+            _ifs_allowed = False  # due to incompatible data in cache
+
             with cosmo_grib_defs():
                 self._grid = self.load_grid_reference(ref_param)
         else:
@@ -234,8 +237,8 @@ class GribReader:
                 level_type = field.metadata("typeOfLevel")
                 vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
 
-                x0 = self._grid.longitudeOfFirstGridPointInDegrees % 360
-                y0 = self._grid.latitudeOfFirstGridPointInDegrees
+                x0 = self._grid.lon_first_grid_point % 360
+                y0 = self._grid.lat_first_grid_point
                 geo = metadata["geography"]
                 dx = geo["iDirectionIncrementInDegrees"]
                 dy = geo["jDirectionIncrementInDegrees"]
