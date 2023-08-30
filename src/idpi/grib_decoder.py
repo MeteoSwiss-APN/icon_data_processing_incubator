@@ -166,7 +166,7 @@ class GribReader:
             mapping = yaml.safe_load(mapping_path.open())
             ref_param = mapping[ref_param]["ifs"]["name"]
 
-        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles])
+        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles], indexing=True)
 
         for field in fs.sel(param=ref_param):
             lonlat_dict = {
