@@ -171,7 +171,6 @@ class GribReader:
             ref_param = mapping[ref_param]["ifs"]["name"]
 
         fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles])
-
         it = iter(fs.sel(param=ref_param))
         field = next(it, None)
         if field is None:
@@ -268,8 +267,8 @@ class GribReader:
         coords, shape = _gather_coords(field_map, dims)
         tcoords = _gather_tcoords(time_meta)
         hcoords = {
-            "lon": (("y", "x"), self._grid.lon.data),
-            "lat": (("y", "x"), self._grid.lat.data),
+            "lon": xr.DataArray(dim=("y", "x"), data=self._grid.lon.data),
+            "lat": xr.DataArray(dim=("y", "x"), data=self._grid.lat.data),
         }
 
         array = xr.DataArray(
