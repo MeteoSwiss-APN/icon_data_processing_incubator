@@ -15,6 +15,7 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
+from earthkit.data.readers.grib.codes import GribField  # type:ignore
 
 DIM_MAP = {
     "level": "z",
@@ -202,6 +203,32 @@ class GribReader:
         for field in fs:
             return field.metadata("pv")
 
+    def _construct_metadata(self, field: GribField):
+        metadata: dict[str, typing.Any] = field.metadata(
+            namespace=["geography", "parameter"]
+        )
+        level_type: str = field.metadata("typeOfLevel")
+        vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
+
+        x0 = self._grid.lon_first_grid_point % 360
+        y0 = self._grid.lat_first_grid_point
+        geo = metadata["geography"]
+        dx = geo["iDirectionIncrementInDegrees"]
+        dy = geo["jDirectionIncrementInDegrees"]
+
+        metadata |= {
+            "vcoord_type": vcoord_type,
+            "origin": {
+                "z": zshift,
+                "x": np.round(
+                    (geo["longitudeOfFirstGridPointInDegrees"] % 360 - x0) / dx,
+                    1,
+                ),
+                "y": np.round((geo["latitudeOfFirstGridPointInDegrees"] - y0) / dy, 1),
+            },
+        }
+        return metadata
+
     def _load_param(
         self,
         param: str,
@@ -233,29 +260,7 @@ class GribReader:
                 dims = tuple(DIM_MAP[d] for d in dim_keys) + ("y", "x")
 
             if not metadata:
-                metadata = field.metadata(namespace=["geography", "parameter"])
-                level_type = field.metadata("typeOfLevel")
-                vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
-
-                x0 = self._grid.lon_first_grid_point % 360
-                y0 = self._grid.lat_first_grid_point
-                geo = metadata["geography"]
-                dx = geo["iDirectionIncrementInDegrees"]
-                dy = geo["jDirectionIncrementInDegrees"]
-
-                metadata |= {
-                    "vcoord_type": vcoord_type,
-                    "origin": {
-                        "z": zshift,
-                        "x": np.round(
-                            (geo["longitudeOfFirstGridPointInDegrees"] % 360 - x0) / dx,
-                            1,
-                        ),
-                        "y": np.round(
-                            (geo["latitudeOfFirstGridPointInDegrees"] - y0) / dy, 1
-                        ),
-                    },
-                }
+                metadata = self._construct_metadata(field)
 
         if not field_map:
             raise RuntimeError(f"requested {param=} not found.")
