@@ -15,7 +15,6 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
-from earthkit.data.readers.grib.codes import GribField  # type:ignore
 
 DIM_MAP = {
     "level": "z",
@@ -202,7 +201,7 @@ class GribReader:
         for field in fs:
             return field.metadata("pv")
 
-    def _construct_metadata(self, field: GribField):
+    def _construct_metadata(self, field: typing.Any):
         metadata: dict[str, typing.Any] = field.metadata(
             namespace=["geography", "parameter"]
         )
@@ -267,8 +266,8 @@ class GribReader:
         coords, shape = _gather_coords(field_map, dims)
         tcoords = _gather_tcoords(time_meta)
         hcoords = {
-            "lon": xr.DataArray(dim=("y", "x"), data=self._grid.lon.data),
-            "lat": xr.DataArray(dim=("y", "x"), data=self._grid.lat.data),
+            "lon": xr.DataArray(dims=("y", "x"), data=self._grid.lon.data),
+            "lat": xr.DataArray(dims=("y", "x"), data=self._grid.lat.data),
         }
 
         array = xr.DataArray(
