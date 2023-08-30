@@ -133,7 +133,7 @@ class GribReader:
             if the grid can not be constructed from the ref_param
 
         """
-        self._datafiles = datafiles
+        self._datafiles = [str(p) for p in datafiles]
         self._ifs = ifs
         self._delayed = dask.delayed if delay else (lambda x: x)
         if not self._ifs:
@@ -171,7 +171,11 @@ class GribReader:
 
         fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles])
 
-        for field in fs.sel(param=ref_param):
+        it = iter(fs.sel(param=ref_param))
+        field = next(it, None)
+        if field is None:
+            msg = f"reference field, {ref_param=} not found in {self._datafiles=}"
+            raise RuntimeError(msg)
             lonlat_dict = {
                 geo_dim: xr.DataArray(dims=("y", "x"), data=values)
                 for geo_dim, values in field.to_latlon().items()
