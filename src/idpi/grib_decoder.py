@@ -176,25 +176,21 @@ class GribReader:
         if field is None:
             msg = f"reference field, {ref_param=} not found in {self._datafiles=}"
             raise RuntimeError(msg)
-            lonlat_dict = {
-                geo_dim: xr.DataArray(dims=("y", "x"), data=values)
-                for geo_dim, values in field.to_latlon().items()
-            }
+        lonlat_dict = {
+            geo_dim: xr.DataArray(dims=("y", "x"), data=values)
+            for geo_dim, values in field.to_latlon().items()
+        }
 
-            grid = Grid(
-                lonlat_dict["lon"],
-                lonlat_dict["lat"],
-                *field.metadata(
-                    "longitudeOfFirstGridPointInDegrees",
-                    "latitudeOfFirstGridPointInDegrees",
-                ),
-            )
-
-            return grid
-
-        raise RuntimeError(
-            f"reference field, {ref_param=} not found in {self._datafiles=}"
+        grid = Grid(
+            lonlat_dict["lon"],
+            lonlat_dict["lat"],
+            *field.metadata(
+                "longitudeOfFirstGridPointInDegrees",
+                "latitudeOfFirstGridPointInDegrees",
+            ),
         )
+
+        return grid
 
     def _load_pv(self, pv_param: str):
         if not self._ifs:
