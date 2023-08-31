@@ -13,8 +13,8 @@ def test_relhum(data_dir, fieldextra):
     reader = GribReader([cdatafile, datafile], ref_param="P")
     ds = reader.load_cosmo_data(["P", "T", "QV"])
 
-    brn = relhum(ds["QV"], ds["T"], ds["P"], clipping=True, phase="water")
+    relhum_arr = relhum(ds["QV"], ds["T"], ds["P"], clipping=True, phase="water")
 
     fs_ds = fieldextra("RELHUM")
 
-    assert_allclose(fs_ds["RELHUM"], brn, rtol=5e-3, atol=5e-2)
+    assert_allclose(fs_ds["RELHUM"], relhum_arr, rtol=5e-3, atol=5e-2)
