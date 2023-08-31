@@ -10,17 +10,15 @@ from itertools import accumulate
 import dask
 
 
-class Register:
-    """Register methods that are (dask) delayed for caching."""
+class OperatorRegistry:
+    """Registry for operators that can be used to cache operations in dask."""
 
     def __init__(self, delay: bool = False):
         self.regdict: dict[str, typing.Any] = {}
         self._delayed = dask.delayed if delay else lambda x: x
 
     def reg(self, fn, *arg):
-        key = list(
-            accumulate([hash(id(x)) for x in arg], lambda x, acc: hash(x ^ acc))
-        )[-1]
+        key = frozenset([id(x) for x in arg])
 
         return self.regdict.setdefault(key, self._delayed(fn)(*arg))
 
@@ -31,12 +29,12 @@ class Product(metaclass=ABCMeta):
     def __init__(
         self,
         input_fields: list[str],
-        reg: Register | None = None,
+        reg: OperatorRegistry | None = None,
         delay_entire_product: bool = False,
     ):
         self._input_fields = input_fields
         if not reg:
-            self.reg = Register()
+            self.reg = OperatorRegistry()
         else:
             self.reg = reg
         self._base_delayed = dask.delayed if delay_entire_product else lambda x: x
