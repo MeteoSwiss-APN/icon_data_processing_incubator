@@ -53,7 +53,7 @@ def pv_qp(qv, p):
     Parameters
     ----------
     qv : xr.DataArray
-        waver vapor mixing ratio
+        water vapor mixing ratio
     p : xr.DataArray
         pressure
 

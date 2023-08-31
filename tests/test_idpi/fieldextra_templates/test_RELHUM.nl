@@ -39,31 +39,7 @@
 /
 
 &Process
-  in_file="{{ file.inputc }}"
-  out_type="INCORE" /
-&Process in_field="FR_LAND" /
-&Process in_field="FR_LAKE" /
-&Process in_field="SOILTYP" /
-&Process in_field="HSURF", tag='GRID' /
-&Process in_field="FIS" /
-&Process in_field="HEIGHT", tag="hhl_c1e", levmin=1, levmax=81, level_class="k_half" /
-
-&Process
-  in_type="INCORE"
-  in_regrid_target="GRID"
-  tstart=0, tstop=0, tincr=1
-  out_file="{{ file.output }}"
-  out_type="NETCDF"
-  in_size_field=570
-/
-&Process in_field="HSURF", use_tag="GRID", tag="hsurf" /
-&Process in_field="HEIGHT", use_tag="hhl_c1e", tag="HHL", level_class="k_half", levmin=1, levmax=81 /
-&Process in_field="HEIGHT", use_tag="hhl_c1e", tag="HFL", level_class="k_full", levmin=1, levmax=80 /
-&Process in_field="SOILTYP" /
-
-&Process
   in_file="{{ file.inputi }}"
-  in_regrid_target="GRID"
   out_file="{{ file.output }}", out_type="NETCDF"
   in_size_field=570
   tstart=0, tstop=0, tincr=1

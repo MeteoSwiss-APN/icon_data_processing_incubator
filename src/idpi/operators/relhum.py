@@ -11,20 +11,22 @@ from idpi.operators.atmo import qv_pvp
 
 
 def relhum(
-    qv, t, p, clipping=True, phase: Literal["water", "ice", "water+ic"] = "water"
+    qv, t, p, clipping=True, phase: Literal["water", "ice", "water+ice"] = "water"
 ):
     """Calculate relative humidity.
 
     Parameters
     ----------
     qv : xr.DataArray
-        waver vapor mixing ratio
+        water vapor mixing ratio
     t : xr.DataArray
         temperature
     p : xr.DataArray
         pressure
     clipping : bool
-        clips the relative humidity to [0,100] interval
+        clips the relative humidity to [0,100] interval.
+        Only upper bound is controled by this parameter,
+        since lower bound clipping is always performed.
     phase : Literal["water", "ice", "water+ic"]
         Customizes how relative humidity is computed.
         'water'        over water
