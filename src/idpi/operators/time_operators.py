@@ -88,6 +88,36 @@ def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
     return result
 
 
+def tdelta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
+    """Compute weighted difference for a given delta in time.
+
+    Parameters
+    ----------
+    field : xr.DataArray
+        Field that contains the input data.
+    dtime : np.timedelta64
+        Time delta for which to evaluate the difference.
+
+    Raises
+    ------
+    ValueError
+        if dtime is not multiple of the field time step
+        or if the time step is not regular.
+
+    Returns
+    -------
+    xr.DataArray
+        The field weighted difference for the given time delta.
+
+    """
+    nsteps = get_nsteps(field.valid_time, dtime)
+    weights = (field.valid_time - field.ref_time) / dtime
+    weighted = field * weights
+    result = weighted - weighted.shift(time=nsteps)
+    result.attrs = field.attrs
+    return result
+
+
 def resample(field: xr.DataArray, interval: np.timedelta64) -> xr.DataArray:
     """Resample field.
 
