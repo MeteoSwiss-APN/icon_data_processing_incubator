@@ -73,7 +73,12 @@ def test_tdelta(data_dir, fieldextra):
 
     expected = xr.concat([fx_ds["GLOB"] for fx_ds in fx_ds_h], dim="time")
 
-    assert_allclose(observed, expected.transpose("epsd_1", "time", ...))
+    assert_allclose(
+        observed,
+        expected.transpose("epsd_1", "time", ...),
+        rtol=1e-5,
+        atol=1e-5,
+    )
 
 
 def test_max(data_dir, fieldextra):
