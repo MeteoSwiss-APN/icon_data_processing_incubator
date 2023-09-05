@@ -277,8 +277,8 @@ class GribReader:
         coords, shape = _gather_coords(field_map, dims)
         tcoords = _gather_tcoords(time_meta)
         hcoords = {
-            "lon": xr.DataArray(dims=("y", "x"), data=self._grid.lon.data),
-            "lat": xr.DataArray(dims=("y", "x"), data=self._grid.lat.data),
+            "lon": self._grid.lon),
+            "lat": self._grid.lat),
         }
 
         array = xr.DataArray(
