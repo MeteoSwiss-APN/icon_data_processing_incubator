@@ -15,6 +15,7 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
+from functools import partial
 
 # First-party
 from idpi.product import Product
@@ -99,10 +100,25 @@ def _extract_pv(pv):
 
 @dc.dataclass
 class Grid:
+    """Coordinates of the reference grid.
+
+    Parameters
+    ----------
+    lon: xr.DataArray
+        2d array with longitude of geographical coordinates
+    lat: xr.DataArray
+        2d array with latitude of geographical coordinates
+    lon_first_grid_point: float
+        longitude of first grid point in rotated lat-lon CRS
+    lat_first_grid_point: float
+        latitude of first grid point in rotated lat-lon CRS
+
+    """
+
     lon: xr.DataArray
     lat: xr.DataArray
-    longitudeOfFirstGridPointInDegrees: float
-    latitudeOfFirstGridPointInDegrees: float
+    lon_first_grid_point: float
+    lat_first_grid_point: float
 
 
 def _check_string_arg(obj):
@@ -113,7 +129,7 @@ class GribReader:
     def __init__(
         self,
         datafiles: list[Path],
-        ref_param="HHL",
+        ref_param: str = "HHL",
         ifs: bool = False,
         delay: bool = False,
     ):
@@ -121,7 +137,7 @@ class GribReader:
 
         Parameters
         ----------
-        datafiles : list[str]
+        datafiles : list[Path]
             List of grib input filenames
         ref_param : str
             name of parameter used to construct a reference grid
@@ -136,10 +152,13 @@ class GribReader:
             if the grid can not be constructed from the ref_param
 
         """
-        self._datafiles = datafiles
+        self._datafiles = [str(p) for p in datafiles]
         self._ifs = ifs
-        self._delayed = dask.delayed if delay else (lambda x: x)
+        self._delayed = partial(dask.delayed, pure=True) if delay else (lambda x: x)
         if not self._ifs:
+            global _ifs_allowed
+            _ifs_allowed = False  # due to incompatible data in cache
+
             with cosmo_grib_defs():
                 self._grid = self.load_grid_reference(ref_param)
         else:
@@ -169,46 +188,67 @@ class GribReader:
             mapping = yaml.safe_load(mapping_path.open())
             ref_param = mapping[ref_param]["ifs"]["name"]
 
-        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles])
+        fs = earthkit.data.from_source("file", self._datafiles)
+        it = iter(fs.sel(param=ref_param))
+        field = next(it, None)
+        if field is None:
+            msg = f"reference field, {ref_param=} not found in {self._datafiles=}"
+            raise RuntimeError(msg)
+        lonlat_dict = {
+            geo_dim: xr.DataArray(dims=("y", "x"), data=values)
+            for geo_dim, values in field.to_latlon().items()
+        }
 
-        for field in fs.sel(param=ref_param):
-            lonlat_dict = {
-                geo_dim: xr.DataArray(dims=("y", "x"), data=values)
-                for geo_dim, values in field.to_latlon().items()
-            }
-
-            grid = Grid(
-                lonlat_dict["lon"],
-                lonlat_dict["lat"],
-                *field.metadata(
-                    "longitudeOfFirstGridPointInDegrees",
-                    "latitudeOfFirstGridPointInDegrees",
-                ),
-            )
-
-            return grid
-
-        raise RuntimeError(
-            f"reference field, {ref_param=} not found in {self._datafiles=}"
+        grid = Grid(
+            lonlat_dict["lon"],
+            lonlat_dict["lat"],
+            *field.metadata(
+                "longitudeOfFirstGridPointInDegrees",
+                "latitudeOfFirstGridPointInDegrees",
+            ),
         )
+
+        return grid
 
     def _load_pv(self, pv_param: str):
         if not self._ifs:
             raise ValueError("load_pv only available for IFS data")
-        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles]).sel(
-            param=pv_param
-        )
+        fs = earthkit.data.from_source("file", self._datafiles).sel(param=pv_param)
 
         for field in fs:
             return field.metadata("pv")
+
+    def _construct_metadata(self, field: typing.Any):
+        metadata: dict[str, typing.Any] = field.metadata(
+            namespace=["geography", "parameter"]
+        )
+        level_type: str = field.metadata("typeOfLevel")
+        vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
+
+        x0 = self._grid.lon_first_grid_point % 360
+        y0 = self._grid.lat_first_grid_point
+        geo = metadata["geography"]
+        dx = geo["iDirectionIncrementInDegrees"]
+        dy = geo["jDirectionIncrementInDegrees"]
+
+        metadata |= {
+            "vcoord_type": vcoord_type,
+            "origin": {
+                "z": zshift,
+                "x": np.round(
+                    (geo["longitudeOfFirstGridPointInDegrees"] % 360 - x0) / dx,
+                    1,
+                ),
+                "y": np.round((geo["latitudeOfFirstGridPointInDegrees"] - y0) / dy, 1),
+            },
+        }
+        return metadata
 
     def _load_param(
         self,
         param: str,
     ):
-        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles]).sel(
-            param=param
-        )
+        fs = earthkit.data.from_source("file", self._datafiles).sel(param=param)
 
         hcoords = None
         metadata: dict[str, typing.Any] = {}
@@ -233,29 +273,7 @@ class GribReader:
                 dims = tuple(DIM_MAP[d] for d in dim_keys) + ("y", "x")
 
             if not metadata:
-                metadata = field.metadata(namespace=["geography", "parameter"])
-                level_type = field.metadata("typeOfLevel")
-                vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
-
-                x0 = self._grid.longitudeOfFirstGridPointInDegrees % 360
-                y0 = self._grid.latitudeOfFirstGridPointInDegrees
-                geo = metadata["geography"]
-                dx = geo["iDirectionIncrementInDegrees"]
-                dy = geo["jDirectionIncrementInDegrees"]
-
-                metadata |= {
-                    "vcoord_type": vcoord_type,
-                    "origin": {
-                        "z": zshift,
-                        "x": np.round(
-                            (geo["longitudeOfFirstGridPointInDegrees"] % 360 - x0) / dx,
-                            1,
-                        ),
-                        "y": np.round(
-                            (geo["latitudeOfFirstGridPointInDegrees"] - y0) / dy, 1
-                        ),
-                    },
-                }
+                metadata = self._construct_metadata(field)
 
         if not field_map:
             raise RuntimeError(f"requested {param=} not found.")
@@ -263,8 +281,8 @@ class GribReader:
         coords, shape = _gather_coords(field_map, dims)
         tcoords = _gather_tcoords(time_meta)
         hcoords = {
-            "lon": (("y", "x"), self._grid.lon.data),
-            "lat": (("y", "x"), self._grid.lat.data),
+            "lon": self._grid.lon,
+            "lat": self._grid.lat,
         }
 
         array = xr.DataArray(
