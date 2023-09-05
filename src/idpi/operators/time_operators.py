@@ -91,6 +91,12 @@ def delta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
 def tdelta(field: xr.DataArray, dtime: np.timedelta64) -> xr.DataArray:
     """Compute weighted difference for a given delta in time.
 
+    This operator is useful for recomputing time averaged values that are
+    aggregated from the reference time to the lead time. The output field
+    is averaged with respect to the given time interval for every lead time
+    present in the input field. The output for lead times that are smaller
+    than the reference time shifted by the interval are undefined.
+
     Parameters
     ----------
     field : xr.DataArray
