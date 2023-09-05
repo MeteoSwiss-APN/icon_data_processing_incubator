@@ -96,6 +96,21 @@ def _extract_pv(pv):
 
 @dc.dataclass
 class Grid:
+    """Coordinates of the reference grid.
+
+    Parameters
+    ----------
+    lon: xr.DataArray
+        2d array with longitude of geographical coordinates
+    lat: xr.DataArray
+        2d array with latitude of geographical coordinates
+    lon_first_grid_point: float
+        longitude of first grid point in rotated lat-lon CRS
+    lat_first_grid_point: float
+        latitude of first grid point in rotated lat-lon CRS
+
+    """
+
     lon: xr.DataArray
     lat: xr.DataArray
     lon_first_grid_point: float
