@@ -184,7 +184,7 @@ class GribReader:
             mapping = yaml.safe_load(mapping_path.open())
             ref_param = mapping[ref_param]["ifs"]["name"]
 
-        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles])
+        fs = earthkit.data.from_source("file", self._datafiles)
         it = iter(fs.sel(param=ref_param))
         field = next(it, None)
         if field is None:
@@ -209,9 +209,7 @@ class GribReader:
     def _load_pv(self, pv_param: str):
         if not self._ifs:
             raise ValueError("load_pv only available for IFS data")
-        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles]).sel(
-            param=pv_param
-        )
+        fs = earthkit.data.from_source("file", self._datafiles).sel(param=pv_param)
 
         for field in fs:
             return field.metadata("pv")
@@ -246,9 +244,7 @@ class GribReader:
         self,
         param: str,
     ):
-        fs = earthkit.data.from_source("file", [str(p) for p in self._datafiles]).sel(
-            param=param
-        )
+        fs = earthkit.data.from_source("file", self._datafiles).sel(param=param)
 
         hcoords = None
         metadata: dict[str, typing.Any] = {}
