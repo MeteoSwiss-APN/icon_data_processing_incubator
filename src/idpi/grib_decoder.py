@@ -15,6 +15,7 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
+from functools import partial
 
 # First-party
 from idpi.product import Product
@@ -138,7 +139,7 @@ class GribReader:
         """
         self._datafiles = datafiles
         self._ifs = ifs
-        self._delayed = dask.delayed if delay else (lambda x: x)
+        self._delayed = partial(dask.delayed, pure=True) if delay else (lambda x: x)
         if not self._ifs:
             with cosmo_grib_defs():
                 self._grid = self.load_grid_reference(ref_param)
