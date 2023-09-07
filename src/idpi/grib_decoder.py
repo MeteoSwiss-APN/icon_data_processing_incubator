@@ -98,7 +98,7 @@ def _extract_pv(pv):
 class Grid:
     """Coordinates of the reference grid.
 
-    Parameters
+    Attributes
     ----------
     lon: xr.DataArray
         2d array with longitude of geographical coordinates
