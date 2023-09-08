@@ -56,8 +56,8 @@ def test_tdelta(data_dir, fieldextra):
         ["ASWDIFD_S", "ASWDIR_S"], datafiles, ref_param="ASWDIFD_S"
     )
 
-    direct = time_ops.tdelta(ds["ASWDIR_S"], np.timedelta64(1, "h"))
-    diffuse = time_ops.tdelta(ds["ASWDIFD_S"], np.timedelta64(1, "h"))
+    direct = time_ops.resample_average(ds["ASWDIR_S"], np.timedelta64(1, "h"))
+    diffuse = time_ops.resample_average(ds["ASWDIFD_S"], np.timedelta64(1, "h"))
 
     observed = (direct + diffuse).clip(min=0)
 
