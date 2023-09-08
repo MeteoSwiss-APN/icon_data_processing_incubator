@@ -24,7 +24,7 @@ def test_athd_s(data_dir, fieldextra):
 
     ds = grib_decoder.load_cosmo_data(["ATHB_S", "T_G"], datafiles, ref_param="T_G")
 
-    athb_s = time_ops.tdelta(ds["ATHB_S"], np.timedelta64(1, "h"))
+    athb_s = time_ops.resample_average(ds["ATHB_S"], np.timedelta64(1, "h"))
     observed = radiation.compute_athd_s(athb_s, ds["T_G"])
 
     conf_files = {
