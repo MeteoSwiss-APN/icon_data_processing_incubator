@@ -47,7 +47,7 @@ def test_delta(data_dir, fieldextra):
     assert_allclose(observed, expected.transpose("epsd_1", "time", ...))
 
 
-def test_tdelta(data_dir, fieldextra):
+def test_resample_average(data_dir, fieldextra):
     steps = np.arange(12)
     dd, hh = np.divmod(steps, 24)
     datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
