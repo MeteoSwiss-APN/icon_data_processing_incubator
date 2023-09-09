@@ -5,6 +5,7 @@ import datetime as dt
 import sys
 import typing
 from contextlib import contextmanager
+from functools import partial
 from importlib.resources import files
 from pathlib import Path
 
@@ -15,7 +16,6 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
-from functools import partial
 
 # First-party
 from idpi.product import Product
@@ -312,7 +312,7 @@ class GribReader:
         result = {}
 
         for param in _params:
-            result[param] = self._delayed(self._load_param)(param)
+            result[param] = self._delayed(self._load_param)(param)  # type: ignore
 
         if not _params == result.keys():
             raise RuntimeError(f"Missing params: {_params - data.keys()}")
