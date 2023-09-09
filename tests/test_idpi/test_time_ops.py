@@ -53,9 +53,8 @@ def test_resample_average(data_dir, fieldextra):
     dd, hh = np.divmod(steps, 24)
     datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
 
-    ds = grib_decoder.load_cosmo_data(
-        ["ASWDIFD_S", "ASWDIR_S"], datafiles, ref_param="ASWDIFD_S"
-    )
+    reader = GribReader(datafiles, ref_param="ASWDIFD_S")
+    ds = reader.load_cosmo_data(["ASWDIFD_S", "ASWDIR_S"])
 
     direct = time_ops.resample_average(ds["ASWDIR_S"], np.timedelta64(1, "h"))
     diffuse = time_ops.resample_average(ds["ASWDIFD_S"], np.timedelta64(1, "h"))
