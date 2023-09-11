@@ -155,6 +155,10 @@ def geolatlon2swiss(
     tuple[xarray.DataArray, xarray.DataArray]
         x and y coordinates in the Swiss LV03 coordinate system.
 
+    Notes
+    -----
+    Approximate formula published by swisstopo, precision in the order of 1 meter
+
     """
     norm_lat = ((lat * 3.6) - 169.02866) / 10
     lon = lon.where(lon < 180, lon - 360)
