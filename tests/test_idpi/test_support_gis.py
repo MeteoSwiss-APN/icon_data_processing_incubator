@@ -1,10 +1,12 @@
+# Third-party
+import numpy as np
 import pytest
 import xarray as xr
-import numpy as np
 from numpy.testing import assert_allclose
 
-from idpi.operators import support_gis
+# First-party
 from idpi import grib_decoder
+from idpi.operators import support_gis
 
 
 @pytest.fixture

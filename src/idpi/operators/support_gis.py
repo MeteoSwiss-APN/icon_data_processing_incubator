@@ -69,7 +69,6 @@ def get_grid(geo: Mapping[str, typing.Any]) -> RotLatLonGrid:
         object representing the rotated lat lon grid.
 
     """
-
     _check_requirements(geo)
 
     ni = geo["Ni"]
