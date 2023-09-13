@@ -1,9 +1,9 @@
 """Product base classes."""
 
 # Standard library
+import dataclasses as dc
 from abc import ABCMeta
 from abc import abstractmethod
-import dataclasses as dc
 from functools import partial
 
 # Third-party
