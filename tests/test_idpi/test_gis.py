@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 
 # First-party
 from idpi import grib_decoder
-from idpi.operators import support_gis
+from idpi.operators import gis
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def test_geolatlon2swiss(coords):
     lat_xr = xr.DataArray(list(lat), dims="pt")
     lon_xr = xr.DataArray(list(lon), dims="pt")
 
-    observed = support_gis.geolatlon2swiss(lon_xr, lat_xr)
+    observed = gis.geolatlon2swiss(lon_xr, lat_xr)
 
     assert_allclose(observed, expected, atol=1.5)
 
@@ -47,7 +47,7 @@ def test_vref_rot2geolatlon(data_dir, fieldextra):
     reader = grib_decoder.GribReader([datafile], ref_param="T")
     ds = reader.load_cosmo_data(["U_10M", "V_10M"])
 
-    u_g, v_g = support_gis.vref_rot2geolatlon(ds["U_10M"], ds["V_10M"])
+    u_g, v_g = gis.vref_rot2geolatlon(ds["U_10M"], ds["V_10M"])
 
     fx_ds = fieldextra("n2geog")
 

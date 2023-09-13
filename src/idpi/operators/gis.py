@@ -1,4 +1,4 @@
-"""Support geospatial logic."""
+"""Geospatial logic."""
 
 # Standard library
 import dataclasses as dc
