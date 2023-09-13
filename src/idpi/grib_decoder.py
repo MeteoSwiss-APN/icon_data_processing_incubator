@@ -5,6 +5,7 @@ import datetime as dt
 import sys
 import typing
 from contextlib import contextmanager
+from functools import partial
 from importlib.resources import files
 from pathlib import Path
 
@@ -15,10 +16,9 @@ import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
 import yaml
-from functools import partial
 
 # First-party
-from idpi.product import Product
+from idpi.product import ProductDescriptor
 
 DIM_MAP = {
     "level": "z",
@@ -102,7 +102,7 @@ def _extract_pv(pv):
 class Grid:
     """Coordinates of the reference grid.
 
-    Parameters
+    Attributes
     ----------
     lon: xr.DataArray
         2d array with longitude of geographical coordinates
@@ -312,7 +312,7 @@ class GribReader:
         result = {}
 
         for param in _params:
-            result[param] = self._delayed(self._load_param)(param)
+            result[param] = self._delayed(self._load_param)(param)  # type: ignore
 
         if not _params == result.keys():
             raise RuntimeError(f"Missing params: {_params - data.keys()}")
@@ -324,15 +324,16 @@ class GribReader:
 
     def load(
         self,
-        products: list[Product],
+        descriptors: list[ProductDescriptor],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
         """Load a dataset with the requested parameters.
 
         Parameters
         ----------
-        products : list[Product]
-            List of products from which the input fields required are extracted.
+        descriptors : list[ProductDescriptor]
+            List of product descriptors from which the input fields required
+            are extracted.
         extract_pv: str | None
             Optionally extract hybrid level coefficients from the given field.
 
@@ -348,8 +349,8 @@ class GribReader:
 
         """
         params = set()
-        for product in products:
-            params |= set(product.input_fields)
+        for desc in descriptors:
+            params |= set(desc.input_fields)
 
         if self._ifs:
             return self.load_ifs_data(params, extract_pv)
