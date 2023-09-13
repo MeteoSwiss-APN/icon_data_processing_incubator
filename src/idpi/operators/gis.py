@@ -126,17 +126,17 @@ def rot2geolatlon(grid: RotLatLonGrid) -> tuple[xr.DataArray, xr.DataArray]:
     arg1 = cos_np_lat * cos_lat * cos_lon + sin_np_lat * sin_lat
     lat = rad2deg * np.arcsin(arg1)
     # ... compute longitude
-    arg1 = (
+    arg2 = (
         sin_np_lon * (-sin_np_lat * cos_lon * cos_lat + cos_np_lat * sin_lat)
         - cos_np_lon * sin_lon * cos_lat
     )
-    arg2 = (
+    arg3 = (
         cos_np_lon * (-sin_np_lat * cos_lon * cos_lat + cos_np_lat * sin_lat)
         + sin_np_lon * sin_lon * cos_lat
     )
     # BUG: changes sign when arg2 is negative and less than threshold
-    arg2 = xr.where(np.abs(arg2) < 1e-20, 1e-20, arg2)
-    lon = rad2deg * np.arctan2(arg1, arg2) % 360
+    arg4 = xr.where(np.abs(arg3) < 1e-20, 1e-20, arg3)
+    lon = rad2deg * np.arctan2(arg2, arg4) % 360
 
     return lon, lat
 
