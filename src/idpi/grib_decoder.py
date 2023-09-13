@@ -332,7 +332,8 @@ class GribReader:
         Parameters
         ----------
         descriptors : list[ProductDescriptor]
-            List of product descriptors from which the input fields required are extracted.
+            List of product descriptors from which the input fields required
+            are extracted.
         extract_pv: str | None
             Optionally extract hybrid level coefficients from the given field.
 
