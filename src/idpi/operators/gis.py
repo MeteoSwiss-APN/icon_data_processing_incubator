@@ -211,12 +211,22 @@ def vref_rot2geolatlon(
         x and y components of the vector field w.r.t. the geo lat lon coords.
 
     """
-    if u.origin["x"] != 0.0 or v.origin["y"] != 0.0:
+    valid_origin = {d: 0.0 for d in tuple("xyz")}
+    if u.origin != valid_origin or v.origin != valid_origin:
         raise ValueError("The vector fields must be destaggered.")
 
     grid = get_grid(u.geography)
     lon, lat = rot2geolatlon(grid)
+    return _vref_rot2geolatlon(u, v, lon, lat, grid)
 
+
+def _vref_rot2geolatlon(
+    u: xr.DataArray,
+    v: xr.DataArray,
+    lon: xr.DataArray,
+    lat: xr.DataArray,
+    grid: RotLatLonGrid,
+) -> tuple[xr.DataArray, xr.DataArray]:
     deg2rad = np.pi / 180
     sin_np = np.sin(deg2rad * grid.north_pole_lat)
     cos_np = np.cos(deg2rad * grid.north_pole_lat)
