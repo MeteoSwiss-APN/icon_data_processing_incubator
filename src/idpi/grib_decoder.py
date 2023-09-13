@@ -18,7 +18,7 @@ import xarray as xr
 import yaml
 
 # First-party
-from idpi.product import Product
+from idpi.product import ProductDescriptor
 
 DIM_MAP = {
     "level": "z",
@@ -324,15 +324,15 @@ class GribReader:
 
     def load(
         self,
-        products: list[Product],
+        descriptors: list[ProductDescriptor],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
         """Load a dataset with the requested parameters.
 
         Parameters
         ----------
-        products : list[Product]
-            List of products from which the input fields required are extracted.
+        descriptors : list[ProductDescriptor]
+            List of product descriptors from which the input fields required are extracted.
         extract_pv: str | None
             Optionally extract hybrid level coefficients from the given field.
 
@@ -348,8 +348,8 @@ class GribReader:
 
         """
         params = set()
-        for product in products:
-            params |= set(product.input_fields)
+        for desc in descriptors:
+            params |= set(desc.input_fields)
 
         if self._ifs:
             return self.load_ifs_data(params, extract_pv)
