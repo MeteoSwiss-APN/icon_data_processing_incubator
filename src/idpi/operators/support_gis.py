@@ -47,11 +47,14 @@ def _check_requirements(geo: Mapping[str, typing.Any]) -> None:
     errors = {key: geo[key] for key in requirements if requirements[key] != geo[key]}
     if errors:
         msg = f"Unsupported values for keys: {errors}"
-        raise RuntimeError(msg)
+        raise ValueError(msg)
 
 
 def get_grid(geo: Mapping[str, typing.Any]) -> RotLatLonGrid:
     """Get grid parameters for a given field.
+
+    Only fields defined on regular grids in rotlatlon coordinates,
+    without rotation nor flipped axes are supported.
 
     Parameters
     ----------
@@ -61,7 +64,7 @@ def get_grid(geo: Mapping[str, typing.Any]) -> RotLatLonGrid:
     Raises
     ------
     ValueError
-        if the field is not defined on a rotated lat lon grid.
+        if the field does not fulfill the conditions above.
 
     Returns
     -------
@@ -131,7 +134,8 @@ def rot2geolatlon(grid: RotLatLonGrid) -> tuple[xr.DataArray, xr.DataArray]:
         cos_np_lon * (-sin_np_lat * cos_lon * cos_lat + cos_np_lat * sin_lat)
         + sin_np_lon * sin_lon * cos_lat
     )
-    arg2 = xr.where(np.abs(arg2) < 1e-20, 1e-20, arg2)  # BUG: changes sign?
+    # BUG: changes sign when arg2 is negative and less than threshold
+    arg2 = xr.where(np.abs(arg2) < 1e-20, 1e-20, arg2)
     lon = rad2deg * np.arctan2(arg1, arg2) % 360
 
     return lon, lat
@@ -208,7 +212,7 @@ def vref_rot2geolatlon(
 
     """
     if u.origin["x"] != 0.0 or v.origin["y"] != 0.0:
-        raise ValueError("The velocity fields must be destaggered.")
+        raise ValueError("The vector fields must be destaggered.")
 
     grid = get_grid(u.geography)
     lon, lat = rot2geolatlon(grid)
