@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from functools import partial
 from importlib.resources import files
 from pathlib import Path
+from frozendict import frozendict
 
 # Third-party
 import dask
@@ -119,10 +120,6 @@ class Grid:
     lat: xr.DataArray
     lon_first_grid_point: float
     lat_first_grid_point: float
-
-
-def _check_string_arg(obj):
-    return bool(obj) and all(isinstance(elem, str) for elem in obj)
 
 
 class GribReader:
@@ -246,9 +243,9 @@ class GribReader:
 
     def _load_param(
         self,
-        param: str,
+        param: dict,
     ):
-        fs = earthkit.data.from_source("file", self._datafiles).sel(param=param)
+        fs = earthkit.data.from_source("file", self._datafiles).sel(param)
 
         hcoords = None
         metadata: dict[str, typing.Any] = {}
@@ -298,24 +295,20 @@ class GribReader:
 
     def _load_dataset(
         self,
-        params: typing.Iterable[str],
+        params: typing.Iterable[dict],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
-        if not _check_string_arg(params):
-            raise ValueError(f"wrong type for arg {params=}. Expected str")
+        param_names = {param["param"] for param in params}
+        if extract_pv is not None and extract_pv not in param_names:
+            raise ValueError(f"If set, {extract_pv=} must be in {params=}")
 
-        _params = set(params)
-        if extract_pv is not None and extract_pv not in _params:
-            raise ValueError(f"If set, {extract_pv=} must be in {_params=}")
-
-        data: dict[str, dict[tuple[int, ...], np.ndarray]] = {}
         result = {}
 
-        for param in _params:
-            result[param] = self._delayed(self._load_param)(param)  # type: ignore
+        for param in params:
+            result[param["param"]] = self._delayed(self._load_param)(param)  # type: ignore
 
-        if not _params == result.keys():
-            raise RuntimeError(f"Missing params: {_params - data.keys()}")
+        if not param_names == result.keys():
+            raise RuntimeError(f"Missing params: {param_names - result.keys()}")
 
         if extract_pv:
             result = result | _extract_pv(self._load_pv(extract_pv))
@@ -350,7 +343,7 @@ class GribReader:
         """
         params = set()
         for desc in descriptors:
-            params |= set(desc.input_fields)
+            params |= set([frozendict(data_desc) for data_desc in desc.input_fields])
 
         if self._ifs:
             return self.load_ifs_data(params, extract_pv)
@@ -359,15 +352,19 @@ class GribReader:
                 raise ValueError(f"{extract_pv=} can only be set for ifs data")
             return self.load_cosmo_data(params)
 
+    def load_fields(self, params: list[str]):
+        desc = ProductDescriptor(input_fields=[{"param": param} for param in params])
+        return self.load([desc])
+
     def load_cosmo_data(
         self,
-        params: typing.Iterable[str],
+        params: typing.Iterable[dict],
     ) -> dict[str, xr.DataArray]:
         """Load a COSMO dataset with the requested parameters.
 
         Parameters
         ----------
-        params : list[str]
+        params : list[dict]
             List of fields to load from the data files.
 
         Raises
@@ -394,7 +391,7 @@ class GribReader:
 
     def load_ifs_data(
         self,
-        params: typing.Iterable[str],
+        params: typing.Iterable[dict],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
         """Load an IFS dataset with the requested parameters.
@@ -427,11 +424,13 @@ class GribReader:
 
         mapping_path = files("idpi.data").joinpath("field_mappings.yml")
         mapping = yaml.safe_load(mapping_path.open())
-        missing = set(params) - mapping.keys()
+        param_names = {param["param"] for param in params}
+        missing = param_names - mapping.keys()
         if missing:
             msg = f"Some params are not present in the field mappings: {missing}"
             raise ValueError(msg)
-        params_map = {mapping[p]["ifs"]["name"]: p for p in params}
+        params_map = {mapping[p]["ifs"]["name"]: p for p in param_names}
+        rev_params_map = {p: mapping[p]["ifs"]["name"] for p in param_names}
 
         def get_unit_factor(key):
             param = params_map.get(key)
@@ -439,7 +438,10 @@ class GribReader:
                 return 1
             return mapping[param].get("cosmo", {}).get("unit_factor", 1)
 
-        ifs_params = list(params_map.keys())
+        ifs_params = params.copy()
+
+        for param in ifs_params:
+            param["param"] = rev_params_map[param["param"]]
         ifs_extract_pv = (
             mapping[extract_pv]["ifs"]["name"] if extract_pv is not None else None
         )

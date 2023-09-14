@@ -12,7 +12,7 @@ import dask
 
 @dc.dataclass
 class ProductDescriptor:
-    input_fields: list[str]
+    input_fields: list[dict]
 
 
 class Product(metaclass=ABCMeta):
@@ -20,7 +20,7 @@ class Product(metaclass=ABCMeta):
 
     def __init__(
         self,
-        input_fields: list[str],
+        input_fields: list[dict],
         delay_entire_product: bool = False,
     ):
         self._desc = ProductDescriptor(input_fields=input_fields)
