@@ -4,7 +4,6 @@
 import dataclasses as dc
 from abc import ABCMeta
 from abc import abstractmethod
-from functools import partial
 
 # Third-party
 import dask
