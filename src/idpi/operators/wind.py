@@ -65,7 +65,7 @@ def direction(u: xr.DataArray, v: xr.DataArray) -> xr.DataArray:
     ------
     ValueError
         if any of the input fields is located on staggered points or on any
-        other than a regular gird in the rotated latlon coordinate system.
+        other than a regular grid in the rotated latlon coordinate system.
 
     Returns
     -------
