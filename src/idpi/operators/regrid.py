@@ -35,6 +35,12 @@ def _get_crs(geo):
     )
 
 
+def _relimit(longitude: float) -> float:
+    if longitude > 180:
+        return longitude - 360
+    return longitude
+
+
 @dc.dataclass
 class RegularGrid:
     crs: CRS
@@ -52,8 +58,8 @@ class RegularGrid:
             crs=_get_crs(geo),
             nx=geo["Ni"],
             ny=geo["Nj"],
-            xmin=geo["longitudeOfFirstGridPointInDegrees"],
-            xmax=geo["longitudeOfLastGridPointInDegrees"],
+            xmin=_relimit(geo["longitudeOfFirstGridPointInDegrees"]),
+            xmax=_relimit(geo["longitudeOfLastGridPointInDegrees"]),
             ymin=geo["latitudeOfFirstGridPointInDegrees"],
             ymax=geo["latitudeOfLastGridPointInDegrees"],
         )
