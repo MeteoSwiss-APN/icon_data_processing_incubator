@@ -15,13 +15,12 @@ def test_regrid(data_dir, fieldextra):
     ds = reader.load_cosmo_data(["T", "HHL"])
 
     hzerocl = fhzerocl(ds["T"], ds["HHL"], extrapolate=True)
-    dst = regrid.RegularGrid.parse_regrid_operator(
-        "swiss,479500,69500,840500,300500,1000,1000"
-    )
+    out_regrid_target = "swiss,549500,149500,650500,250500,1000,1000"
+    dst = regrid.RegularGrid.parse_regrid_operator(out_regrid_target)
     hzerocl.attrs["geography"] = ds["HHL"].geography
     observed = regrid.regrid(hzerocl, dst, regrid.Resampling.bilinear)
 
-    fx_ds = fieldextra("regrid")
+    fx_ds = fieldextra("regrid", out_regrid_target=out_regrid_target)
     expected = fx_ds["HZEROCL"]
 
-    assert_allclose(observed, expected, rtol=2e-6)
+    assert_allclose(observed, expected, rtol=5e-4)

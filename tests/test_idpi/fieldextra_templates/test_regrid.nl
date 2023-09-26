@@ -48,7 +48,7 @@
   tstart=0, tstop=0, tincr=1
   out_file="{{ file.output }}"
   out_mode_h0cl_extrapolate = .true.
-  out_regrid_target = "swiss,479500,69500,840500,300500,1000,1000"
+  out_regrid_target = "{{ out_regrid_target }}"
   out_regrid_method = "bilinear"
   out_type="NETCDF"
 /
@@ -60,7 +60,7 @@
   out_file="{{ file.output }}", out_type="NETCDF"
   tstart=0, tstop=0, tincr=1
   out_mode_h0cl_extrapolate = .true.
-  out_regrid_target = "swiss,479500,69500,840500,300500,1000,1000"
+  out_regrid_target = "{{ out_regrid_target }}"
   out_regrid_method = "bilinear"
 /
 &Process in_field="T", levmin=1, levmax=80 /
