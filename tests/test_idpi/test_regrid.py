@@ -2,8 +2,8 @@
 from numpy.testing import assert_allclose
 
 # First-party
-from idpi.operators import regrid
 from idpi import grib_decoder
+from idpi.operators import regrid
 from idpi.operators.hzerocl import fhzerocl
 
 
