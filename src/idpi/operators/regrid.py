@@ -43,6 +43,27 @@ def _relimit(longitude: float) -> float:
 
 @dc.dataclass
 class RegularGrid:
+    """Class defining a regular grid.
+
+    Attributes
+    ----------
+    crs : CRS
+        Coordinate reference system.
+    nx : int
+        Number of grid points in the x direction.
+    ny : int
+        Number of grid points in the y direction.
+    xmin : float
+        Coordinate of the first grid point in the x direction.
+    xmax : float
+        Coordinate of the last grid point in the x direction.
+    ymin : float
+        Coordinate of the first grid point in the y direction.
+    ymax : float
+        Coordinate of the last grid point in the y direction.
+
+    """
+
     crs: CRS
     nx: int
     ny: int
@@ -53,6 +74,14 @@ class RegularGrid:
 
     @classmethod
     def from_field(cls, field: xr.DataArray):
+        """Extract grid parameters from grib metadata.
+
+        Parameters
+        ----------
+        field : xarray.DataArray
+            field containing the relevant metadata.
+
+        """
         geo = field.geography
         obj = cls(
             crs=_get_crs(geo),
@@ -71,6 +100,15 @@ class RegularGrid:
 
     @classmethod
     def parse_regrid_operator(cls, op: str):
+        """Parse fieldextra out_regrid_target string.
+
+        Parameters
+        ----------
+        op : str
+            fieldextra out_regrid_target definition
+            i.e. crs,xmin,ymin,xmay,ymax,dx,dy.
+
+        """
         crs_str, *grid_params = op.split(",")
         crs = CRS.from_string(CRS_ALIASES[crs_str])
         xmin, ymin, xmax, ymax, dx, dy = map(float, grid_params)
@@ -99,6 +137,29 @@ class RegularGrid:
 
 
 def regrid(field: xr.DataArray, dst: RegularGrid, resampling: Resampling):
+    """Regrid a field.
+
+    Parameters
+    ----------
+    field : xarray.DataArray
+        Input field defined on a regular grid in rotated latlon coordinates.
+    dst : RegularGrid
+        Destination grid onto which to project the field.
+    resampling : Resampling
+        Resampling method, alias of rasterio.warp.Resampling.
+
+    Raises
+    ------
+    ValueError
+        If the input field is not defined on a regular grid in rotated latlon or
+        if the input field geography metadata does not have consistent grid parameters.
+
+    Returns
+    -------
+    xarray.DataArray
+        Field regridded in the destination grid.
+
+    """
     src = RegularGrid.from_field(field)
 
     def reproject_layer(field):
