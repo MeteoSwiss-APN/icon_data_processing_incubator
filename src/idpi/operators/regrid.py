@@ -13,13 +13,14 @@ from rasterio.crs import CRS
 
 Resampling: typing.TypeAlias = warp.Resampling
 
+# For more information: check https://epsg.io/<id>
 CRS_ALIASES = {
-    "geolatlon": "epsg:4326",
-    "swiss": "epsg:21781",
-    "swiss03": "epsg:21781",
-    "swiss95": "epsg:2056",
-    "boaga-west": "epsg:3003",
-    "boaga-east": "epsg:3004",
+    "geolatlon": "epsg:4326",  # WGS84
+    "swiss": "epsg:21781",  # Swiss CH1903 / LV03
+    "swiss03": "epsg:21781",  # Swiss CH1903 / LV03
+    "swiss95": "epsg:2056",  # Swiss CH1903+ / LV95
+    "boaga-west": "epsg:3003",  # Monte Mario / Italy zone 1
+    "boaga-east": "epsg:3004",  # Monte Mario / Italy zone 2
 }
 
 
