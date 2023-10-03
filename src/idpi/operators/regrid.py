@@ -35,10 +35,8 @@ def _get_crs(geo):
     )
 
 
-def _relimit(longitude: float) -> float:
-    if longitude > 180:
-        return longitude - 360
-    return longitude
+def _normalise(angle: float) -> float:
+    return np.fmod(angle + 180, 360) - 180
 
 
 @dc.dataclass
@@ -87,8 +85,8 @@ class RegularGrid:
             crs=_get_crs(geo),
             nx=geo["Ni"],
             ny=geo["Nj"],
-            xmin=_relimit(geo["longitudeOfFirstGridPointInDegrees"]),
-            xmax=_relimit(geo["longitudeOfLastGridPointInDegrees"]),
+            xmin=_normalise(geo["longitudeOfFirstGridPointInDegrees"]),
+            xmax=_normalise(geo["longitudeOfLastGridPointInDegrees"]),
             ymin=geo["latitudeOfFirstGridPointInDegrees"],
             ymax=geo["latitudeOfLastGridPointInDegrees"],
         )
@@ -112,6 +110,8 @@ class RegularGrid:
         crs_str, *grid_params = op.split(",")
         crs = CRS.from_string(CRS_ALIASES[crs_str])
         xmin, ymin, xmax, ymax, dx, dy = map(float, grid_params)
+        if abs(dx) < 1e-10 or abs(dy) < 1e-10:
+            raise ValueError("Inconsistent regrid parameters")
         nx = (xmax - xmin) / dx + 1
         ny = (ymax - ymin) / dy + 1
         if nx != int(nx) or ny != int(ny):
@@ -175,6 +175,8 @@ def regrid(field: xr.DataArray, dst: RegularGrid, resampling: Resampling):
         )
         return output[::-1]
 
+    # output dims renamed to workaround limitation that overlapping dims in the input
+    # must not change in size
     return xr.apply_ufunc(
         reproject_layer,
         field,
