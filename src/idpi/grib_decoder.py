@@ -18,6 +18,7 @@ import xarray as xr
 # First-party
 import idpi.config
 from idpi.product import ProductDescriptor
+import idpi.tasking as tasking
 
 DIM_MAP = {
     "level": "z",
@@ -147,7 +148,6 @@ class GribReader:
 
         """
         self._datafiles = [str(p) for p in datafiles]
-        self._delayed = partial(dask.delayed, pure=True) if delay else (lambda x: x)
         if idpi.config.get("data_scope", "cosmo") == "cosmo":
             with cosmo_grib_defs():
                 self._grid = self.load_grid_reference(ref_param)
@@ -295,7 +295,7 @@ class GribReader:
         result = {}
 
         for param in _params:
-            result[param] = self._delayed(self._load_param)(param)  # type: ignore
+            result[param] = tasking.delayed(self._load_param)(param)  # type: ignore
 
         if not _params == result.keys():
             raise RuntimeError(f"Missing params: {_params - data.keys()}")

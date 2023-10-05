@@ -1,4 +1,5 @@
 """Product base classes."""
+import idpi.tasking as tasking
 
 # Standard library
 import dataclasses as dc
@@ -31,7 +32,7 @@ class Product(metaclass=ABCMeta):
 
     def __call__(self, *args):
         if self._delay_entire_product:
-            return dask.delayed(self._run, pure=True)(*args)
+            return tasking.delayed(self._run, pure=True)(*args)
         else:
             return self._run(*args)
 
