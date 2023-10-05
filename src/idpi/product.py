@@ -1,12 +1,10 @@
 """Product base classes."""
-import idpi.tasking as tasking
-
 # Standard library
 import dataclasses as dc
 from abc import ABCMeta, abstractmethod
 
-# Third-party
-import dask
+# First-party
+import idpi.tasking as tasking
 
 
 @dc.dataclass

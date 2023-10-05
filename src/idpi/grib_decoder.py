@@ -5,11 +5,9 @@ import datetime as dt
 import sys
 import typing
 from contextlib import contextmanager
-from functools import partial
 from pathlib import Path
 
 # Third-party
-import dask
 import earthkit.data  # type: ignore
 import eccodes  # type: ignore
 import numpy as np
@@ -17,8 +15,8 @@ import xarray as xr
 
 # First-party
 import idpi.config
-from idpi.product import ProductDescriptor
 import idpi.tasking as tasking
+from idpi.product import ProductDescriptor
 
 DIM_MAP = {
     "level": "z",
