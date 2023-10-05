@@ -32,7 +32,7 @@ class Product(metaclass=ABCMeta):
 
     def __call__(self, *args):
         if self._delay_entire_product:
-            return tasking.delayed(self._run, pure=True)(*args)
+            return tasking.delayed(self._run)(*args)
         else:
             return self._run(*args)
 
