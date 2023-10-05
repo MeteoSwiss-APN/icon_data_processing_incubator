@@ -6,7 +6,6 @@ import sys
 import typing
 from contextlib import contextmanager
 from functools import partial
-from importlib.resources import files
 from pathlib import Path
 
 # Third-party
@@ -15,7 +14,6 @@ import earthkit.data  # type: ignore
 import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
-import yaml
 
 # First-party
 import idpi.config

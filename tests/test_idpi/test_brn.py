@@ -2,7 +2,6 @@
 from numpy.testing import assert_allclose
 
 # First-party
-import idpi.config
 import idpi.operators.brn as mbrn
 from idpi.grib_decoder import GribReader
 
