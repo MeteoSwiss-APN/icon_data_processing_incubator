@@ -129,7 +129,6 @@ class GribReader:
         self,
         datafiles: list[Path],
         ref_param: str = "HHL",
-        ifs: bool = False,
         delay: bool = False,
     ):
         """Initialize a grib reader from a list of grib files.
@@ -140,8 +139,6 @@ class GribReader:
             List of grib input filenames
         ref_param : str
             name of parameter used to construct a reference grid
-        ifs : bool
-            True for setting up a grib reader for IFS data
         delay : bool
             if True, it will (dask) delay the functions that load parameters
 
@@ -152,7 +149,6 @@ class GribReader:
 
         """
         self._datafiles = [str(p) for p in datafiles]
-        self._ifs = ifs
         self._delayed = partial(dask.delayed, pure=True) if delay else (lambda x: x)
         if idpi.config.get("data_scope", "cosmo") == "cosmo":
             with cosmo_grib_defs():
@@ -202,8 +198,6 @@ class GribReader:
         return grid
 
     def _load_pv(self, pv_param: str):
-        if not self._ifs:
-            raise ValueError("load_pv only available for IFS data")
         fs = earthkit.data.from_source("file", self._datafiles).sel(param=pv_param)
 
         for field in fs:
@@ -343,7 +337,7 @@ class GribReader:
         for desc in descriptors:
             params |= set(desc.input_fields)
 
-        return self.load_fields(params)
+        return self.load_fields(params, extract_pv=extract_pv)
 
     def load_fields(
         self,
