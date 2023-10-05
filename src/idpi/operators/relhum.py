@@ -25,7 +25,7 @@ def relhum(
         pressure
     clipping : bool
         clips the relative humidity to [0,100] interval.
-        Only upper bound is controled by this parameter,
+        Only upper bound is controlled by this parameter,
         since lower bound clipping is always performed.
     phase : Literal["water", "ice", "water+ic"]
         Customizes how relative humidity is computed.
