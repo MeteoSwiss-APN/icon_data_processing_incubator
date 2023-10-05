@@ -293,7 +293,7 @@ class GribReader:
         result = {}
 
         for param in _params:
-            result[param] = tasking.delayed(self._load_param)(param)  # type: ignore
+            result[param] = tasking.delayed(self._load_param)(param)
 
         if not _params == result.keys():
             raise RuntimeError(f"Missing params: {_params - data.keys()}")
