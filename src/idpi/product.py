@@ -2,9 +2,7 @@
 
 # Standard library
 import dataclasses as dc
-from abc import ABCMeta
-from abc import abstractmethod
-from functools import partial
+from abc import ABCMeta, abstractmethod
 
 # Third-party
 import dask
@@ -24,16 +22,17 @@ class Product(metaclass=ABCMeta):
         delay_entire_product: bool = False,
     ):
         self._desc = ProductDescriptor(input_fields=input_fields)
-        self._base_delayed = (
-            partial(dask.delayed, pure=True) if delay_entire_product else lambda x: x
-        )
+        self._delay_entire_product = delay_entire_product
 
     @abstractmethod
     def _run(self, **args):
         pass
 
     def __call__(self, *args):
-        return self._base_delayed(self._run)(*args)
+        if self._delay_entire_product:
+            return dask.delayed(self._run, pure=True)(*args)
+        else:
+            return self._run(*args)
 
     @property
     def descriptor(self):

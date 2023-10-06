@@ -6,8 +6,7 @@ from typing import Literal
 import xarray as xr
 
 # First-party
-from idpi.operators.atmo import pv_sw
-from idpi.operators.atmo import qv_pvp
+from idpi.operators.atmo import pv_sw, qv_pvp
 
 
 def relhum(
@@ -25,7 +24,7 @@ def relhum(
         pressure
     clipping : bool
         clips the relative humidity to [0,100] interval.
-        Only upper bound is controled by this parameter,
+        Only upper bound is controlled by this parameter,
         since lower bound clipping is always performed.
     phase : Literal["water", "ice", "water+ic"]
         Customizes how relative humidity is computed.

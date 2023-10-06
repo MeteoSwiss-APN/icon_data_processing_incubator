@@ -343,7 +343,11 @@ class GribReader:
         """
         params = set()
         for desc in descriptors:
+<<<<<<< HEAD
             params |= set([frozendict(data_desc) for data_desc in desc.input_fields])
+=======
+            params |= set(desc.input_fields)
+>>>>>>> main
 
         if self._ifs:
             return self.load_ifs_data(params, extract_pv)
@@ -352,6 +356,7 @@ class GribReader:
                 raise ValueError(f"{extract_pv=} can only be set for ifs data")
             return self.load_cosmo_data(params)
 
+<<<<<<< HEAD
     def load_fields(self, params: list[str]):
         desc = ProductDescriptor(input_fields=[{"param": param} for param in params])
         return self.load([desc])
@@ -359,6 +364,11 @@ class GribReader:
     def load_cosmo_data(
         self,
         params: typing.Iterable[dict],
+=======
+    def load_cosmo_data(
+        self,
+        params: typing.Iterable[str],
+>>>>>>> main
     ) -> dict[str, xr.DataArray]:
         """Load a COSMO dataset with the requested parameters.
 
@@ -391,7 +401,11 @@ class GribReader:
 
     def load_ifs_data(
         self,
+<<<<<<< HEAD
         params: typing.Iterable[dict],
+=======
+        params: typing.Iterable[str],
+>>>>>>> main
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
         """Load an IFS dataset with the requested parameters.

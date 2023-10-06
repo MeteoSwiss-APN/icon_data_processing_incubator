@@ -2,8 +2,8 @@
 from numpy.testing import assert_allclose
 
 # First-party
-from idpi.operators.relhum import relhum
 from idpi.grib_decoder import GribReader
+from idpi.operators.relhum import relhum
 
 
 def test_relhum(data_dir, fieldextra):
