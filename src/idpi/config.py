@@ -1,8 +1,7 @@
 """global configuration for idpi."""
 
 # Standard library
-from typing import Any
-from typing import Literal
+from typing import Any, Literal
 
 config: dict = {}
 
