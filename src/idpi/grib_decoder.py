@@ -5,20 +5,18 @@ import datetime as dt
 import sys
 import typing
 from contextlib import contextmanager
-from functools import partial
-from importlib.resources import files
 from pathlib import Path
 from frozendict import frozendict
 
 # Third-party
-import dask
 import earthkit.data  # type: ignore
 import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
-import yaml
 
 # First-party
+import idpi.config
+import idpi.tasking as tasking
 from idpi.product import ProductDescriptor
 
 DIM_MAP = {
@@ -33,8 +31,6 @@ VCOORD_TYPE = {
     "isobaricInPa": ("pressure", 0.0),
     "surface": ("surface", 0.0),
 }
-_ifs_allowed = True
-_cosmo_allowed = True
 
 
 @contextmanager
@@ -127,7 +123,6 @@ class GribReader:
         self,
         datafiles: list[Path],
         ref_param: str = "HHL",
-        ifs: bool = False,
         delay: bool = False,
     ):
         """Initialize a grib reader from a list of grib files.
@@ -138,8 +133,6 @@ class GribReader:
             List of grib input filenames
         ref_param : str
             name of parameter used to construct a reference grid
-        ifs : bool
-            True for setting up a grib reader for IFS data
         delay : bool
             if True, it will (dask) delay the functions that load parameters
 
@@ -150,12 +143,7 @@ class GribReader:
 
         """
         self._datafiles = [str(p) for p in datafiles]
-        self._ifs = ifs
-        self._delayed = partial(dask.delayed, pure=True) if delay else (lambda x: x)
-        if not self._ifs:
-            global _ifs_allowed
-            _ifs_allowed = False  # due to incompatible data in cache
-
+        if idpi.config.get("data_scope", "cosmo") == "cosmo":
             with cosmo_grib_defs():
                 self._grid = self.load_grid_reference(ref_param)
         else:
@@ -180,11 +168,6 @@ class GribReader:
             reference grid
 
         """
-        if self._ifs:
-            mapping_path = files("idpi.data").joinpath("field_mappings.yml")
-            mapping = yaml.safe_load(mapping_path.open())
-            ref_param = mapping[ref_param]["ifs"]["name"]
-
         fs = earthkit.data.from_source("file", self._datafiles)
         it = iter(fs.sel(param=ref_param))
         field = next(it, None)
@@ -208,8 +191,6 @@ class GribReader:
         return grid
 
     def _load_pv(self, pv_param: str):
-        if not self._ifs:
-            raise ValueError("load_pv only available for IFS data")
         fs = earthkit.data.from_source("file", self._datafiles).sel(param=pv_param)
 
         for field in fs:
@@ -305,7 +286,7 @@ class GribReader:
         result = {}
 
         for param in params:
-            result[param["param"]] = self._delayed(self._load_param)(param)  # type: ignore
+            result[param["param"]] = tasking.delayed(self._load_param)(param)
 
         if not param_names == result.keys():
             raise RuntimeError(f"Missing params: {param_names - result.keys()}")
@@ -345,63 +326,25 @@ class GribReader:
         for desc in descriptors:
             params |= set([frozendict(data_desc) for data_desc in desc.input_fields])
 
-        if self._ifs:
-            return self.load_ifs_data(params, extract_pv)
-        else:
-            if extract_pv:
-                raise ValueError(f"{extract_pv=} can only be set for ifs data")
-            return self.load_cosmo_data(params)
+        return self.load_fields(params, extract_pv=extract_pv)
 
-    def load_fields_str(self, params: list[str]):
+    def load_fieldnames(self, params: list[str], extract_pv: str | None = None):
         desc = ProductDescriptor(input_fields=[{"param": param} for param in params])
-        return self.load([desc])
+        return self.load([desc], extract_pv=extract_pv)
 
-    def load_cosmo_data(
-        self,
-        params: typing.Iterable[dict],
-    ) -> dict[str, xr.DataArray]:
-        """Load a COSMO dataset with the requested parameters.
-
-        Parameters
-        ----------
-        params : list[dict]
-            List of fields to load from the data files.
-
-        Raises
-        ------
-        RuntimeError
-            if not all fields are found in the given datafiles.
-
-        Returns
-        -------
-        dict[str, xr.DataArray]
-            Mapping of fields by param name
-
-        """
-        if not _cosmo_allowed:
-            raise RuntimeError(
-                "GRIB cache contains IFS defs, respawn process to clear."
-            )
-
-        global _ifs_allowed
-        _ifs_allowed = False  # due to incompatible data in cache
-
-        with cosmo_grib_defs():
-            return self._load_dataset(params, extract_pv=None)
-
-    def load_ifs_data(
+    def load_fields(
         self,
         params: typing.Iterable[dict],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
-        """Load an IFS dataset with the requested parameters.
+        """Load a dataset with the requested list of fields.
 
         Parameters
         ----------
         params : list[str]
             List of fields to load from the data files.
-        extract_pv: str | None
-            Optionally extract hybrid level coefficients from the given field.
+        extract_pv: str | None, optional
+            Extract hybrid level coefficients from the given field.
 
         Raises
         ------
@@ -414,37 +357,10 @@ class GribReader:
             Mapping of fields by param name
 
         """
-        if not _ifs_allowed:
-            raise RuntimeError(
-                "GRIB cache contains cosmo defs, respawn process to clear."
-            )
-
-        global _cosmo_allowed
-        _cosmo_allowed = False  # due to incompatible data in cache
-
-        mapping_path = files("idpi.data").joinpath("field_mappings.yml")
-        mapping = yaml.safe_load(mapping_path.open())
-        param_names = {param["param"] for param in params}
-        missing = param_names - mapping.keys()
-        if missing:
-            msg = f"Some params are not present in the field mappings: {missing}"
-            raise ValueError(msg)
-        params_map = {mapping[p]["ifs"]["name"]: p for p in param_names}
-        rev_params_map = {p: mapping[p]["ifs"]["name"] for p in param_names}
-
-        def get_unit_factor(key):
-            param = params_map.get(key)
-            if param is None:
-                return 1
-            return mapping[param].get("cosmo", {}).get("unit_factor", 1)
-
-        ifs_params = params.copy()
-
-        for param in ifs_params:
-            param["param"] = rev_params_map[param["param"]]
-        ifs_extract_pv = (
-            mapping[extract_pv]["ifs"]["name"] if extract_pv is not None else None
-        )
-        ds = self._load_dataset(ifs_params, ifs_extract_pv)
-        with xr.set_options(keep_attrs=True):
-            return {params_map.get(k, k): get_unit_factor(k) * v for k, v in ds.items()}
+        if idpi.config.get("data_scope", "cosmo") == "cosmo":
+            if extract_pv:
+                raise ValueError("extract_pv not supported with data_scope==cosmo")
+            with cosmo_grib_defs():
+                return self._load_dataset(params, extract_pv=None)
+        else:
+            return self._load_dataset(params, extract_pv=extract_pv)
