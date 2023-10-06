@@ -6,13 +6,13 @@ import sys
 import typing
 from contextlib import contextmanager
 from pathlib import Path
-from frozendict import frozendict
 
 # Third-party
 import earthkit.data  # type: ignore
 import eccodes  # type: ignore
 import numpy as np
 import xarray as xr
+from frozendict import frozendict
 
 # First-party
 import idpi.config
