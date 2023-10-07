@@ -16,7 +16,11 @@ from idpi.operators import radiation
 
 @pytest.fixture
 def data_dir():
-    return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/32_39x45_51/COSMO-1E_time/")
+    return Path(
+        "/project/s83c/rz+/icon_data_processing_incubator/datasets/"\
+        "32_39x45_51/COSMO-1E_time/"
+    )
+
 
 def test_delta(data_dir, fieldextra):
     steps = np.arange(34)
@@ -35,7 +39,7 @@ def test_delta(data_dir, fieldextra):
 
     fx_ds_h = fieldextra(
         "time_ops_delta",
-        load_output = [ f"{i:02d}_time_ops_delta.nc" for i in steps.tolist()[::3] ],
+        load_output=[f"{i:02d}_time_ops_delta.nc" for i in steps.tolist()[::3]],
         conf_files={
             "inputi": data_dir / "lfff<DDHH>0000",
             "inputc": data_dir / "lfff00000000c",
@@ -63,7 +67,7 @@ def test_resample_average(data_dir, fieldextra):
 
     fx_ds_h = fieldextra(
         "time_ops_tdelta",
-        load_output = [ f"{i:02d}_time_ops_tdelta.nc" for i in steps.tolist() ],
+        load_output=[f"{i:02d}_time_ops_tdelta.nc" for i in steps.tolist()],
         conf_files={
             "inputi": data_dir / "lfff<DDHH>0000",
             "inputc": data_dir / "lfff00000000c",
@@ -98,7 +102,7 @@ def test_max(data_dir, fieldextra):
 
     fx_ds_h = fieldextra(
         "time_ops_max",
-        load_output = [ f"{i:02d}_time_ops_max.nc" for i in steps.tolist()[::3] ],
+        load_output=[f"{i:02d}_time_ops_max.nc" for i in steps.tolist()[::3]],
         conf_files={
             "inputi": data_dir / "lfff<DDHH>0000",
             "inputc": data_dir / "lfff00000000c",

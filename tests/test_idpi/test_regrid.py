@@ -1,16 +1,20 @@
-# Third-party
-from numpy.testing import assert_allclose
-import pytest
+# Standard library
 from pathlib import Path
+
+# Third-party
+import pytest
+from numpy.testing import assert_allclose
 
 # First-party
 from idpi import grib_decoder
 from idpi.operators import regrid
 from idpi.operators.hzerocl import fhzerocl
 
+
 @pytest.fixture
 def data_dir():
     return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/original/")
+
 
 def test_regrid(data_dir, fieldextra):
     datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"

@@ -1,7 +1,6 @@
 """Test configuration."""
 # Standard library
 import subprocess
-from collections.abc import Iterable
 from pathlib import Path
 
 # Third-party
@@ -13,7 +12,9 @@ from jinja2 import Environment, FileSystemLoader
 @pytest.fixture
 def data_dir():
     """Base data dir."""
-    return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/32_39x45_51/")
+    return Path(
+        "/project/s83c/rz+/icon_data_processing_incubator/datasets/32_39x45_51/"
+    )
 
 
 @pytest.fixture
@@ -35,16 +36,17 @@ def fieldextra(tmp_path, data_dir, template_env, fieldextra_executable):
     """Run fieldextra on a given field."""
 
     def f(
-        product: str, conf_files: dict[str, str] | None = None, load_output: str | list[str] = "00_outfile.nc", **ctx
+        product: str,
+        conf_files: dict[str, str] | None = None,
+        load_output: str | list[str] = "00_outfile.nc",
+        **ctx,
     ):
-        
         if not conf_files:
             conf_files = {
                 "inputi": data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000",
-                "inputc" : data_dir / "COSMO-1E/1h/const/000/lfff00000000c",
+                "inputc": data_dir / "COSMO-1E/1h/const/000/lfff00000000c",
                 "output": "<HH>_outfile.nc",
             }
-
 
         template = template_env.get_template(f"test_{product}.nl")
         nl_path = tmp_path / f"test_{product}.nl"

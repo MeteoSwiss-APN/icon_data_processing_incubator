@@ -1,17 +1,21 @@
+# Standard library
+from pathlib import Path
+
 # Third-party
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
-from pathlib import Path
 
 # First-party
 import idpi.operators.lateral_operators as lat_ops
 from idpi.grib_decoder import GribReader
 from idpi.operators.hzerocl import fhzerocl
 
+
 @pytest.fixture
 def data_dir():
     return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/original/")
+
 
 def test_fill_undef(data_dir, fieldextra):
     datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
