@@ -17,7 +17,7 @@ from idpi.operators import radiation
 @pytest.fixture
 def data_dir():
     return Path(
-        "/project/s83c/rz+/icon_data_processing_incubator/datasets/"\
+        "/project/s83c/rz+/icon_data_processing_incubator/datasets/"
         "32_39x45_51/COSMO-1E_time/"
     )
 
