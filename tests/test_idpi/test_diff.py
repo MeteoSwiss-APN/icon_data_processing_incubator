@@ -9,8 +9,7 @@ from idpi.operators.theta import ftheta
 
 
 def test_masspoint_field(data_dir):
-    datafile = data_dir / "lfff00000000.ch"
-
+    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
     reader = GribReader([datafile], ref_param="P")
 
     ds = reader.load_cosmo_data(["P", "T"])
@@ -33,8 +32,7 @@ def test_masspoint_field(data_dir):
 
 
 def test_staggered_field(data_dir):
-    datafile = data_dir / "lfff00000000.ch"
-
+    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
     reader = GribReader([datafile], ref_param="W")
 
     ds = reader.load_cosmo_data(["W"])

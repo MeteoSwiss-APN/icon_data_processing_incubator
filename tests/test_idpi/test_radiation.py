@@ -14,8 +14,7 @@ from idpi.operators import time_operators as time_ops
 
 @pytest.fixture
 def data_dir():
-    return Path("/project/s83c/rz+/icon_data_processing_incubator/data/temporal")
-
+    return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/32_39x45_51/COSMO-1E_time/")
 
 def test_athd_s(data_dir, fieldextra):
     steps = np.arange(34)
@@ -30,7 +29,7 @@ def test_athd_s(data_dir, fieldextra):
 
     conf_files = {
         "inputi": data_dir / "lfff<DDHH>0000",
-        "output": "athd_s.nc",
+        "output": "00_outfile.nc",
     }
     fx_ds = fieldextra("athd_s", conf_files=conf_files, hh=None)
     expected = fx_ds["ATHD_S_TG"].transpose("epsd_1", "time", ...)

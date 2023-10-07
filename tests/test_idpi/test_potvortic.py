@@ -11,8 +11,8 @@ from idpi.operators.total_diff import TotalDiff
 
 
 def test_pv(data_dir, fieldextra):
-    datafile = data_dir / "lfff00000000.ch"
-    cdatafile = data_dir / "lfff00000000c.ch"
+    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
+    cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader([cdatafile, datafile])
     ds = reader.load_cosmo_data(["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"])
