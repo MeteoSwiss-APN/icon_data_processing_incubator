@@ -40,6 +40,5 @@ else
       conda init bash --no-user --install --system
     fi
     conda activate
-    conda install mamba
     rm ${INSTALL_PREFIX}/miniconda.sh
 fi
