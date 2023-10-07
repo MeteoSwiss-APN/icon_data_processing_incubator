@@ -7,8 +7,12 @@ import idpi.config
 
 
 def delayed(fn):
-    return dask.delayed(fn) if idpi.config.get("enable_dask", False) else fn
+    return dask.delayed(fn, pure=True) if idpi.config.get("enable_dask", False) else fn
 
 
-def compute(*x):
-    return dask.compute(*x) if idpi.config.get("enable_dask", False) else x
+def compute(*delayed_objs):
+    return (
+        dask.compute(*delayed_objs)
+        if idpi.config.get("enable_dask", False)
+        else delayed_objs
+    )
