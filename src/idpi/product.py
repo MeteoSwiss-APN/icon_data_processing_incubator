@@ -4,7 +4,7 @@ import dataclasses as dc
 from abc import ABCMeta, abstractmethod
 
 # First-party
-import idpi.tasking as tasking
+from . import tasking
 
 
 @dc.dataclass
