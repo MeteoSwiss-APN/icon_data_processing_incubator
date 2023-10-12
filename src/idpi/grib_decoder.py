@@ -15,8 +15,8 @@ import xarray as xr
 
 # First-party
 import idpi.config
-import idpi.tasking as tasking
-from idpi.product import ProductDescriptor
+from . import tasking
+from .product import ProductDescriptor
 
 DIM_MAP = {
     "level": "z",
