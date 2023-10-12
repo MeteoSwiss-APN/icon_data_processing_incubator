@@ -42,7 +42,7 @@ def test_flexpart(data_dir, fieldextra):
         "nsss",
     )
 
-    with idpi.config.set(data_scope="ifs"):
+    with idpi.config.set_values(data_scope="ifs"):
         reader = GribReader(datafiles, ref_param="t")
         ds = reader.load_fields(inputf + constants, extract_pv="u")
 

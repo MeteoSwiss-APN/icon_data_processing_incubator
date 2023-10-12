@@ -1,12 +1,14 @@
 """global configuration for idpi."""
 
 # Standard library
+from contextlib import contextmanager
 from typing import Any, Literal
 
 config: dict = {}
 
 
-class set:
+@contextmanager
+def set_values(config: dict = config, **kwargs):
     """Temporarily set configuration values within a context manager.
 
     Parameters
@@ -18,26 +20,21 @@ class set:
         the configuration key-value pairs to set.
 
     """
+    record: list[tuple[Literal["insert", "replace"], str, Any]] = []
 
-    def __init__(self, config: dict = config, **kwargs):
-        self._config = config
-        self._record: list[tuple[Literal["insert", "replace"], str, Any]] = []
+    for key, value in kwargs.items():
+        if key in config:
+            record.append(("replace", key, config[key]))
+        else:
+            record.append(("insert", key, None))
 
-        if kwargs:
-            for key, value in kwargs.items():
-                if key in self._config:
-                    self._record.append(("replace", key, self._config[key]))
-                else:
-                    self._record.append(("insert", key, None))
+        config[key] = value
 
-                self._config[key] = value
-
-    def __enter__(self) -> dict:
-        return self._config
-
-    def __exit__(self, type, value, traceback):
-        for op, key, value in reversed(self._record):
-            d = self._config
+    try:
+        yield config
+    finally:
+        for op, key, value in reversed(record):
+            d = config
             if op == "replace":
                 d[key] = value
             else:  # insert
