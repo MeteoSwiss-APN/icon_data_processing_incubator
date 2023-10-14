@@ -47,7 +47,7 @@ pipeline {
                 source $WORKSPACE/miniconda/etc/profile.d/conda.sh
                 conda activate no-deps
                 cd ${WORKSPACE}
-                pytest -s "not ifs" tests
+                pytest -m "not ifs" tests
                 '''
                 sh '''#!/usr/bin/env bash
                 source $WORKSPACE/miniconda/etc/profile.d/conda.sh
