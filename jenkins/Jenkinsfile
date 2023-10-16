@@ -28,6 +28,14 @@ pipeline {
                 '''
             }
         }
+        stage('setup spack') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                set -e
+                bash tools/setup_spack.sh -w ${WORKSPACE}
+                '''
+            }
+        }
         stage('build package') {
             steps {
                 sh '''#!/usr/bin/env bash
