@@ -8,6 +8,3 @@ spack:
   view: false
   concretizer:
     unify: true
-  config:
-    install_tree:
-      root: $SCRATCH/spack-root
