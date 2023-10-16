@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 script_dir=$(dirname -- "$(readlink -f -- "$BASH_SOURCE")")
 
 spack_c2sm_url=https://github.com/C2SM/spack-c2sm.git
