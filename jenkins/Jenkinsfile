@@ -31,7 +31,7 @@ pipeline {
         stage('setup spack') {
             steps {
                 sh '''#!/usr/bin/env bash
-                set -e
+                set -ex
                 bash tools/setup_spack.sh -w ${WORKSPACE}
                 '''
             }

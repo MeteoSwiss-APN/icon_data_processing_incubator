@@ -12,8 +12,8 @@ while getopts "w:" flag; do
     esac
 done
 
-mkdir -p $workspace
-pushd $workspace
+mkdir -p ${workspace}
+pushd ${workspace}
 
 if [[ $(git --version) =~ git\ version\ 1 ]]; then
     # assume that we are on tsa
@@ -27,6 +27,7 @@ mkdir spack-env
 cp ${script_dir}/spack.yaml spack-env/
 spack env activate -p spack-env
 
+export PATH=$PATH:${workspace}/spack-c2sm/user-cache/bootstrap/store/bin
 spack install
 
 popd
