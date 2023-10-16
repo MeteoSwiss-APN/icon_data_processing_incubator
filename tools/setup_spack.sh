@@ -12,8 +12,13 @@ while getopts "w:" flag; do
     esac
 done
 
+mkdir -p $workspace
 pushd $workspace
 
+if [[ $(git --version) =~ git\ version\ 1 ]]; then
+    # assume that we are on tsa
+    module load git
+fi
 git clone --depth 1 --recurse-submodules --shallow-submodules -b ${spack_c2sm_tag} ${spack_c2sm_url}
 
 . spack-c2sm/setup-env.sh
@@ -21,6 +26,7 @@ git clone --depth 1 --recurse-submodules --shallow-submodules -b ${spack_c2sm_ta
 mkdir spack-env
 cp ${script_dir}/spack.yaml spack-env/
 spack env activate -p spack-env
+
 spack install
 
 popd
