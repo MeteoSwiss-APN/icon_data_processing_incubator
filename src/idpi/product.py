@@ -2,14 +2,20 @@
 # Standard library
 import dataclasses as dc
 from abc import ABCMeta, abstractmethod
+from typing import NamedTuple
 
 # Local
 from . import tasking
 
 
+class Request(NamedTuple):
+    param: str
+    levtype: str | None = None
+
+
 @dc.dataclass
 class ProductDescriptor:
-    input_fields: list[str]
+    input_fields: list[Request]
 
 
 class Product(metaclass=ABCMeta):
@@ -17,7 +23,7 @@ class Product(metaclass=ABCMeta):
 
     def __init__(
         self,
-        input_fields: list[str],
+        input_fields: list[Request],
         delay_entire_product: bool = False,
     ):
         self._desc = ProductDescriptor(input_fields=input_fields)
