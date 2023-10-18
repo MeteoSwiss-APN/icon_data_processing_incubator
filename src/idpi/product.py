@@ -11,6 +11,7 @@ from . import tasking
 class Request(NamedTuple):
     param: str
     levtype: str | None = None
+    levelist: list[int] | None = None
 
 
 @dc.dataclass
@@ -30,14 +31,14 @@ class Product(metaclass=ABCMeta):
         self._delay_entire_product = delay_entire_product
 
     @abstractmethod
-    def _run(self, **args):
+    def _run(self, *args, **kwargs):
         pass
 
-    def __call__(self, *args):
+    def __call__(self, *args, **kwargs):
         if self._delay_entire_product:
-            return tasking.delayed(self._run)(*args)
+            return tasking.delayed(self._run)(*args, **kwargs)
         else:
-            return self._run(*args)
+            return self._run(*args, **kwargs)
 
     @property
     def descriptor(self):
