@@ -11,7 +11,7 @@ from . import tasking
 class Request(NamedTuple):
     param: str
     levtype: str | None = None
-    levelist: list[int] | None = None
+    levelist: tuple[int, ...] | None = None
 
 
 @dc.dataclass

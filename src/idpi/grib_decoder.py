@@ -227,7 +227,8 @@ class GribReader:
         self,
         req: Request,
     ):
-        fs = earthkit.data.from_source("file", self._datafiles).sel(req._asdict())
+        arg = {k: v for k, v in req._asdict().items() if v is not None}
+        fs = earthkit.data.from_source("file", self._datafiles).sel(arg)
 
         hcoords = None
         metadata: dict[str, typing.Any] = {}
