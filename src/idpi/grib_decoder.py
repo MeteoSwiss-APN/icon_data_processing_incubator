@@ -313,12 +313,12 @@ class GribReader:
         Raises
         ------
         RuntimeError
-            if not all fields are found in the given datafiles.
+            if not all fields are found in the data source.
 
         Returns
         -------
-        dict[str, xr.DataArray]
-            Mapping of fields by param name
+        dict[Request, xr.DataArray]
+            Mapping of fields by request
 
         """
         reqs = {req for desc in descriptors for req in desc.input_fields}
@@ -326,8 +326,30 @@ class GribReader:
         return self.load_fields(reqs, extract_pv=extract_pv)
 
     def load_fieldnames(
-        self, params: list[str], extract_pv: str | None = None
+        self,
+        params: list[str],
+        extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
+        """Load a dataset with the requested parameters by name.
+
+        Parameters
+        ----------
+        params : list[str]
+            List of parameter names to include in the dataset.
+        extract_pv: str | None
+            Optionally extract hybrid level coefficients from the given field.
+
+        Raises
+        ------
+        RuntimeError
+            if not all fields are found in the data source.
+
+        Returns
+        -------
+        dict[str, xr.DataArray]
+            Mapping of fields by param name
+
+        """
         desc = ProductDescriptor(input_fields=[Request(param) for param in params])
         result = self.load([desc], extract_pv=extract_pv)
         return {req.param: field for req, field in result.items()}
@@ -349,12 +371,12 @@ class GribReader:
         Raises
         ------
         RuntimeError
-            if not all fields are found in the given datafiles.
+            if not all fields are found in the data source.
 
         Returns
         -------
-        dict[str, xr.DataArray]
-            Mapping of fields by param name
+        dict[Request, xr.DataArray]
+            Mapping of fields by request
 
         """
         if idpi.config.get("data_scope", "cosmo") == "cosmo":
