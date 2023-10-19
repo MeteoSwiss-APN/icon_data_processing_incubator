@@ -19,11 +19,7 @@ done
 mkdir -p ${workspace}
 pushd ${workspace}
 
-if [[ $(git --version) =~ git\ version\ 1 ]]; then
-    # assume that we are on tsa
-    module load git
-fi
-git clone --depth 1 --recurse-submodules --shallow-submodules -b ${spack_c2sm_tag} ${spack_c2sm_url} ${spack_c2sm_dir}
+git clone --depth 1 --recurse-submodules -b ${spack_c2sm_tag} ${spack_c2sm_url} ${spack_c2sm_dir}
 
 . ${spack_c2sm_dir}/setup-env.sh
 
