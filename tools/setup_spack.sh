@@ -4,14 +4,15 @@ set -ex
 
 script_dir=$(dirname -- "$(readlink -f -- "$BASH_SOURCE")")
 
+workspace=$(pwd)
 spack_c2sm_url=https://github.com/C2SM/spack-c2sm.git
 spack_c2sm_tag=v0.20.1.0
-spack_dir=s
-workspace=$(pwd)
+spack_c2sm_dir=${workspace}/spack-c2sm
 
-while getopts "w:" flag; do
+while getopts "w:s:" flag; do
     case ${flag} in
         w) workspace=${OPTARG};;
+        s) spack_c2sm_dir=${OPTARG};;
     esac
 done
 
@@ -22,9 +23,9 @@ if [[ $(git --version) =~ git\ version\ 1 ]]; then
     # assume that we are on tsa
     module load git
 fi
-git clone --depth 1 --recurse-submodules --shallow-submodules -b ${spack_c2sm_tag} ${spack_c2sm_url} ${spack_dir}
+git clone --depth 1 --recurse-submodules --shallow-submodules -b ${spack_c2sm_tag} ${spack_c2sm_url} ${spack_c2sm_dir}
 
-. ${spack_dir}/setup-env.sh
+. ${spack_c2sm_dir}/setup-env.sh
 
 mkdir spack-env
 cp ${script_dir}/spack.yaml spack-env/

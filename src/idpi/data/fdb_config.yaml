@@ -1,0 +1,8 @@
+---
+type: local
+engine: toc
+schema: /scratch/e1000/meteoswiss/scratch/ckanesan/fdb-setup/fdb-schema
+spaces:
+- handler: Default
+  roots:
+  - path: /scratch/e1000/meteoswiss/scratch/ckanesan/fdb-root/

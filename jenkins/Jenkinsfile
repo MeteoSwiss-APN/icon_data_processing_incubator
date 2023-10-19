@@ -32,7 +32,7 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/env bash
                 set -ex
-                bash tools/setup_spack.sh -w ${WORKSPACE}
+                bash tools/setup_spack.sh -w ${WORKSPACE} -s ${WORKSPACE}/s
                 '''
             }
         }
