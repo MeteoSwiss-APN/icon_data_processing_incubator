@@ -3,7 +3,7 @@
 # It describes a set of packages to be installed, along with
 # configuration settings.
 spack:
-  specs: 
+  specs:
   - fdb ~~mpi
   - eckit@1.20.2
   - eccodes@2.25 jp2k=none

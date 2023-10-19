@@ -33,6 +33,7 @@ pipeline {
                 sh '''#!/usr/bin/env bash
                 set -ex
                 bash tools/setup_spack.sh -s ${WORKSPACE}/s
+                . ${WORKSPACE}/s/setup-env.sh
                 spack env activate -p ${WORKSPACE}/spack-env
                 spack install
                 '''

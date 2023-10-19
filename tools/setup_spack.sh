@@ -13,5 +13,3 @@ while getopts "w:s:" flag; do
 done
 
 git clone --depth 1 --recurse-submodules -b ${spack_c2sm_tag} ${spack_c2sm_url} ${spack_c2sm_dir}
-
-. ${spack_c2sm_dir}/setup-env.sh
