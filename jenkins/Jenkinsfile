@@ -28,11 +28,13 @@ pipeline {
                 '''
             }
         }
-        stage('setup spack') {
+        stage('spack') {
             steps {
                 sh '''#!/usr/bin/env bash
                 set -ex
-                bash tools/setup_spack.sh -w ${WORKSPACE} -s ${WORKSPACE}/s
+                bash tools/setup_spack.sh -s ${WORKSPACE}/s
+                spack env activate -p ${WORKSPACE}/spack-env
+                spack install
                 '''
             }
         }
