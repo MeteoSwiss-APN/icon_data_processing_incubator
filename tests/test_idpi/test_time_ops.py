@@ -1,5 +1,6 @@
 # Standard library
 from pathlib import Path
+from typing import Callable, List
 
 # Third-party
 import numpy as np
@@ -14,18 +15,15 @@ from idpi.grib_decoder import GribReader
 from idpi.operators import radiation
 
 
-@pytest.fixture
-def data_dir():
-    return Path(
-        "/project/s83c/rz+/icon_data_processing_incubator/datasets/"
-        "32_39x45_51/COSMO-1E_time/"
-    )
-
-
-def test_delta(data_dir, fieldextra):
+def test_delta(
+    data_dir_time_aggregated: Path,
+    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+):
     steps = np.arange(34)
     dd, hh = np.divmod(steps, 24)
-    datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
+    datafiles = [
+        data_dir_time_aggregated / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)
+    ]
 
     reader = GribReader(datafiles, ref_param="TOT_PREC")
     ds = reader.load_cosmo_data(["TOT_PREC"])
@@ -41,8 +39,8 @@ def test_delta(data_dir, fieldextra):
         "time_ops_delta",
         load_output=[f"{i:02d}_time_ops_delta.nc" for i in steps.tolist()[::3]],
         conf_files={
-            "inputi": data_dir / "lfff<DDHH>0000",
-            "inputc": data_dir / "lfff00000000c",
+            "inputi": data_dir_time_aggregated / "lfff<DDHH>0000",
+            "inputc": data_dir_time_aggregated / "lfff00000000c",
             "output": "<HH>_time_ops_delta.nc",
         },
     )
@@ -52,10 +50,15 @@ def test_delta(data_dir, fieldextra):
     assert_allclose(observed, expected.transpose("epsd_1", "time", ...))
 
 
-def test_resample_average(data_dir, fieldextra):
+def test_resample_average(
+    data_dir_time_aggregated: Path,
+    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+):
     steps = np.arange(12)
     dd, hh = np.divmod(steps, 24)
-    datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
+    datafiles = [
+        data_dir_time_aggregated / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)
+    ]
 
     reader = GribReader(datafiles, ref_param="ASWDIFD_S")
     ds = reader.load_cosmo_data(["ASWDIFD_S", "ASWDIR_S"])
@@ -69,8 +72,8 @@ def test_resample_average(data_dir, fieldextra):
         "time_ops_tdelta",
         load_output=[f"{i:02d}_time_ops_tdelta.nc" for i in steps.tolist()],
         conf_files={
-            "inputi": data_dir / "lfff<DDHH>0000",
-            "inputc": data_dir / "lfff00000000c",
+            "inputi": data_dir_time_aggregated / "lfff<DDHH>0000",
+            "inputc": data_dir_time_aggregated / "lfff00000000c",
             "output": "<HH>_time_ops_tdelta.nc",
         },
     )
@@ -85,10 +88,15 @@ def test_resample_average(data_dir, fieldextra):
     )
 
 
-def test_max(data_dir, fieldextra):
+def test_max(
+    data_dir_time_aggregated: Path,
+    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+):
     steps = np.arange(34)
     dd, hh = np.divmod(steps, 24)
-    datafiles = [data_dir / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)]
+    datafiles = [
+        data_dir_time_aggregated / f"lfff{d:02d}{h:02d}0000" for d, h in zip(dd, hh)
+    ]
     reader = GribReader(datafiles, ref_param="VMAX_10M")
     ds = reader.load_cosmo_data(["VMAX_10M"])
 
@@ -104,8 +112,8 @@ def test_max(data_dir, fieldextra):
         "time_ops_max",
         load_output=[f"{i:02d}_time_ops_max.nc" for i in steps.tolist()[::3]],
         conf_files={
-            "inputi": data_dir / "lfff<DDHH>0000",
-            "inputc": data_dir / "lfff00000000c",
+            "inputi": data_dir_time_aggregated / "lfff<DDHH>0000",
+            "inputc": data_dir_time_aggregated / "lfff00000000c",
             "output": "<HH>_time_ops_max.nc",
         },
     )

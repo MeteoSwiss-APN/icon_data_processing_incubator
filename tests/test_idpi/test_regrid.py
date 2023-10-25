@@ -1,8 +1,9 @@
 # Standard library
 from pathlib import Path
+from typing import Callable, List
 
 # Third-party
-import pytest
+import xarray as xr
 from numpy.testing import assert_allclose
 
 # First-party
@@ -11,14 +12,12 @@ from idpi.operators import regrid
 from idpi.operators.hzerocl import fhzerocl
 
 
-@pytest.fixture
-def data_dir():
-    return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/original/")
-
-
-def test_regrid(data_dir, fieldextra):
-    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
-    cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
+def test_regrid(
+    full_domain_data_dir_fixture: Path,
+    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+):
+    datafile = full_domain_data_dir_fixture / "COSMO-1E/1h/ml_sl/000/lfff00000000"
+    cdatafile = full_domain_data_dir_fixture / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = grib_decoder.GribReader([cdatafile, datafile])
     ds = reader.load_cosmo_data(["T", "HHL"])

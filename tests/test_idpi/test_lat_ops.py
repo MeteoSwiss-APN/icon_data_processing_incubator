@@ -1,9 +1,11 @@
 # Standard library
 from pathlib import Path
+from typing import Callable, List
 
 # Third-party
 import numpy as np
 import pytest
+import xarray as xr
 from numpy.testing import assert_allclose
 
 # First-party
@@ -12,14 +14,12 @@ from idpi.grib_decoder import GribReader
 from idpi.operators.hzerocl import fhzerocl
 
 
-@pytest.fixture
-def data_dir():
-    return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/original/")
-
-
-def test_fill_undef(data_dir, fieldextra):
-    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
-    cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
+def test_fill_undef(
+    full_domain_data_dir: Path,
+    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+):
+    datafile = full_domain_data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
+    cdatafile = full_domain_data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader([cdatafile, datafile])
     ds = reader.load_cosmo_data(["T", "HHL"])
@@ -34,9 +34,9 @@ def test_fill_undef(data_dir, fieldextra):
     assert_allclose(observed, expected, rtol=2e-6)
 
 
-def test_disk_avg(data_dir, fieldextra):
-    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
-    cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
+def test_disk_avg(full_domain_data_dir: Path, fieldextra):
+    datafile = full_domain_data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
+    cdatafile = full_domain_data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader([cdatafile, datafile])
 

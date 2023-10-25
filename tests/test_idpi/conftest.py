@@ -2,6 +2,7 @@
 # Standard library
 import subprocess
 from pathlib import Path
+from typing import Callable, List
 
 # Third-party
 import pytest
@@ -9,11 +10,39 @@ import xarray as xr
 from jinja2 import Environment, FileSystemLoader
 
 
-@pytest.fixture
-def data_dir():
-    """Base data dir."""
+@pytest.fixture(name="data_dir")
+def data_dir_fixture():
+    """Provide the path to the cropped dataset for testing.
+
+    Returns:
+        Path: Path to the dataset.
+    """
     return Path(
         "/project/s83c/rz+/icon_data_processing_incubator/datasets/32_39x45_51/"
+    )
+
+
+@pytest.fixture(name="full_domain_data_dir")
+def full_domain_data_dir_fixture() -> Path:
+    """Provide the path to the full domain dataset.
+
+
+    Returns:
+        Path: Path to the full dataset.
+    """
+    return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/original/")
+
+
+@pytest.fixture(name="data_dir_time_aggregated")
+def data_dir_time_aggregated_fixture() -> Path:
+    """Provide the path the the time aggregated dataset.
+
+    Returns:
+        Path: Path to the dataset
+    """
+    return Path(
+        "/project/s83c/rz+/icon_data_processing_incubator/datasets/"
+        "32_39x45_51/COSMO-1E_time/"
     )
 
 
@@ -32,7 +61,9 @@ def template_env():
 
 
 @pytest.fixture
-def fieldextra(tmp_path, data_dir, template_env, fieldextra_executable):
+def fieldextra(
+    tmp_path, data_dir, template_env, fieldextra_executable
+) -> Callable[..., xr.Dataset | List[xr.Dataset]]:
     """Run fieldextra on a given field."""
 
     def f(
