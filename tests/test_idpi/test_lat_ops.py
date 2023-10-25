@@ -1,6 +1,6 @@
 # Standard library
 from pathlib import Path
-from typing import Callable, List
+from typing import Any, Callable
 
 # Third-party
 import numpy as np
@@ -16,7 +16,7 @@ from idpi.operators.hzerocl import fhzerocl
 
 def test_fill_undef(
     full_domain_data_dir: Path,
-    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+    fieldextra: Callable[..., Any],
 ):
     datafile = full_domain_data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
     cdatafile = full_domain_data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
@@ -28,7 +28,7 @@ def test_fill_undef(
 
     observed = lat_ops.fill_undef(hzerocl, 10, 0.3)
 
-    fx_ds = fieldextra("lat_ops_fill_undef")
+    fx_ds: xr.Dataset = fieldextra("lat_ops_fill_undef")
     expected = fx_ds["HZEROCL"]
 
     assert_allclose(observed, expected, rtol=2e-6)

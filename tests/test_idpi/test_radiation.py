@@ -1,10 +1,9 @@
 # Standard library
 from pathlib import Path
-from typing import Callable, List
+from typing import Any, Callable
 
 # Third-party
 import numpy as np
-import xarray as xr
 from numpy.testing import assert_allclose
 
 # First-party
@@ -15,7 +14,7 @@ from idpi.operators import time_operators as time_ops
 
 def test_athd_s(
     data_dir_time_aggregated: Path,
-    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+    fieldextra: Callable[..., Any],
 ):
     steps = np.arange(34)
     dd, hh = np.divmod(steps, 24)

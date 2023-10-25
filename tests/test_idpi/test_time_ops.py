@@ -1,6 +1,6 @@
 # Standard library
 from pathlib import Path
-from typing import Callable, List
+from typing import Any, Callable
 
 # Third-party
 import numpy as np
@@ -17,7 +17,7 @@ from idpi.operators import radiation
 
 def test_delta(
     data_dir_time_aggregated: Path,
-    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+    fieldextra: Callable[..., Any],
 ):
     steps = np.arange(34)
     dd, hh = np.divmod(steps, 24)
@@ -52,7 +52,7 @@ def test_delta(
 
 def test_resample_average(
     data_dir_time_aggregated: Path,
-    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+    fieldextra: Callable[..., Any],
 ):
     steps = np.arange(12)
     dd, hh = np.divmod(steps, 24)
@@ -90,7 +90,7 @@ def test_resample_average(
 
 def test_max(
     data_dir_time_aggregated: Path,
-    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+    fieldextra: Callable[..., Any],
 ):
     steps = np.arange(34)
     dd, hh = np.divmod(steps, 24)

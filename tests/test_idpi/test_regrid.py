@@ -1,6 +1,6 @@
 # Standard library
 from pathlib import Path
-from typing import Callable, List
+from typing import Any, Callable
 
 # Third-party
 import xarray as xr
@@ -14,7 +14,7 @@ from idpi.operators.hzerocl import fhzerocl
 
 def test_regrid(
     full_domain_data_dir_fixture: Path,
-    fieldextra: Callable[..., xr.Dataset | List[xr.Dataset]],
+    fieldextra: Callable[..., Any],
 ):
     datafile = full_domain_data_dir_fixture / "COSMO-1E/1h/ml_sl/000/lfff00000000"
     cdatafile = full_domain_data_dir_fixture / "COSMO-1E/1h/const/000/lfff00000000c"
@@ -28,7 +28,7 @@ def test_regrid(
     hzerocl.attrs["geography"] = ds["HHL"].geography
     observed = regrid.regrid(hzerocl, dst, regrid.Resampling.bilinear)
 
-    fx_ds = fieldextra("regrid", out_regrid_target=out_regrid_target)
+    fx_ds: xr.Dataset = fieldextra("regrid", out_regrid_target=out_regrid_target)
     expected = fx_ds["HZEROCL"]
 
     # The regrid operator is evaluated indirectly by comparing the output
