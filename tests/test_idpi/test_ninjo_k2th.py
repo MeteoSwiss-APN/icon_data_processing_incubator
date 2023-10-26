@@ -36,7 +36,7 @@ def test_ninjo_k2th(data_dir, fieldextra):
     assert_allclose(
         fs_ds["POT_VORTIC_AT_THETA"],
         observed_at_theta["pot_vortic"],
-        atol=1e-5,
+        atol=1e-8,
         rtol=1e-5,
     )
 
