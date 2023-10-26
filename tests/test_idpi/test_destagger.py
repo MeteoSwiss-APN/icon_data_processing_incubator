@@ -11,7 +11,7 @@ def test_destagger(data_dir, fieldextra):
     cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader([cdatafile, datafile])
-    ds = reader.load_cosmo_data(
+    ds = reader.load_fieldnames(
         ["U", "V", "HHL"],
     )
 

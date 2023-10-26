@@ -15,7 +15,7 @@ def test_pv(data_dir, fieldextra):
     cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader([cdatafile, datafile])
-    ds = reader.load_cosmo_data(["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"])
+    ds = reader.load_fieldnames(["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"])
 
     theta = ftheta(ds["P"], ds["T"])
     rho_tot = f_rho_tot(ds["T"], ds["P"], ds["QV"], ds["QC"], ds["QI"])

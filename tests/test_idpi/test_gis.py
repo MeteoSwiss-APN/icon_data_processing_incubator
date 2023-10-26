@@ -44,7 +44,7 @@ def test_geolatlon2swiss(coords):
 def test_vref_rot2geolatlon(data_dir, fieldextra):
     datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
     reader = grib_decoder.GribReader([datafile], ref_param="T")
-    ds = reader.load_cosmo_data(["U_10M", "V_10M"])
+    ds = reader.load_fieldnames(["U_10M", "V_10M"])
 
     u_g, v_g = gis.vref_rot2geolatlon(ds["U_10M"], ds["V_10M"])
 

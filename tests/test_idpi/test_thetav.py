@@ -10,7 +10,7 @@ def test_thetav(data_dir, fieldextra):
     datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
     reader = GribReader([datafile], ref_param="P")
 
-    ds = reader.load_cosmo_data(["P", "T", "QV"])
+    ds = reader.load_fieldnames(["P", "T", "QV"])
     thetav = mthetav.fthetav(ds["P"], ds["T"], ds["QV"])
 
     fs_ds = fieldextra("THETAV")

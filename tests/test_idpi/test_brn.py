@@ -11,7 +11,7 @@ def test_brn(data_dir, fieldextra):
     cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader([cdatafile, datafile])
-    ds = reader.load_cosmo_data(["P", "T", "QV", "U", "V", "HHL", "HSURF"])
+    ds = reader.load_fieldnames(["P", "T", "QV", "U", "V", "HHL", "HSURF"])
 
     brn = mbrn.fbrn(
         ds["P"], ds["T"], ds["QV"], ds["U"], ds["V"], ds["HHL"], ds["HSURF"]
