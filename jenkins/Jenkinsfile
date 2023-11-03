@@ -36,7 +36,7 @@ pipeline {
                 . ${WORKSPACE}/s/setup-env.sh
                 spack env activate -p ${WORKSPACE}/spack-env
                 spack mirror add iwf2-mirror /project/s83c/rz+/spack-mirror-test/
-                spack install
+                spack install --no-check-signature
                 '''
             }
         }
