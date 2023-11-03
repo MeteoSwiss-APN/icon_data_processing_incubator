@@ -35,7 +35,7 @@ pipeline {
                 bash tools/setup_spack.sh -s ${WORKSPACE}/s
                 . ${WORKSPACE}/s/setup-env.sh
                 spack env activate -p ${WORKSPACE}/spack-env
-                spack mirror add iwf2-mirror /project/s83c/rz+/spack-mirror/
+                spack mirror add iwf2-mirror /project/s83c/rz+/spack-mirror-test/
                 spack install
                 '''
             }
