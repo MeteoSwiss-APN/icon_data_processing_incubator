@@ -1,3 +1,5 @@
+"""Mars request helper class."""
+
 # Standard library
 import dataclasses as dc
 from enum import Enum
