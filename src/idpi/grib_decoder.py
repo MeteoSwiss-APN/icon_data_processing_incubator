@@ -3,15 +3,16 @@
 import dataclasses as dc
 import datetime as dt
 import typing
+from collections.abc import Mapping
 from pathlib import Path
+
 
 # Third-party
 import numpy as np
 import xarray as xr
 
 # Local
-from . import mars, tasking, data_source
-
+from . import data_source, mars, tasking
 
 DIM_MAP = {
     "level": "z",
@@ -161,7 +162,7 @@ class GribReader:
 
         return grid
 
-    def _load_pv(self, pv_param: str):
+    def _load_pv(self, pv_param: Request):
         fs = self.data_source.query(pv_param)
 
         for field in fs:
@@ -246,18 +247,18 @@ class GribReader:
 
     def load(
         self,
-        requests: dict[str, Request],
+        requests: Mapping[str, Request],
         extract_pv: str | None = None,
     ) -> dict[str, xr.DataArray]:
         """Load a dataset with the requested parameters.
 
         Parameters
         ----------
-        descriptors : list[ProductDescriptor]
-            List of product descriptors from which the input fields required
-            are extracted.
+        requests : Mapping[str, Request]
+            Mapping of label to request for a given field from the data source.
         extract_pv: str | None
-            Optionally extract hybrid level coefficients from the given field.
+            Optionally extract hybrid level coefficients from the field referenced by
+            the given label.
 
         Raises
         ------
@@ -267,7 +268,7 @@ class GribReader:
         Returns
         -------
         dict[str, xr.DataArray]
-            Mapping of fields by name
+            Mapping of fields by label
 
         """
         result = {

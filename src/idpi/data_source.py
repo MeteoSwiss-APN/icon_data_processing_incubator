@@ -7,8 +7,8 @@ from functools import singledispatchmethod
 from pathlib import Path
 
 # Third-party
-import earthkit.data as ekd
-import eccodes
+import earthkit.data as ekd  # type: ignore
+import eccodes  # type: ignore
 
 # Local
 from . import config, mars
@@ -56,8 +56,9 @@ class DataSource:
 
     @query.register
     def _(self, request: mars.Request):
-        # The presence of the yield keyword makes this def a generator. As a result, the context
-        # manager will remain active until the exhaustion of the data source iterator.
+        # The presence of the yield keyword makes this def a generator.
+        # As a result, the context manager will remain active until the
+        # exhaustion of the data source iterator.
         grib_def = config.get("data_scope", GRIB_DEF[request.model])
         with grib_def_ctx(grib_def):
             if self.datafiles:
