@@ -1,3 +1,5 @@
+"""Data source helper class."""
+
 # Standard library
 import dataclasses as dc
 import sys
@@ -55,24 +57,21 @@ class DataSource:
         raise NotImplementedError(f"request of type {type(request)} not supported.")
 
     @query.register
-    def _(self, request: mars.Request):
+    def _(self, request: dict):
         # The presence of the yield keyword makes this def a generator.
         # As a result, the context manager will remain active until the
         # exhaustion of the data source iterator.
-        grib_def = config.get("data_scope", GRIB_DEF[request.model])
+        req_kwargs = self.request_template | request
+        req = mars.Request(**req_kwargs)
+
+        grib_def = config.get("data_scope", GRIB_DEF[req.model])
         with grib_def_ctx(grib_def):
             if self.datafiles:
                 fs = ekd.from_source("file", self.datafiles)
-                source = fs.sel(request.dump(exclude_defaults=True))
+                source = fs.sel(req_kwargs)
             else:
-                source = ekd.from_source("fdb", request.to_fdb())
+                source = ekd.from_source("fdb", req.to_fdb())
             yield from source
-
-    @query.register
-    def _(self, request: dict):
-        req_kwargs = self.request_template | request
-        req = mars.Request(**req_kwargs)
-        yield from self.query(req)
 
     @query.register
     def _(self, request: str):
