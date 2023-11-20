@@ -11,7 +11,6 @@ import pydantic
 import yaml
 from pydantic import dataclasses as pdc
 
-
 ValidationError = pydantic.ValidationError
 
 

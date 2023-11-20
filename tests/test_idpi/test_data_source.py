@@ -1,8 +1,11 @@
+# Standard library
 from contextlib import nullcontext
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
+# Third-party
 import pytest
 
+# First-party
 from idpi import config, data_source, mars
 
 

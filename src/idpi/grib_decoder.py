@@ -6,7 +6,6 @@ import typing
 from collections.abc import Mapping
 from pathlib import Path
 
-
 # Third-party
 import numpy as np
 import xarray as xr
