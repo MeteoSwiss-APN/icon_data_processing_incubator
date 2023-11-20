@@ -69,6 +69,10 @@ class DataSource:
             if self.datafiles:
                 fs = ekd.from_source("file", self.datafiles)
                 source = fs.sel(req_kwargs)
+                # ideally, the sel would be done with the mars request but
+                # fdb and file sources currently disagree on the type of the
+                # date and time fields.
+                # see: https://github.com/ecmwf/earthkit-data/issues/253
             else:
                 source = ekd.from_source("fdb", req.to_fdb())
             yield from source
