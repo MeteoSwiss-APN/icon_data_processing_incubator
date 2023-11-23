@@ -139,7 +139,7 @@ class GribReader:
             reference grid
 
         """
-        fs = self.data_source.query(ref_param)
+        fs = self.data_source.retrieve(ref_param)
         it = iter(fs)
         field = next(it, None)
         if field is None:
@@ -162,7 +162,7 @@ class GribReader:
         return grid
 
     def _load_pv(self, pv_param: Request):
-        fs = self.data_source.query(pv_param)
+        fs = self.data_source.retrieve(pv_param)
 
         for field in fs:
             return field.metadata("pv")
@@ -196,7 +196,7 @@ class GribReader:
         self,
         req: Request,
     ):
-        fs = self.data_source.query(req)
+        fs = self.data_source.retrieve(req)
 
         hcoords = None
         metadata: dict[str, typing.Any] = {}

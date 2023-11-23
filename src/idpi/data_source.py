@@ -53,15 +53,36 @@ class DataSource:
     request_template: dict[str, typing.Any] = dc.field(default_factory=dict)
 
     @singledispatchmethod
-    def query(self, request):
+    def retrieve(self, request):
+        """Stream GRIB fields from files or FDB.
+
+        Request for data from the source in the mars language.
+        The data source is defined by the `datafiles` attribute if provided otherwise
+        FDB is used.
+        Simple strings are interpreted as `param` filters and pairs of strings
+        are interpreted as `param` and `levtype` filters.
+        Key value pairs from the `request_template` attribute are used as default
+        values.
+
+        Parameters
+        ----------
+        request : dict | str | tuple[str, str]
+            Request for data from the source in the mars language.
+
+        Yields
+        ------
+        GribField
+            GribField instances containing the requested data.
+        """
         raise NotImplementedError(f"request of type {type(request)} not supported.")
 
-    @query.register
+    @retrieve.register
     def _(self, request: dict):
         # The presence of the yield keyword makes this def a generator.
         # As a result, the context manager will remain active until the
         # exhaustion of the data source iterator.
         req_kwargs = self.request_template | request
+        # validate the request
         req = mars.Request(**req_kwargs)
 
         grib_def = config.get("data_scope", GRIB_DEF[req.model])
@@ -77,11 +98,11 @@ class DataSource:
                 source = ekd.from_source("fdb", req.to_fdb())
             yield from source
 
-    @query.register
+    @retrieve.register
     def _(self, request: str):
-        yield from self.query({"param": request})
+        yield from self.retrieve({"param": request})
 
-    @query.register
+    @retrieve.register
     def _(self, request: tuple):
         param, levtype = request
-        yield from self.query({"param": param, "levtype": levtype})
+        yield from self.retrieve({"param": param, "levtype": levtype})

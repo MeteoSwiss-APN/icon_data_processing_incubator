@@ -22,12 +22,12 @@ def mock_grib_def_ctx():
         yield mock
 
 
-def test_query_files(mock_from_source, mock_grib_def_ctx):
+def test_retrieve_files(mock_from_source, mock_grib_def_ctx):
     datafiles = ["foo"]
     param = "bar"
 
-    ds = data_source.DataSource(datafiles)
-    for _ in ds.query(param):
+    source = data_source.DataSource(datafiles)
+    for _ in source.retrieve(param):
         pass
 
     assert mock_grib_def_ctx.mock_calls == [call("cosmo")]
@@ -38,12 +38,12 @@ def test_query_files(mock_from_source, mock_grib_def_ctx):
     ]
 
 
-def test_query_files_tuple(mock_from_source, mock_grib_def_ctx):
+def test_retrieve_files_tuple(mock_from_source, mock_grib_def_ctx):
     datafiles = ["foo"]
     request = param, levtype = ("bar", "ml")
 
-    ds = data_source.DataSource(datafiles)
-    for _ in ds.query(request):
+    source = data_source.DataSource(datafiles)
+    for _ in source.retrieve(request):
         pass
 
     assert mock_grib_def_ctx.mock_calls == [call("cosmo")]
@@ -54,13 +54,13 @@ def test_query_files_tuple(mock_from_source, mock_grib_def_ctx):
     ]
 
 
-def test_query_files_ifs(mock_from_source, mock_grib_def_ctx):
+def test_retrieve_files_ifs(mock_from_source, mock_grib_def_ctx):
     datafiles = ["foo"]
     param = "bar"
 
     with config.set_values(data_scope="ifs"):
-        ds = data_source.DataSource(datafiles)
-        for _ in ds.query(param):
+        source = data_source.DataSource(datafiles)
+        for _ in source.retrieve(param):
             pass
 
     assert mock_grib_def_ctx.mock_calls == [call("ifs")]
@@ -71,13 +71,13 @@ def test_query_files_ifs(mock_from_source, mock_grib_def_ctx):
     ]
 
 
-def test_query_fdb(mock_from_source, mock_grib_def_ctx):
+def test_retrieve_fdb(mock_from_source, mock_grib_def_ctx):
     datafiles = []
     param = "U"
     template = {"date": "20200101", "time": "0000"}
 
-    ds = data_source.DataSource(datafiles, template)
-    for _ in ds.query(param):
+    source = data_source.DataSource(datafiles, template)
+    for _ in source.retrieve(param):
         pass
 
     assert mock_grib_def_ctx.mock_calls == [call("cosmo")]
