@@ -4,6 +4,7 @@
 import dataclasses as dc
 import sys
 import typing
+from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from functools import singledispatchmethod
 from pathlib import Path
@@ -53,7 +54,9 @@ class DataSource:
     request_template: dict[str, typing.Any] = dc.field(default_factory=dict)
 
     @singledispatchmethod
-    def retrieve(self, request):
+    def retrieve(
+        self, request: dict[str, typing.Any] | str | tuple[str, str]
+    ) -> Iterator:
         """Stream GRIB fields from files or FDB.
 
         Request for data from the source in the mars language.
@@ -77,7 +80,7 @@ class DataSource:
         raise NotImplementedError(f"request of type {type(request)} not supported.")
 
     @retrieve.register
-    def _(self, request: dict):
+    def _(self, request: dict) -> Iterator:
         # The presence of the yield keyword makes this def a generator.
         # As a result, the context manager will remain active until the
         # exhaustion of the data source iterator.
@@ -96,13 +99,13 @@ class DataSource:
                 # see: https://github.com/ecmwf/earthkit-data/issues/253
             else:
                 source = ekd.from_source("fdb", req.to_fdb())
-            yield from source
+            yield from source  # type: ignore
 
     @retrieve.register
-    def _(self, request: str):
+    def _(self, request: str) -> Iterator:
         yield from self.retrieve({"param": request})
 
     @retrieve.register
-    def _(self, request: tuple):
+    def _(self, request: tuple) -> Iterator:
         param, levtype = request
         yield from self.retrieve({"param": param, "levtype": levtype})
