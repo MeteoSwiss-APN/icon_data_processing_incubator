@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 # Local
-from . import data_source, mars, tasking
+from . import data_source, tasking
 
 DIM_MAP = {
     "level": "z",
@@ -26,7 +26,7 @@ VCOORD_TYPE = {
     "surface": ("surface", 0.0),
 }
 
-Request = mars.Request | str | tuple | dict
+Request = str | tuple | dict
 
 
 def _is_ensemble(field) -> bool:
@@ -97,8 +97,8 @@ class Grid:
 class GribReader:
     def __init__(
         self,
-        datafiles: list[Path],
-        ref_param: str = "HHL",
+        source: data_source.DataSource,
+        ref_param: Request = "HHL",
     ):
         """Initialize a grib reader from a list of grib files.
 
@@ -108,8 +108,6 @@ class GribReader:
             List of grib input filenames
         ref_param : str
             name of parameter used to construct a reference grid
-        delay : bool
-            if True, it will (dask) delay the functions that load parameters
 
         Raises
         ------
@@ -117,15 +115,19 @@ class GribReader:
             if the grid can not be constructed from the ref_param
 
         """
-        self.data_source = data_source.DataSource([str(p) for p in datafiles])
+        self.data_source = source
         self._grid = self.load_grid_reference(ref_param)
 
-    def load_grid_reference(self, ref_param: str) -> Grid:
+    @classmethod
+    def from_files(cls, datafiles: list[Path], ref_param: Request = "HHL"):
+        return cls(data_source.DataSource([str(p) for p in datafiles]), ref_param)
+
+    def load_grid_reference(self, ref_param: Request) -> Grid:
         """Construct a grid from a reference parameter.
 
         Parameters
         ----------
-        ref_param : str
+        ref_param : Request
             name of parameter used to construct a reference grid.
 
         Raises
@@ -137,7 +139,6 @@ class GribReader:
         -------
         Grid
             reference grid
-
         """
         fs = self.data_source.retrieve(ref_param)
         it = iter(fs)
