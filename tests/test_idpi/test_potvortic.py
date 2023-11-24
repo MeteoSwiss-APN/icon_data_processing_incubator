@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose
 
 # First-party
 import idpi.operators.pot_vortic as pv
-from idpi.data_source import DataSource
 from idpi.data_cache import DataCache
+from idpi.data_source import DataSource
 from idpi.grib_decoder import GribReader
 from idpi.operators.rho import f_rho_tot
 from idpi.operators.theta import ftheta

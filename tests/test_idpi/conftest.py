@@ -1,5 +1,6 @@
 """Test configuration."""
 # Standard library
+import os
 import subprocess
 from collections.abc import Iterable
 from pathlib import Path
@@ -60,8 +61,6 @@ def template_env():
 
 @pytest.fixture(scope="session")
 def setup_fdb(machine):
-    import os
-
     root = Path(__file__).parents[2]
 
     os.environ["FDB5_DIR"] = str(root / "spack-env/.spack-env/view")

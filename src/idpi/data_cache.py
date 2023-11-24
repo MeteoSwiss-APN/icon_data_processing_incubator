@@ -1,3 +1,11 @@
+"""Helper class to cache data.
+
+The helper is intended to create a cache of grib files with a layout that is
+suitable for reading by fieldextra.
+
+"""
+
+
 # Standard library
 import dataclasses as dc
 from itertools import product

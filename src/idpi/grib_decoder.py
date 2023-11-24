@@ -100,6 +100,26 @@ class GribReader:
         source: data_source.DataSource,
         ref_param: Request = "HHL",
     ):
+        """Initialize a grib reader from a data source.
+
+        Parameters
+        ----------
+        source : data_source.DataSource
+            Data source from which to retrieve the grib fields
+        ref_param : str
+            name of parameter used to construct a reference grid
+
+        Raises
+        ------
+        ValueError
+            if the grid can not be constructed from the ref_param
+
+        """
+        self.data_source = source
+        self._grid = self.load_grid_reference(ref_param)
+
+    @classmethod
+    def from_files(cls, datafiles: list[Path], ref_param: Request = "HHL"):
         """Initialize a grib reader from a list of grib files.
 
         Parameters
@@ -115,11 +135,6 @@ class GribReader:
             if the grid can not be constructed from the ref_param
 
         """
-        self.data_source = source
-        self._grid = self.load_grid_reference(ref_param)
-
-    @classmethod
-    def from_files(cls, datafiles: list[Path], ref_param: Request = "HHL"):
         return cls(data_source.DataSource([str(p) for p in datafiles]), ref_param)
 
     def load_grid_reference(self, ref_param: Request) -> Grid:
@@ -139,6 +154,7 @@ class GribReader:
         -------
         Grid
             reference grid
+
         """
         fs = self.data_source.retrieve(ref_param)
         it = iter(fs)
