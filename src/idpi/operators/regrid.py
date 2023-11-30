@@ -123,8 +123,6 @@ class RegularGrid:
 
         Parameters
         ----------
-        src : RegularGrid
-            The source grid.
         crs : str
             The coordinate reference system in which the output grid should be defined.
 
