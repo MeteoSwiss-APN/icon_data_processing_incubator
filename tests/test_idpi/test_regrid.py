@@ -1,9 +1,9 @@
+# Standard library
 import dataclasses as dc
 
 # Third-party
 import pytest
 from numpy.testing import assert_allclose
-
 
 # First-party
 from idpi import grib_decoder
