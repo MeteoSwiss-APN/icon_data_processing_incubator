@@ -118,7 +118,7 @@ class RegularGrid:
             raise ValueError("Inconsistent regrid parameters")
         return cls(crs, int(nx), int(ny), xmin, xmax, ymin, ymax)
 
-    def to_crs(self, crs: str):
+    def to_crs(self, crs: str, **kwargs):
         """Return a new grid in the given coordinate reference system.
 
         Parameters
@@ -144,11 +144,12 @@ class RegularGrid:
                 bottom=self.ymin,
                 right=self.xmax,
                 top=self.ymax,
+                **kwargs,
             ),
         )
         a = transform.AffineTransformer(tx)
-        xmin, ymax = a.xy(0, 0)
-        xmax, ymin = a.xy(height - 1, width - 1)  # row, col
+        xmin, ymax = a.xy(-0.5, -0.5)
+        xmax, ymin = a.xy(height + 0.5, width + 0.5)  # row, col
         return type(self)(dst_crs, width, height, xmin, xmax, ymin, ymax)
 
     @property
