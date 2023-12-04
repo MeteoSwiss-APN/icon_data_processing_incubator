@@ -1,8 +1,11 @@
+# Standard library
 from unittest import mock
 
+# Third-party
 import pytest
 
-from idpi import product, data_source
+# First-party
+from idpi import data_source, product
 
 
 class ProductA(product.Product):
