@@ -68,7 +68,7 @@ N_LVL = {
     config=pydantic.ConfigDict(use_enum_values=True),
 )
 class Request:
-    param: str | int | tuple[str, ...] | tuple[int, ...]
+    param: str | tuple[str, ...]
     date: str | None = None  # YYYYMMDD
     time: str | None = None  # hhmm
 
@@ -123,5 +123,5 @@ class Request:
         else:
             levelist = self.levelist
 
-        obj = dc.replace(self, param=self._param_id(), levelist=levelist)
-        return obj.dump()
+        obj = dc.replace(self, levelist=levelist)
+        return obj.dump() | {"param": self._param_id()}  # type: ignore
