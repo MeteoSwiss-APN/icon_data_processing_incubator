@@ -2,6 +2,7 @@
 
 # Standard library
 import dataclasses as dc
+from collections.abc import Iterable
 from enum import Enum
 from functools import cache
 from importlib.resources import files
@@ -67,7 +68,7 @@ N_LVL = {
     config=pydantic.ConfigDict(use_enum_values=True),
 )
 class Request:
-    param: str | int
+    param: str | int | tuple[str, ...] | tuple[int, ...]
     date: str | None = None  # YYYYMMDD
     time: str | None = None  # hhmm
 
@@ -93,21 +94,34 @@ class Request:
             exclude_none=True,
         )
 
-    def to_fdb(self):
+    def _param_id(self):
         mapping = _load_mapping()
-        param_id = mapping[self.param]["cosmo"]["paramId"]
-        staggered = mapping[self.param]["cosmo"].get("vertStag", False)
+        if isinstance(self.param, Iterable) and not isinstance(self.param, str):
+            return [mapping[param]["cosmo"]["paramId"] for param in self.param]
+        return mapping[self.param]["cosmo"]["paramId"]
 
+    def _staggered(self):
+        mapping = _load_mapping()
+        if isinstance(self.param, Iterable) and not isinstance(self.param, str):
+            first, *others = (
+                mapping[param]["cosmo"].get("vertStag", False) for param in self.param
+            )
+            if not all(first == other for other in others):
+                raise ValueError("Not all fields have the same staggering.")
+            return first
+        return mapping[self.param]["cosmo"].get("vertStag", False)
+
+    def to_fdb(self):
         if self.date is None or self.time is None:
             raise RuntimeError("date and time are required fields for FDB.")
 
         if self.levelist is None and self.levtype == LevType.MODEL_LEVEL:
             n_lvl = N_LVL[self.model]
-            if staggered:
+            if self._staggered():
                 n_lvl += 1
             levelist = tuple(range(1, n_lvl + 1))
         else:
             levelist = self.levelist
 
-        obj = dc.replace(self, param=param_id, levelist=levelist)
+        obj = dc.replace(self, param=self._param_id(), levelist=levelist)
         return obj.dump()

@@ -59,3 +59,15 @@ def test_fdb_sfc(sample):
 def test_request_raises():
     with pytest.raises(ValueError):
         mars.Request("U", date="20200101", time="0000", model="undef")
+
+
+def test_multiple_params(sample):
+    observed = mars.Request(("U", "V"), date="20200101", time="0000").to_fdb()
+    expected = sample | {"param": [500028, 500030]}
+
+    assert observed == expected
+
+
+def test_different_staggering():
+    with pytest.raises(ValueError):
+        mars.Request(("U", "V", "W"), date="20200101", time="0000").to_fdb()
