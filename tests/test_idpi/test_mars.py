@@ -68,6 +68,11 @@ def test_multiple_params(sample):
     assert observed == expected
 
 
-def test_different_staggering():
-    with pytest.raises(ValueError):
-        mars.Request(("U", "V", "W"), date="20200101", time="0000").to_fdb()
+def test_any_staggering(sample):
+    observed = mars.Request(("U", "V", "W"), date="20200101", time="0000").to_fdb()
+    expected = sample | {
+        "param": [500028, 500030, 500032],
+        "levelist": list(range(1, 82)),
+    }
+
+    assert observed == expected

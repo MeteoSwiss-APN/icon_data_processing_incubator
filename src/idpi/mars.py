@@ -104,12 +104,9 @@ class Request:
     def _staggered(self):
         mapping = _load_mapping()
         if isinstance(self.param, Iterable) and not isinstance(self.param, str):
-            first, *others = (
+            return any(
                 mapping[param]["cosmo"].get("vertStag", False) for param in self.param
             )
-            if not all(first == other for other in others):
-                raise ValueError("Not all fields have the same staggering.")
-            return first
         return mapping[self.param]["cosmo"].get("vertStag", False)
 
     def to_fdb(self) -> dict[str, typing.Any]:
