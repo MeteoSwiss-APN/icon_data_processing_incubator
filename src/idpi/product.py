@@ -49,6 +49,15 @@ class Product(metaclass=ABCMeta):
 def _merge_requests(
     products: list[Product],
 ) -> tuple[dict[str, Request], dict[str, list[str]]]:
+    """Deduplicate field requests for a collection of products.
+
+    Raises RuntimeError if there are conflicts meaning that there
+    different requests assigned to the same name.
+
+    Returns the merged mapping of names to requests and name aliases.
+    The alias is needed because a product will expect to find a requested
+    field under the name that was attached to the request.
+    """
     req_labels: dict[Request, set[str]] = {}
     for product in products:
         for name, req in product.descriptor.input_fields.items():
@@ -76,6 +85,28 @@ def run_products(
     source: data_source.DataSource,
     ref_param: Request = Request("HHL"),
 ):
+    """Run multiple products.
+
+    Parameters
+    ----------
+    products : list[Product]
+        List of products to run.
+    source : DataSource
+        Data source from which to request the fields.
+    ref_param : Request, optional
+        Reference parameter to determine the origin of the grid. Defaults to HHL.
+
+    Raises
+    ------
+    RuntimeError
+        if a single name is mapped to different input field requests.
+
+    Returns
+    -------
+    tuple[Any, ...]
+        Returns the collection of results.
+
+    """
     reqs, aliases = _merge_requests(products)
 
     reader = grib_decoder.GribReader(source, ref_param=ref_param._asdict())
