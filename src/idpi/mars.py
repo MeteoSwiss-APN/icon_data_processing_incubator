@@ -2,6 +2,7 @@
 
 # Standard library
 import dataclasses as dc
+import typing
 from collections.abc import Iterable
 from enum import Enum
 from functools import cache
@@ -111,7 +112,7 @@ class Request:
             return first
         return mapping[self.param]["cosmo"].get("vertStag", False)
 
-    def to_fdb(self):
+    def to_fdb(self) -> dict[str, typing.Any]:
         if self.date is None or self.time is None:
             raise RuntimeError("date and time are required fields for FDB.")
 
@@ -119,9 +120,10 @@ class Request:
             n_lvl = N_LVL[self.model]
             if self._staggered():
                 n_lvl += 1
-            levelist = tuple(range(1, n_lvl + 1))
+            levelist: int | tuple[int, ...] | None = tuple(range(1, n_lvl + 1))
         else:
             levelist = self.levelist
 
         obj = dc.replace(self, levelist=levelist)
-        return obj.dump() | {"param": self._param_id()}  # type: ignore
+        out = typing.cast(dict[str, typing.Any], obj.dump())
+        return out | {"param": self._param_id()}
