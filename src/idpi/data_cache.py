@@ -58,9 +58,12 @@ class DataCache:
                 yield label, name.format(mmm=number, dd=dd, hh=hh), number, step
 
     def _iter_requests(self, label: str, number: int | None, step: int | None):
+        param_map: dict[str, list[str]] = {}
         for param, levtype in self.fields[label]:
-            # TODO: group params by levtype
-            req = {"param": param, "levtype": levtype}
+            param_map.setdefault(levtype, []).append(param)
+
+        for levtype, params in param_map.items():
+            req = {"param": params, "levtype": levtype}
             if number is not None:
                 req["number"] = number
             if step is not None:
