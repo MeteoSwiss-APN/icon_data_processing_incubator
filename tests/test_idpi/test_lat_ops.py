@@ -1,3 +1,6 @@
+# Standard library
+from pathlib import Path
+
 # Third-party
 import numpy as np
 import pytest
@@ -9,9 +12,14 @@ from idpi.grib_decoder import GribReader
 from idpi.operators.hzerocl import fhzerocl
 
 
+@pytest.fixture
+def data_dir():
+    return Path("/project/s83c/rz+/icon_data_processing_incubator/datasets/original/")
+
+
 def test_fill_undef(data_dir, fieldextra):
-    datafile = data_dir / "lfff00000000.ch"
-    cdatafile = data_dir / "lfff00000000c.ch"
+    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
+    cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader.from_files([cdatafile, datafile])
     ds = reader.load_fieldnames(["T", "HHL"])
@@ -27,8 +35,8 @@ def test_fill_undef(data_dir, fieldextra):
 
 
 def test_disk_avg(data_dir, fieldextra):
-    datafile = data_dir / "lfff00000000.ch"
-    cdatafile = data_dir / "lfff00000000c.ch"
+    datafile = data_dir / "COSMO-1E/1h/ml_sl/000/lfff00000000"
+    cdatafile = data_dir / "COSMO-1E/1h/const/000/lfff00000000c"
 
     reader = GribReader.from_files([cdatafile, datafile])
 
