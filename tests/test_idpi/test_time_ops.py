@@ -29,7 +29,7 @@ def test_delta(data_dir, fieldextra):
 
     fx_ds_h = fieldextra(
         "time_ops_delta",
-        load_output=[f"{i:02d}_time_ops_delta.nc" for i in steps.tolist()[::3]],
+        load_output=[f"{i:02d}_time_ops_delta.nc" for i in steps[::3]],
         conf_files={
             "inputi": data_dir / "lfff<DDHH>0000",
             "inputc": data_dir / "lfff00000000c",
@@ -58,7 +58,7 @@ def test_resample_average(data_dir, fieldextra):
 
     fx_ds_h = fieldextra(
         "time_ops_tdelta",
-        load_output=[f"{i:02d}_time_ops_tdelta.nc" for i in steps.tolist()],
+        load_output=[f"{i:02d}_time_ops_tdelta.nc" for i in steps],
         conf_files={
             "inputi": data_dir / "lfff<DDHH>0000",
             "inputc": data_dir / "lfff00000000c",
@@ -94,7 +94,7 @@ def test_max(data_dir, fieldextra):
 
     fx_ds_h = fieldextra(
         "time_ops_max",
-        load_output=[f"{i:02d}_time_ops_max.nc" for i in steps.tolist()[::3]],
+        load_output=[f"{i:02d}_time_ops_max.nc" for i in steps[::3]],
         conf_files={
             "inputi": data_dir / "lfff<DDHH>0000",
             "inputc": data_dir / "lfff00000000c",
