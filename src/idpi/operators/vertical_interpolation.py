@@ -350,7 +350,6 @@ def interpolate_k2any(
         field on target coordinates
 
     """
-
     modes = ("low_fold", "high_fold")
     if mode not in modes:
         raise ValueError(f"Unsupported mode: {mode}")
@@ -384,8 +383,8 @@ def interpolate_k2any(
     fkm1 = field.shift(z=1)
 
     for tc_idx, value in enumerate(tc.values):
-        # ... find the height field where theta is >= value on level k and was <= value
-        #     on level k-1 or where theta is <= value on level k
+        # ... find the height field where target is >= value on level k and was <= value
+        #     on level k-1 or where target is <= value on level k
         #     and was >= value on level k-1
         h = h_field.where(
             ((tc_field >= value) & (tckm1 <= value))
@@ -400,15 +399,15 @@ def interpolate_k2any(
             # is fulfilled
             tcind = h.fillna(h_min).argmax(dim="z")
 
-        # ... extract theta and field at level k
-        th2 = tc_field[{"z": tcind}]
+        # ... extract target and field at level k
+        t2 = tc_field[{"z": tcind}]
         f2 = field[{"z": tcind}]
-        # ... extract theta and field at level k-1
+        # ... extract target and field at level k-1
         f1 = fkm1[{"z": tcind}]
-        th1 = tckm1[{"z": tcind}]
+        t1 = tckm1[{"z": tcind}]
 
         # ... compute the interpolation weights
-        ratio = xr.where(np.abs(th2 - th1) > 0, (value - th1) / (th2 - th1), 0.0)
+        ratio = xr.where(np.abs(t2 - t1) > 0, (value - t1) / (t2 - t1), 0.0)
 
         # ... interpolate and update field_on_tc
         field_on_tc[{tc.type_of_level: tc_idx}] = (1.0 - ratio) * f1 + ratio * f2
