@@ -21,7 +21,7 @@ dependencies = [
     "click",
     "earthkit-data",
     "eccodes",
-    "pydantic",
+    "pydantic>=2",
     "pyyaml",
     "rasterio",
     "numpy",
