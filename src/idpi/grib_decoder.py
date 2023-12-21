@@ -330,6 +330,25 @@ def _get_type_of_level(field):
 
 
 def save(field: xr.DataArray, file_handle: io.BufferedWriter):
+    """Write field to file in GRIB format.
+
+    Parameters
+    ----------
+    field : xarray.DataArray
+        Field to write into the output file.
+    file_handle : io.BufferedWriter
+        File handle for the output file.
+
+    Raises
+    ------
+    ValueError
+        If the field does not have a metadata attribute.
+
+    """
+    if not hasattr(field, "metadata"):
+        msg = "The metadata attribute is required to write to the GRIB format."
+        raise ValueError(msg)
+
     idx = {
         dim: field.coords[key]
         for key in field.dims
