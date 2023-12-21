@@ -210,7 +210,7 @@ class GribReader:
                 "x": np.round((geo[x0_key] % 360 - x0) / dx, 1),
                 "y": np.round((geo[y0_key] - y0) / dy, 1),
             },
-            "metadata": field.metadata(),
+            "message": field.message(),
         }
         return metadata
 
@@ -342,12 +342,15 @@ def save(field: xr.DataArray, file_handle: io.BufferedWriter):
     Raises
     ------
     ValueError
-        If the field does not have a metadata attribute.
+        If the field does not have a message attribute.
 
     """
-    if not hasattr(field, "metadata"):
-        msg = "The metadata attribute is required to write to the GRIB format."
+    if not hasattr(field, "message"):
+        msg = "The message attribute is required to write to the GRIB format."
         raise ValueError(msg)
+
+    stream = io.BytesIO(field.message)
+    [md] = (f.metadata() for f in ekd.from_source("stream", stream))
 
     idx = {
         dim: field.coords[key]
@@ -362,7 +365,7 @@ def save(field: xr.DataArray, file_handle: io.BufferedWriter):
     for idx_slice in product(*idx.values()):
         loc = {dim: value for dim, value in zip(idx.keys(), idx_slice)}
         array = field.sel(loc).values
-        metadata = field.metadata.override(to_grib(loc))
+        metadata = md.override(to_grib(loc))
 
         fs = ekd.FieldList.from_numpy(array, metadata)
         fs.write(file_handle)
