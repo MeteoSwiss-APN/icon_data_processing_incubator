@@ -9,7 +9,7 @@ from itertools import product
 from pathlib import Path
 
 # Third-party
-import earthkit.data as ekd
+import earthkit.data as ekd  # type: ignore
 import numpy as np
 import xarray as xr
 
