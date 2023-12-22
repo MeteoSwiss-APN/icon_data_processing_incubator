@@ -40,8 +40,10 @@ def speed(u: xr.DataArray, v: xr.DataArray) -> xr.DataArray:
     if u.origin != centered or v.origin != centered:
         raise ValueError("The wind components should not be staggered.")
 
+    name = {"U": "SP", "U_10M": "SP_10M"}[u.parameter["shortName"]]
     return xr.DataArray(
-        np.sqrt(u**2 + v**2), attrs=override(u.message, shortName="SP_10M")
+        np.sqrt(u**2 + v**2),
+        attrs=override(u.message, shortName=name),
     )
 
 
@@ -75,7 +77,8 @@ def direction(u: xr.DataArray, v: xr.DataArray) -> xr.DataArray:
     """
     rad2deg = 180 / np.pi
     u_g, v_g = vref_rot2geolatlon(u, v)
+    name = {"U": "DD", "U_10M": "DD_10M"}[u.parameter["shortName"]]
     return xr.DataArray(
         rad2deg * np.arctan2(u_g, v_g) + 180,
-        attrs=override(u.message, shortName="DD_10M"),
+        attrs=override(u.message, shortName=name),
     )
