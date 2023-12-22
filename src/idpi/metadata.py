@@ -1,12 +1,30 @@
+"""Manage GRIB metadata."""
+
 # Standard library
 import io
+import typing
 
 # Third-party
 import earthkit.data as ekd
 from earthkit.data.writers import write
 
 
-def override(message: bytes, **kwargs):
+def override(message: bytes, **kwargs: typing.Any) -> dict[str, typing.Any]:
+    """Override GRIB metadata contained in message.
+
+    Parameters
+    ----------
+    message : bytes
+        Byte string of the input GRIB message
+    kwargs : Any
+        Keyword arguments forwarded to earthkit-data GribMetadata override method
+
+    Returns
+    -------
+    dict[str, Any]
+        Updated message byte string along with the geography and parameter namespaces
+
+    """
     stream = io.BytesIO(message)
     [grib_field] = ekd.from_source("stream", stream)
 
