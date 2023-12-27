@@ -5,8 +5,8 @@ import io
 import typing
 
 # Third-party
-import earthkit.data as ekd
-from earthkit.data.writers import write
+import earthkit.data as ekd  # type: ignore
+from earthkit.data.writers import write  # type: ignore
 
 
 def override(message: bytes, **kwargs: typing.Any) -> dict[str, typing.Any]:
