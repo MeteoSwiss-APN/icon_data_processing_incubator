@@ -5,8 +5,8 @@ import numpy as np
 import xarray as xr
 
 # Local
-from .gis import vref_rot2geolatlon
 from ..metadata import override
+from .gis import vref_rot2geolatlon
 
 
 def speed(u: xr.DataArray, v: xr.DataArray) -> xr.DataArray:
