@@ -3,9 +3,6 @@
 import numpy as np
 import xarray as xr
 
-# First-party
-import idpi.operators.constants as cnt
-
 
 # similar to the subtract.accumulate but permute the order of the operans of the diff
 # TODO implement as a ufunc
@@ -30,6 +27,8 @@ def omega_slope(
     ps: xr.DataArray, etadot: xr.DataArray, ak: xr.DataArray, bk: xr.DataArray
 ):
     """Compute omega slope."""
+    surface_pressure_ref = 101325.0
+
     dak_dz = ak.diff(dim="z")
     dbk_dz = bk.diff(dim="z")
 
@@ -38,7 +37,7 @@ def omega_slope(
         * etadot
         * ps
         * (dak_dz / ps + dbk_dz)
-        / (dak_dz / cnt.surface_pressure_ref() + dbk_dz)
+        / (dak_dz / surface_pressure_ref + dbk_dz)
     ).reduce(cumdiff, dim="z")
 
     res.attrs = etadot.attrs
