@@ -1,5 +1,6 @@
 """Physical constants."""
 
+g = 9.80665  # [m s-2]
 omega = 7.2921e-5
 earth_radius = 6371229.0  # value from COSMO GRIB2 key
 
@@ -18,3 +19,10 @@ b1 = 611.21  # Pressure at triple point of water [Pa]
 b2w = 17.502
 b3 = 273.16  # Temperature at triple point of water [K]
 b4w = 32.19  # [K]
+
+# Surface pressure reference for omega slope
+surface_pressure_ref = 101325.0  # [Pa]
+
+# Radiation
+emissivity_surface = 0.996  # [-]
+boltzman_cst = 5.6697e-8  # [W m-2 K-4]
