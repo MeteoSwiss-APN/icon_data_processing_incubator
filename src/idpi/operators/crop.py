@@ -63,6 +63,7 @@ def crop(field: xr.DataArray, bounds: Bounds) -> xr.DataArray:
     lat_min, lat_max = np.round(grid.rlat.isel(y=[ymin, ymax]).values * 1e6)
     ni = xmax - xmin + 1
     nj = ymax - ymin + 1
+    npts = ni * nj
 
     return xr.DataArray(
         field.isel(x=slice(xmin, xmax + 1), y=slice(ymin, ymax + 1)),
@@ -74,5 +75,6 @@ def crop(field: xr.DataArray, bounds: Bounds) -> xr.DataArray:
             latitudeOfFirstGridPoint=lat_min,
             latitudeOfLastGridPoint=lat_max,
             Nj=nj,
+            numberOfDataPoints=npts,
         ),
     )
