@@ -12,6 +12,9 @@ from earthkit.data.writers import write  # type: ignore
 def override(message: bytes, **kwargs: typing.Any) -> dict[str, typing.Any]:
     """Override GRIB metadata contained in message.
 
+    Note that no special consideration is made for maintaining consistency when
+    overriding template definition keys such as productDefinitionTemplateNumber.
+
     Parameters
     ----------
     message : bytes
