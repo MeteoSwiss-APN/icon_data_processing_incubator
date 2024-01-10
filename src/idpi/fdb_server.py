@@ -1,6 +1,7 @@
 """FDB server module.
 
 Usage:
+$ export GRIB_DEFINITION_PATH=...
 $ uvicorn idpi.fdb_server:app [--reload] --port 8989
 
 The reload option enables reloading the server
@@ -10,7 +11,6 @@ when changes to the module are observed.
 
 # Standard library
 import anyio
-import contextlib
 import logging
 import os
 import tempfile
@@ -23,6 +23,9 @@ config_path = root / "src/idpi/data/fdb_config_balfrin.yaml"
 
 os.environ["FDB5_DIR"] = str(root / "spack-env/.spack-env/view")
 os.environ["FDB5_CONFIG"] = config_path.read_text()
+
+if "GRIB_DEFINITION_PATH" not in os.environ:
+    raise RuntimeError("GRIB_DEFINITION_PATH is required")
 
 # Third-party
 import pyfdb
@@ -60,9 +63,7 @@ async def retrieve(request: mars.Request):
 
 @app.post("/archive")
 async def archive(request: Request):
-    with contextlib.ExitStack() as stack:
-        stack.enter_context(data_source.cosmo_grib_defs())
-        tmp = stack.enter_context(tempfile.SpooledTemporaryFile())
+    with tempfile.SpooledTemporaryFile() as tmp:
         aio_tmp = anyio.wrap_file(tmp)
         async for chunk in request.stream():
             await aio_tmp.write(chunk)
