@@ -1,7 +1,7 @@
 """FDB server module.
 
 Usage:
-$ uvicorn idpi.fdb_server:app [--reload]
+$ uvicorn idpi.fdb_server:app [--reload] --port 8989
 
 The reload option enables reloading the server
 when changes to the module are observed.
@@ -9,7 +9,7 @@ when changes to the module are observed.
 
 
 # Standard library
-import asyncio as aio
+import anyio
 import logging
 import os
 from collections.abc import AsyncIterator
@@ -32,7 +32,7 @@ from . import mars
 
 app = FastAPI()
 fdb = pyfdb.FDB()
-lck = aio.Lock()
+lck = anyio.Lock()
 
 
 @app.get("/")
@@ -44,18 +44,16 @@ def info() -> dict:
 
 
 async def fdb_retrieve(req: dict) -> AsyncIterator[bytes]:
-    async with lck:
-        # datareader is not thread safe
-        print(req)
-        datareader = fdb.retrieve(req)
-        while chunk := datareader.read(16 * 1024**2):
-            yield bytes(chunk)
+    datareader = fdb.retrieve(req)
+    while chunk := datareader.read(16 * 1024**2):
+        yield bytes(chunk)
 
 
 @app.post("/retrieve")
-def retrieve(request: mars.Request):
+async def retrieve(request: mars.Request):
     logger.info("Retrieving %s", str(request))
-    return StreamingResponse(fdb_retrieve(request.to_fdb()))
+    async with lck:  # datareader is not thread safe
+        return StreamingResponse(fdb_retrieve(request.to_fdb()))
 
 
 async def split_messages(stream: AsyncIterator[bytes]) -> AsyncIterator[bytes]:
