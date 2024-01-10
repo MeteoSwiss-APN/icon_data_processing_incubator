@@ -15,7 +15,7 @@ from idpi.operators.total_diff import TotalDiff
 
 
 @pytest.fixture
-def data(work_dir, request_template, setup_fdb):
+def data(work_dir, request_template):
     source = DataSource(request_template=request_template)
     fields = {
         "inputi": [(p, "ml") for p in ("U", "V", "W", "P", "T", "QV", "QC", "QI")],

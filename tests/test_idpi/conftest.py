@@ -59,7 +59,7 @@ def fieldextra_path(machine):
     """Fieldextra path."""
     conf = {
         "tsa": Path("/project/s83c/fieldextra/tsa"),
-        "balfrin": Path("/users/tsm/proj.aare/fieldextra/v14.3.1/"),
+        "balfrin": Path("/users/tsm/proj.aare/fieldextra/v14.3.3/"),
     }
     return conf[machine]
 

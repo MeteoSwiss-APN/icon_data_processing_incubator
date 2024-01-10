@@ -1,12 +1,12 @@
 """Data source helper class."""
 
 # Standard library
+import contextlib
 import dataclasses as dc
 import sys
 import tempfile
 import typing
 from collections.abc import Iterator
-from contextlib import contextmanager, nullcontext
 from functools import singledispatchmethod
 from pathlib import Path
 
@@ -21,10 +21,10 @@ GRIB_DEF = {
     mars.Model.COSMO_1E: "cosmo",
     mars.Model.COSMO_2E: "cosmo",
 }
-FDB_HOST = "http://balfrin-ln002.cscs.ch:8989"
+FDB_HOST = "http://127.0.0.1:8989"
 
 
-@contextmanager
+@contextlib.contextmanager
 def cosmo_grib_defs():
     """Enable COSMO GRIB definitions."""
     root_dir = Path(sys.prefix) / "share"
@@ -47,7 +47,7 @@ def cosmo_grib_defs():
 def grib_def_ctx(grib_def: str):
     if grib_def == "cosmo":
         return cosmo_grib_defs()
-    return nullcontext()
+    return contextlib.nullcontext()
 
 
 @dc.dataclass
@@ -57,7 +57,7 @@ class DataSource:
     client: fdb_client.FDBClient | None = None
 
     def __post_init__(self):
-        if self.datafiles is None:
+        if self.datafiles is None and self.client is None:
             self.client = fdb_client.FDBClient(FDB_HOST)
 
     @singledispatchmethod
@@ -97,7 +97,8 @@ class DataSource:
         req = mars.Request(**req_kwargs)
 
         grib_def = config.get("data_scope", GRIB_DEF[req.model])
-        with grib_def_ctx(grib_def):
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(grib_def_ctx(grib_def))
             if self.datafiles:
                 fs = ekd.from_source("file", self.datafiles)
                 source = fs.sel(req_kwargs)
@@ -106,10 +107,12 @@ class DataSource:
                 # date and time fields.
                 # see: https://github.com/ecmwf/earthkit-data/issues/253
             elif self.client is not None:
-                with tempfile.SpooledTemporaryFile(max_size=1024**3) as f:
-                    self.client.retrieve(req, f)
-                    f.seek(0)
-                    source = ekd.from_source("stream", f)
+                tmp = stack.enter_context(
+                    tempfile.SpooledTemporaryFile(max_size=1024**3)
+                )
+                self.client.retrieve(req, tmp)
+                tmp.seek(0)
+                source = ekd.from_source("stream", tmp)
             else:
                 raise RuntimeError("No source defined")
             yield from source  # type: ignore
