@@ -1,8 +1,8 @@
 ---
 type: local
 engine: toc
-schema: /scratch/mch/ckanesan/fdb-setup/fdb-schema
+schema: /scratch/mch/vcherkas/fdb-setup/fdb-schema
 spaces:
 - handler: Default
   roots:
-  - path: /scratch/mch/ckanesan/fdb-root/
+  - path: /scratch/mch/vcherkas/fdb-root/

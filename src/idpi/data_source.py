@@ -3,6 +3,7 @@
 # Standard library
 import dataclasses as dc
 import sys
+import tempfile
 import typing
 from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
@@ -14,12 +15,13 @@ import earthkit.data as ekd  # type: ignore
 import eccodes  # type: ignore
 
 # Local
-from . import config, mars
+from . import config, fdb_client, mars
 
 GRIB_DEF = {
     mars.Model.COSMO_1E: "cosmo",
     mars.Model.COSMO_2E: "cosmo",
 }
+FDB_HOST = "http://balfrin-ln002.cscs.ch:8989"
 
 
 @contextmanager
@@ -52,6 +54,11 @@ def grib_def_ctx(grib_def: str):
 class DataSource:
     datafiles: list[str] | None = None
     request_template: dict[str, typing.Any] = dc.field(default_factory=dict)
+    client: fdb_client.FDBClient | None = None
+
+    def __post_init__(self):
+        if self.datafiles is None:
+            self.client = fdb_client.FDBClient(FDB_HOST)
 
     @singledispatchmethod
     def retrieve(
@@ -98,8 +105,13 @@ class DataSource:
                 # fdb and file sources currently disagree on the type of the
                 # date and time fields.
                 # see: https://github.com/ecmwf/earthkit-data/issues/253
+            elif self.client is not None:
+                with tempfile.SpooledTemporaryFile(max_size=1024**3) as f:
+                    self.client.retrieve(req, f)
+                    f.seek(0)
+                    source = ekd.from_source("stream", f)
             else:
-                source = ekd.from_source("fdb", req.to_fdb())
+                raise RuntimeError("No source defined")
             yield from source  # type: ignore
 
     @retrieve.register
