@@ -10,8 +10,10 @@ when changes to the module are observed.
 
 # Standard library
 import anyio
+import contextlib
 import logging
 import os
+import tempfile
 from collections.abc import AsyncIterator
 from pathlib import Path
 
@@ -28,7 +30,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
 # Local
-from . import mars
+from . import mars, data_source
 
 app = FastAPI()
 fdb = pyfdb.FDB()
@@ -56,22 +58,14 @@ async def retrieve(request: mars.Request):
         return StreamingResponse(fdb_retrieve(request.to_fdb()))
 
 
-async def split_messages(stream: AsyncIterator[bytes]) -> AsyncIterator[bytes]:
-    buf: list[bytes] = []
-    async for chunk in stream:
-        agg = b"".join(buf + [chunk])
-        msg, sep, remainder = agg.partition(b"7777")
-        buf = [msg, sep]
-        while remainder:
-            yield b"".join(buf)
-            msg, sep, remainder = remainder.partition(b"7777")
-            buf = [msg, sep]
-
-    yield b"".join(buf)
-
-
 @app.post("/archive")
 async def archive(request: Request):
-    async for msg in split_messages(request.stream()):
-        fdb.archive(msg)  # is it okay to archive one by one?
-    fdb.flush()
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(data_source.cosmo_grib_defs())
+        tmp = stack.enter_context(tempfile.SpooledTemporaryFile())
+        aio_tmp = anyio.wrap_file(tmp)
+        async for chunk in request.stream():
+            await aio_tmp.write(chunk)
+        await aio_tmp.seek(0)
+        data = await aio_tmp.read()
+        fdb.archive(data)
