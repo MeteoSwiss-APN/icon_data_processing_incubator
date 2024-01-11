@@ -2,10 +2,13 @@
 
 Usage:
 $ export GRIB_DEFINITION_PATH=...
-$ uvicorn idpi.fdb_server:app [--reload] --port 8989
+$ uvicorn idpi.fdb_server:app [--reload] --port 8989 --host 0.0.0.0
 
 The reload option enables reloading the server
 when changes to the module are observed.
+
+Note: archival will only work if you have write access to the fdb root.
+Update src/idpi/data/fdb_config_balfrin.yaml as needed.
 """
 
 
@@ -33,7 +36,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
 # Local
-from . import mars, data_source
+from . import mars
 
 app = FastAPI()
 fdb = pyfdb.FDB()
