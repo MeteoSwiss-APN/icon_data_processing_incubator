@@ -178,7 +178,12 @@ class RegularGrid:
         )
 
 
-def regrid(field: xr.DataArray, dst: RegularGrid, resampling: Resampling):
+def regrid(
+    field: xr.DataArray,
+    dst: RegularGrid,
+    resampling: Resampling,
+    src: RegularGrid | None = None,
+):
     """Regrid a field.
 
     Parameters
@@ -189,6 +194,8 @@ def regrid(field: xr.DataArray, dst: RegularGrid, resampling: Resampling):
         Destination grid onto which to project the field.
     resampling : Resampling
         Resampling method, alias of rasterio.warp.Resampling.
+    src : RegularGrid, optional
+        Definition of the input field grid
 
     Raises
     ------
@@ -202,7 +209,8 @@ def regrid(field: xr.DataArray, dst: RegularGrid, resampling: Resampling):
         Field regridded in the destination grid.
 
     """
-    src = RegularGrid.from_field(field)
+    if src is None:
+        src = RegularGrid.from_field(field)
 
     def reproject_layer(field):
         output = np.zeros((dst.ny, dst.nx))
