@@ -1,12 +1,12 @@
 """Command line interface of idpi."""
+# Standard library
 from pathlib import Path
 
 # Third-party
 import click
 
 # Local
-from . import __version__
-from . import grib_decoder
+from . import __version__, grib_decoder
 from .operators import regrid
 
 
@@ -39,16 +39,34 @@ RESAMPLING = {
 
 
 @main.command("regrid")
-@click.option("--crs", type=click.Choice(["geolatlon"]), default="geolatlon")
-@click.option("--resampling", type=click.Choice(list(RESAMPLING.keys())), default="nearest")
-@click.argument("infile")
-@click.argument("outfile")
-@click.argument("params")
+@click.option(
+    "--crs",
+    type=click.Choice(["geolatlon"]),
+    default="geolatlon",
+    help="Coordinate reference system",
+)
+@click.option(
+    "--resampling",
+    type=click.Choice(list(RESAMPLING.keys())),
+    default="nearest",
+    help="Resampling method",
+)
+@click.argument(
+    "infile",
+    type=click.Path(exists=True, path_type=Path),
+    help="Input file (GRIB2)",
+)
+@click.argument(
+    "outfile",
+    type=click.Path(writable=True, path_type=Path),
+    help="Output file",
+)
+@click.argument("params", help="Comma seperated list of params e.g. HHL,U,V,T")
 def regrid_cmd(crs: str, resampling: str, infile: Path, outfile: Path, params: str):
     resampling_arg = RESAMPLING[resampling]
     crs_str = regrid.CRS_ALIASES.get(crs, crs)
-    
-    reader = grib_decoder.GribReader.from_files([infile])
+
+    reader = grib_decoder.GribReader.from_files([infile], ref_param="HHL")
     ds = reader.load_fieldnames(params.split(","))
 
     with outfile.open("wb") as fout:

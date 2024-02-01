@@ -189,6 +189,7 @@ def _udeg(value):
 
 
 def _get_metadata(grid: RegularGrid):
+    # geolatlon
     if grid.crs.to_epsg() == 4326:
         scanning_mode = 0
         _set_bit(scanning_mode, 6)  # positive y
