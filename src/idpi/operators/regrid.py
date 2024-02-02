@@ -210,7 +210,7 @@ def _get_metadata(grid: RegularGrid):
             "longitudeOfFirstGridPoint": _udeg(grid.xmin),
             "resolutionAndComponentFlags": resolution_components_flags,
             "latitudeOfLastGridPoint": _udeg(grid.ymax),
-            "longitudeOfLastGridPoint": _udeg(grid.ymax),
+            "longitudeOfLastGridPoint": _udeg(grid.xmax),
             "iDirectionIncrement": _udeg(grid.dx),
             "jDirectionIncrement": _udeg(grid.dy),
             "scanningMode": scanning_mode,
