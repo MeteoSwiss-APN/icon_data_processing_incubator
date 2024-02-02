@@ -21,7 +21,6 @@ GRIB_DEF = {
     mars.Model.COSMO_1E: "cosmo",
     mars.Model.COSMO_2E: "cosmo",
 }
-FDB_HOST = "http://127.0.0.1:8989"
 
 
 @contextlib.contextmanager
@@ -55,10 +54,6 @@ class DataSource:
     datafiles: list[str] | None = None
     request_template: dict[str, typing.Any] = dc.field(default_factory=dict)
     client: fdb_client.FDBClient | None = None
-
-    def __post_init__(self):
-        if self.datafiles is None and self.client is None:
-            self.client = fdb_client.FDBClient(FDB_HOST)
 
     @singledispatchmethod
     def retrieve(
@@ -114,7 +109,7 @@ class DataSource:
                 tmp.seek(0)
                 source = ekd.from_source("stream", tmp)
             else:
-                raise RuntimeError("No source defined")
+                source = ekd.from_source("fdb", req.to_fdb())
             yield from source  # type: ignore
 
     @retrieve.register
