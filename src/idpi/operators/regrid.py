@@ -180,8 +180,14 @@ class RegularGrid:
         )
 
 
-def _set_bit(value, index):
-    return value | (1 << index)
+def _code_flag(indices: list[int]):
+    value = 0
+    for index in indices:
+        if not 1 <= index <= 8:
+            raise ValueError("index must in range [1,8]")
+        shift = 8 - index
+        value |= 1 << shift
+    return value
 
 
 def _udeg(value):
@@ -191,11 +197,9 @@ def _udeg(value):
 def _get_metadata(grid: RegularGrid):
     # geolatlon
     if grid.crs.to_epsg() == 4326:
-        scanning_mode = 0
-        _set_bit(scanning_mode, 6)  # positive y
-        resolution_components_flags = 0
-        _set_bit(resolution_components_flags, 5)  # i direction incr given
-        _set_bit(resolution_components_flags, 4)  # j direction incr given
+        scanning_mode = _code_flag([2])  # positive y
+        # i, j direction increments given
+        resolution_components_flags = _code_flag([3, 4])
         # TODO: track vector field reference system
         return {
             "numberOfDataPoints": grid.nx * grid.ny,
