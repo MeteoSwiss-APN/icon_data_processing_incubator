@@ -54,25 +54,30 @@ RESAMPLING = {
 @click.argument(
     "infile",
     type=click.Path(exists=True, path_type=Path),
-    help="Input file (GRIB2)",
 )
 @click.argument(
     "outfile",
     type=click.Path(writable=True, path_type=Path),
-    help="Output file",
 )
-@click.argument("params", help="Comma seperated list of params e.g. HHL,U,V,T")
+@click.argument("params")
 def regrid_cmd(crs: str, resampling: str, infile: Path, outfile: Path, params: str):
+    """Regrid the given PARAMS found in INFILE and write to OUTFILE."""
     resampling_arg = RESAMPLING[resampling]
     crs_str = regrid.CRS_ALIASES.get(crs, crs)
+
+    if outfile.exists():
+        click.confirm(f"OUTFILE {outfile} exists. Overwrite?")
 
     reader = grib_decoder.GribReader.from_files([infile], ref_param="HHL")
     ds = reader.load_fieldnames(params.split(","))
 
     with outfile.open("wb") as fout:
-        for field in ds.values():
+        for name, field in ds.items():
             src = regrid.RegularGrid.from_field(field)
             dst = src.to_crs(crs_str)
 
+            click.echo(f"Regriding field {name} to {dst}")
             field_out = regrid.regrid(field, dst, resampling_arg)
+
+            click.echo(f"Writing grib fields to {outfile}")
             grib_decoder.save(field_out, fout)
