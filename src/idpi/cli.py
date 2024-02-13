@@ -54,12 +54,14 @@ def handle_vector_fields(ds):
         item = mapping[name]["cosmo"]
         if u := item.get("uComponent"):
             if u not in names:
-                raise click.Abort(f"The u-component {u} must be part of PARAMS")
+                msg = f"The u-component {u} must be part of PARAMS"
+                raise click.UsageError(msg)
             names.remove(u)
             pairs.append((u, name))
         elif v := item.get("vComponent"):
             if v not in names:
-                raise click.Abort(f"The v-component {v} must be part of PARAMS")
+                msg = f"The v-component {v} must be part of PARAMS"
+                raise click.UsageError(msg)
             names.remove(v)
             pairs.append((name, v))
 
@@ -88,8 +90,14 @@ def handle_vector_fields(ds):
     default="nearest",
     help="Resampling method",
 )
+@click.option(
+    "--ref-param",
+    default="HHL",
+    help="Reference parameter with respect to staggering, default: HHL",
+)
 @click.argument(
     "infile",
+    nargs=-1,
     type=click.Path(exists=True, path_type=Path),
 )
 @click.argument(
@@ -97,15 +105,25 @@ def handle_vector_fields(ds):
     type=click.Path(writable=True, path_type=Path),
 )
 @click.argument("params")
-def regrid_cmd(crs: str, resampling: str, infile: Path, outfile: Path, params: str):
+def regrid_cmd(
+    crs: str,
+    resampling: str,
+    ref_param: str,
+    infile: tuple[Path, ...],
+    outfile: Path,
+    params: str,
+):
     """Regrid the given PARAMS found in INFILE and write to OUTFILE."""
     resampling_arg = RESAMPLING[resampling]
     crs_str = regrid.CRS_ALIASES.get(crs, crs)
 
+    if not infile:
+        raise click.UsageError("No input files")
+
     if outfile.exists():
         click.confirm(f"OUTFILE {outfile} exists. Overwrite?")
 
-    reader = grib_decoder.GribReader.from_files([infile], ref_param="HHL")
+    reader = grib_decoder.GribReader.from_files(list(infile), ref_param=ref_param)
     ds = reader.load_fieldnames(params.split(","))
 
     handle_vector_fields(ds)
