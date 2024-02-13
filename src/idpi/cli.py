@@ -1,13 +1,15 @@
 """Command line interface of idpi."""
 # Standard library
+from importlib.resources import files
 from pathlib import Path
 
 # Third-party
 import click
+import yaml
 
 # Local
 from . import __version__, grib_decoder
-from .operators import regrid
+from .operators import destagger, gis, regrid
 
 
 def print_version(ctx, _, value: bool) -> None:
@@ -36,6 +38,41 @@ RESAMPLING = {
     "bilinear": regrid.Resampling.bilinear,
     "cubic": regrid.Resampling.cubic,
 }
+
+
+def _load_mapping():
+    mapping_path = files("idpi.data").joinpath("field_mappings.yml")
+    return yaml.safe_load(mapping_path.open())
+
+
+def handle_vector_fields(ds):
+    mapping = _load_mapping()
+    names = set(ds)
+    pairs = []
+    while names:
+        name = names.pop()
+        item = mapping[name]["cosmo"]
+        if u := item.get("uComponent"):
+            if u not in names:
+                raise click.Abort(f"The u-component {u} must be part of PARAMS")
+            names.remove(u)
+            pairs.append((u, name))
+        elif v := item.get("vComponent"):
+            if v not in names:
+                raise click.Abort(f"The v-component {v} must be part of PARAMS")
+            names.remove(v)
+            pairs.append((name, v))
+
+    for u_name, v_name in pairs:
+        click.echo(f"Rotating vector field components {u_name}, {v_name} to geolatlon")
+        u, v = ds[u_name], ds[v_name]
+        if u.origin["x"] != 0.0:
+            u = destagger.destagger(u, "x")
+        if v.origin["y"] != 0.0:
+            v = destagger.destagger(v, "y")
+        u_g, v_g = gis.vref_rot2geolatlon(u, v)
+        ds[u_name] = u_g
+        ds[v_name] = v_g
 
 
 @main.command("regrid")
@@ -70,6 +107,8 @@ def regrid_cmd(crs: str, resampling: str, infile: Path, outfile: Path, params: s
 
     reader = grib_decoder.GribReader.from_files([infile], ref_param="HHL")
     ds = reader.load_fieldnames(params.split(","))
+
+    handle_vector_fields(ds)
 
     with outfile.open("wb") as fout:
         for name, field in ds.items():
