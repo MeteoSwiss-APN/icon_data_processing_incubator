@@ -10,6 +10,7 @@ import xarray as xr
 from rasterio import transform, warp
 from rasterio.crs import CRS
 
+# Local
 from .. import metadata
 
 Resampling: typing.TypeAlias = warp.Resampling

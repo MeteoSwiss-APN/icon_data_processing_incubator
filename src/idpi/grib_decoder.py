@@ -1,4 +1,5 @@
 """Decoder for grib data."""
+
 # Standard library
 import dataclasses as dc
 import datetime as dt

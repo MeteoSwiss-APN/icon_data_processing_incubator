@@ -1,4 +1,5 @@
 """Command line interface of idpi."""
+
 # Standard library
 from importlib.resources import files
 from pathlib import Path

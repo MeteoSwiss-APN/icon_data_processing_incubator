@@ -1,4 +1,5 @@
 """algorithm for destaggering a field."""
+
 # Standard library
 from typing import Any, Literal
 
@@ -6,6 +7,7 @@ from typing import Any, Literal
 import numpy as np
 import xarray as xr
 
+# Local
 from .. import metadata
 
 ExtendArg = Literal["left", "right", "both"] | None
