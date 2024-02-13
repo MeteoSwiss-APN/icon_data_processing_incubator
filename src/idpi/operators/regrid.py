@@ -200,7 +200,6 @@ def _get_metadata(grid: RegularGrid):
         scanning_mode = _code_flag([2])  # positive y
         # i, j direction increments given
         resolution_components_flags = _code_flag([3, 4])
-        # TODO: track vector field reference system
         return {
             "numberOfDataPoints": grid.nx * grid.ny,
             "sourceOfGridDefinition": 0,  # defined by template number
