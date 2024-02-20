@@ -120,7 +120,10 @@ def regrid_cmd(
     outfile: Path,
     params: str,
 ):
-    """Regrid the given PARAMS found in INFILE and write to OUTFILE."""
+    """Regrid the given PARAMS found in INFILE and write to OUTFILE.
+
+    PARAMS is a comma separated list of short names following the cosmo convention.
+    """
     resampling_arg = RESAMPLING[resampling]
     crs_str = regrid.CRS_ALIASES.get(crs, crs)
 
@@ -140,8 +143,8 @@ def regrid_cmd(
             src = regrid.RegularGrid.from_field(field)
             dst = src.to_crs(crs_str)
 
-            click.echo(f"Regriding field {name} to {dst}")
+            click.echo(f"Regridding field {name} to {dst}")
             field_out = regrid.regrid(field, dst, resampling_arg)
 
-            click.echo(f"Writing grib fields to {outfile}")
+            click.echo(f"Writing GRIB fields to {outfile}")
             grib_decoder.save(field_out, fout)

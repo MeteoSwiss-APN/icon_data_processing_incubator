@@ -193,6 +193,7 @@ class GribReader:
         metadata: dict[str, typing.Any] = field.metadata(
             namespace=["geography", "parameter"]
         )
+        # https://codes.ecmwf.int/grib/format/grib2/ctables/3/3/
         [vref_flag] = get_code_flag(field.metadata("resolutionAndComponentFlags"), [5])
         level_type: str = field.metadata("typeOfLevel")
         vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
@@ -414,7 +415,7 @@ def set_code_flag(indices: Sequence[int]) -> int:
     -------
     int
         Code flag with bits set at the given indices.
-    
+
     """
     value = 0
     for index in indices:

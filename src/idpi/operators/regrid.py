@@ -189,8 +189,11 @@ def _udeg(value):
 def _get_metadata(grid: RegularGrid):
     # geolatlon
     if grid.crs.to_epsg() == 4326:
+        # https://codes.ecmwf.int/grib/format/grib2/ctables/3/4/
         scanning_mode = set_code_flag([2])  # positive y
         # i, j direction increments given
+        # bit 5 left unset since the target grid is geolatlon
+        # both values are equivalent in this case
         resolution_components_flags = set_code_flag([3, 4])
         return {
             "numberOfDataPoints": grid.nx * grid.ny,
