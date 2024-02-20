@@ -5,7 +5,7 @@ import dataclasses as dc
 import datetime as dt
 import io
 import typing
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from itertools import product
 from pathlib import Path
 
@@ -193,6 +193,7 @@ class GribReader:
         metadata: dict[str, typing.Any] = field.metadata(
             namespace=["geography", "parameter"]
         )
+        [vref_flag] = get_code_flag(field.metadata("resolutionAndComponentFlags"), [5])
         level_type: str = field.metadata("typeOfLevel")
         vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
 
@@ -205,6 +206,7 @@ class GribReader:
         y0_key = "latitudeOfFirstGridPointInDegrees"
 
         metadata |= {
+            "vref": "native" if vref_flag else "geo",
             "vcoord_type": vcoord_type,
             "origin": {
                 "z": zshift,
@@ -370,3 +372,54 @@ def save(field: xr.DataArray, file_handle: io.BufferedWriter):
 
         fs = ekd.FieldList.from_numpy(array, metadata)
         fs.write(file_handle)
+
+
+def get_code_flag(value: int, indices: Sequence[int]) -> list[bool]:
+    """Get the code flag value at the given indices.
+
+    Parameters
+    ----------
+    value : int
+        The code flag as an integer in the [0, 255] range.
+    indices : Sequence[int]
+        Indices at which to get the flag values. Left to right, 1-based.
+
+    Returns
+    -------
+    list[bool]
+        The code flag values at the given indices.
+
+    """
+    if not 0 <= value <= 255:
+        raise ValueError("value must be a single byte integer")
+
+    result = []
+    for index in indices:
+        if not 1 <= index <= 8:
+            raise ValueError("index must in range [1,8]")
+        shift = 8 - index
+        result.append(bool(value >> shift & 1))
+    return result
+
+
+def set_code_flag(indices: Sequence[int]) -> int:
+    """Create code flag by setting bits at the given indices.
+
+    Parameters
+    ----------
+    indices : Sequence[int]
+        Indices at which to set the flag values. Left to right, 1-based.
+
+    Returns
+    -------
+    int
+        Code flag with bits set at the given indices.
+    
+    """
+    value = 0
+    for index in indices:
+        if not 1 <= index <= 8:
+            raise ValueError("index must in range [1,8]")
+        shift = 8 - index
+        value |= 1 << shift
+    return value

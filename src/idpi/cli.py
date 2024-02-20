@@ -73,9 +73,15 @@ def handle_vector_fields(ds):
             u = destagger.destagger(u, "x")
         if v.origin["y"] != 0.0:
             v = destagger.destagger(v, "y")
-        u_g, v_g = gis.vref_rot2geolatlon(u, v)
-        ds[u_name] = u_g
-        ds[v_name] = v_g
+        if u.vref == "native" and v.vref == "native":
+            u_g, v_g = gis.vref_rot2geolatlon(u, v)
+            ds[u_name] = u_g
+            ds[v_name] = v_g
+        elif u.vref == "geo" and v.vref == "geo":
+            continue
+        else:
+            msg = "Differing vector references."
+            raise RuntimeError(msg)
 
 
 @main.command("regrid")

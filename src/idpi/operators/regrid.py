@@ -12,6 +12,7 @@ from rasterio.crs import CRS
 
 # Local
 from .. import metadata
+from ..grib_decoder import set_code_flag
 
 Resampling: typing.TypeAlias = warp.Resampling
 
@@ -181,16 +182,6 @@ class RegularGrid:
         )
 
 
-def _code_flag(indices: list[int]):
-    value = 0
-    for index in indices:
-        if not 1 <= index <= 8:
-            raise ValueError("index must in range [1,8]")
-        shift = 8 - index
-        value |= 1 << shift
-    return value
-
-
 def _udeg(value):
     return int(round(value * 1e6))
 
@@ -198,9 +189,9 @@ def _udeg(value):
 def _get_metadata(grid: RegularGrid):
     # geolatlon
     if grid.crs.to_epsg() == 4326:
-        scanning_mode = _code_flag([2])  # positive y
+        scanning_mode = set_code_flag([2])  # positive y
         # i, j direction increments given
-        resolution_components_flags = _code_flag([3, 4])
+        resolution_components_flags = set_code_flag([3, 4])
         return {
             "numberOfDataPoints": grid.nx * grid.ny,
             "sourceOfGridDefinition": 0,  # defined by template number
