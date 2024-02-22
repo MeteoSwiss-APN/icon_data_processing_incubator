@@ -138,7 +138,7 @@ class GribReader:
         metadata |= {
             "vref": "native" if vref_flag else "geo",
             "vcoord_type": vcoord_type,
-            "zshift": zshift,
+            "origin": {"z": zshift},
             "message": field.message(),
         }
         return metadata

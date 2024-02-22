@@ -112,13 +112,12 @@ def compute_origin(ref_grid: Grid, field: xr.DataArray) -> dict[str, float]:
     y0_key = "latitudeOfFirstGridPointInDegrees"
 
     return {
-        "z": field.zshift,
         "x": np.round((geo[x0_key] % 360 - x0) / dx, 1),
         "y": np.round((geo[y0_key] - y0) / dy, 1),
     }
 
 
-def set_origin(ds: dict[str, xr.DataArray], ref_param: str) -> None:
+def set_origin_xy(ds: dict[str, xr.DataArray], ref_param: str) -> None:
     """
 
     Raises
@@ -132,4 +131,4 @@ def set_origin(ds: dict[str, xr.DataArray], ref_param: str) -> None:
 
     ref_grid = load_grid_reference(ds[ref_param].message)
     for field in ds.values():
-        field.attrs["origin"] = compute_origin(ref_grid, field)
+        field.attrs["origin"] |= compute_origin(ref_grid, field)
