@@ -57,6 +57,7 @@ class Grid:
         latitude of first grid point in rotated lat-lon CRS
 
     """
+
     lon_first_grid_point: float
     lat_first_grid_point: float
 
