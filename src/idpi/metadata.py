@@ -138,7 +138,7 @@ def set_origin_xy(ds: dict[str, xr.DataArray], ref_param: str) -> None:
     ds : dict[str, xarray.DataArray]
         Dataset of fields to update.
     ref_param : str
-        Name of the paramter field to use as a reference. Must be a key of ds.
+        Name of the parameter field to use as a reference. Must be a key of ds.
 
     Raises
     ------
