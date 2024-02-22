@@ -74,7 +74,7 @@ def load_grid_reference(message: bytes) -> Grid:
     Parameters
     ----------
     message : bytes
-        name of parameter used to construct a reference grid.
+        GRIB message defining the reference grid.
 
     Returns
     -------
@@ -101,7 +101,20 @@ def load_grid_reference(message: bytes) -> Grid:
 
 
 def compute_origin(ref_grid: Grid, field: xr.DataArray) -> dict[str, float]:
-    """
+    """Compute horizontal components of the origin dict.
+
+    Parameters
+    ----------
+    ref_grid : Grid
+        reference grid
+    field : xarray.DataArray
+        field for which to compute the origin
+
+    Returns
+    -------
+    dict[str, float]
+        Horizontal components of the origin
+
     """
     x0 = ref_grid.lon_first_grid_point % 360
     y0 = ref_grid.lat_first_grid_point
@@ -118,12 +131,19 @@ def compute_origin(ref_grid: Grid, field: xr.DataArray) -> dict[str, float]:
 
 
 def set_origin_xy(ds: dict[str, xr.DataArray], ref_param: str) -> None:
-    """
+    """Set horizontal components of the origin attribute.
+
+    Parameters
+    ----------
+    ds : dict[str, xarray.DataArray]
+        Dataset of fields to update.
+    ref_param : str
+        Name of the paramter field to use as a reference. Must be a key of ds.
 
     Raises
     ------
     KeyError
-        if ref_param is not found in the input dataset
+        if the ref_param key is not found in the input dataset
 
     """
     if ref_param not in ds:
