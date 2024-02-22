@@ -51,19 +51,12 @@ class Grid:
 
     Attributes
     ----------
-    lon: xr.DataArray
-        2d array with longitude of geographical coordinates
-    lat: xr.DataArray
-        2d array with latitude of geographical coordinates
     lon_first_grid_point: float
         longitude of first grid point in rotated lat-lon CRS
     lat_first_grid_point: float
         latitude of first grid point in rotated lat-lon CRS
 
     """
-
-    lon: xr.DataArray
-    lat: xr.DataArray
     lon_first_grid_point: float
     lat_first_grid_point: float
 
@@ -85,14 +78,7 @@ def load_grid_reference(message: bytes) -> Grid:
     stream = io.BytesIO(message)
     [grib_field] = ekd.from_source("stream", stream)
 
-    lonlat_dict = {
-        geo_dim: xr.DataArray(dims=("y", "x"), data=values)
-        for geo_dim, values in grib_field.to_latlon().items()
-    }
-
     return Grid(
-        lonlat_dict["lon"],
-        lonlat_dict["lat"],
         *grib_field.metadata(
             "longitudeOfFirstGridPointInDegrees",
             "latitudeOfFirstGridPointInDegrees",
