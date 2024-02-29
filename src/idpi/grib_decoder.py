@@ -52,7 +52,7 @@ def _gather_coords(field_map, dims):
     if missing := [
         combination
         for combination in product(*coords.values())
-        if not combination in field_map
+        if combination not in field_map
     ]:
         msg = f"Missing combinations: {missing}"
         logger.exception(msg)
