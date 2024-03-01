@@ -1,11 +1,12 @@
 """Data source helper class."""
 
 # Standard library
+import contextlib
 import dataclasses as dc
 import sys
+import tempfile
 import typing
 from collections.abc import Iterator
-from contextlib import contextmanager, nullcontext
 from functools import singledispatchmethod
 from pathlib import Path
 
@@ -14,7 +15,7 @@ import earthkit.data as ekd  # type: ignore
 import eccodes  # type: ignore
 
 # Local
-from . import config, mars
+from . import config, fdb_client, mars
 
 GRIB_DEF = {
     mars.Model.COSMO_1E: "cosmo",
@@ -24,7 +25,7 @@ GRIB_DEF = {
 }
 
 
-@contextmanager
+@contextlib.contextmanager
 def cosmo_grib_defs():
     """Enable COSMO GRIB definitions."""
     root_dir = Path(sys.prefix) / "share"
@@ -47,13 +48,14 @@ def cosmo_grib_defs():
 def grib_def_ctx(grib_def: str):
     if grib_def == "cosmo":
         return cosmo_grib_defs()
-    return nullcontext()
+    return contextlib.nullcontext()
 
 
 @dc.dataclass
 class DataSource:
     datafiles: list[str] | None = None
     request_template: dict[str, typing.Any] = dc.field(default_factory=dict)
+    client: fdb_client.FDBClient | None = None
 
     @singledispatchmethod
     def retrieve(
@@ -92,7 +94,8 @@ class DataSource:
         req = mars.Request(**req_kwargs)
 
         grib_def = config.get("data_scope", GRIB_DEF[req.model])
-        with grib_def_ctx(grib_def):
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(grib_def_ctx(grib_def))
             if self.datafiles:
                 fs = ekd.from_source("file", self.datafiles)
                 source = fs.sel(req_kwargs)
@@ -100,6 +103,13 @@ class DataSource:
                 # fdb and file sources currently disagree on the type of the
                 # date and time fields.
                 # see: https://github.com/ecmwf/earthkit-data/issues/253
+            elif self.client is not None:
+                tmp = stack.enter_context(
+                    tempfile.SpooledTemporaryFile(max_size=1024**3)
+                )
+                self.client.retrieve(req, tmp)
+                tmp.seek(0)
+                source = ekd.from_source("stream", tmp)
             else:
                 source = ekd.from_source("fdb", req.to_fdb())
             yield from source  # type: ignore
