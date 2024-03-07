@@ -165,7 +165,7 @@ class GribReader:
             if not metadata_values:
                 metadata_values = {
                     "message": field.message(),
-                    **metadata.extract(field.metadata),
+                    **metadata.extract(field.metadata()),
                 }
 
             if not hcoords:

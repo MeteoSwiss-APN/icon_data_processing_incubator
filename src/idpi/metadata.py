@@ -23,9 +23,9 @@ VCOORD_TYPE = {
 
 def extract(metadata):
     [vref_flag] = grib_decoder.get_code_flag(
-        metadata("resolutionAndComponentFlags"), [5]
+        metadata.get("resolutionAndComponentFlags"), [5]
     )
-    level_type = metadata("typeOfLevel")
+    level_type = metadata.get("typeOfLevel")
     vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
 
     return {
