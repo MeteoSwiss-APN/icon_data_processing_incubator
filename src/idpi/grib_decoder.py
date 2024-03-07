@@ -16,7 +16,7 @@ import numpy as np
 import xarray as xr
 
 # Local
-from . import data_source, tasking, metadata
+from . import data_source, metadata, tasking
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class GribReader:
             if not metadata_values:
                 metadata_values = {
                     "message": field.message(),
-                    **metadata.extract(field.metadata()),
+                    **metadata.extract(field.metadata),
                 }
 
             if not hcoords:
