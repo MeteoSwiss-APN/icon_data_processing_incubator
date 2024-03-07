@@ -30,7 +30,7 @@ def extract(metadata):
 
     return {
         "parameter": metadata.as_namespace("parameter"),
-        "geometry": metadata.as_namespace("geography"),
+        "geography": metadata.as_namespace("geography"),
         "vref": "native" if vref_flag else "geo",
         "vcoord_type": vcoord_type,
         "origin": {"z": zshift},

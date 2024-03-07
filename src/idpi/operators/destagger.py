@@ -100,7 +100,7 @@ def _update_vertical(field) -> dict[str, Any]:
     if field.vcoord_type != "model_level":
         raise ValueError("Field.vcoord_type must model_level")
     return metadata.override(
-        field.message(),
+        field.message,
         typeOfLevel="generalVerticalLayer",
     )
 
