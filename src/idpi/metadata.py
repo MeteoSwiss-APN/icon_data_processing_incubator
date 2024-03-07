@@ -11,12 +11,37 @@ import numpy as np
 import xarray as xr
 from earthkit.data.writers import write  # type: ignore
 
+from . import grib_decoder
+
+VCOORD_TYPE = {
+    "generalVertical": ("model_level", -0.5),
+    "generalVerticalLayer": ("model_level", 0.0),
+    "isobaricInPa": ("pressure", 0.0),
+}
+
+
+def extract(metadata):
+    [vref_flag] = grib_decoder.get_code_flag(
+        metadata("resolutionAndComponentFlags"), [5]
+    )
+    level_type = metadata("typeOfLevel")
+    vcoord_type, zshift = VCOORD_TYPE.get(level_type, (level_type, 0.0))
+
+    return {
+        "parameter": metadata.as_namespace("parameter"),
+        "geometry": metadata.as_namespace("geography"),
+        "vref": "native" if vref_flag else "geo",
+        "vcoord_type": vcoord_type,
+        "origin": {"z": zshift},
+    }
+
 
 def override(message: bytes, **kwargs: typing.Any) -> dict[str, typing.Any]:
     """Override GRIB metadata contained in message.
 
     Note that no special consideration is made for maintaining consistency when
     overriding template definition keys such as productDefinitionTemplateNumber.
+    Note that the origin components in x and y will be unset.
 
     Parameters
     ----------
@@ -40,8 +65,7 @@ def override(message: bytes, **kwargs: typing.Any) -> dict[str, typing.Any]:
 
     return {
         "message": out.getvalue(),
-        "geography": md.as_namespace("geography"),
-        "parameter": md.as_namespace("parameter"),
+        **extract(md),
     }
 
 

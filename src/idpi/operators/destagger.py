@@ -96,6 +96,15 @@ def _update_grid(field: xr.DataArray, dim: Literal["x", "y"]) -> dict[str, Any]:
         )
 
 
+def _update_vertical(field) -> dict[str, Any]:
+    if field.vcoord_type != "model_level":
+        raise ValueError("Field.vcoord_type must model_level")
+    return metadata.override(
+        field.message(),
+        typeOfLevel="generalVerticalLayer",
+    )
+
+
 def destagger(
     field: xr.DataArray,
     dim: Literal["x", "y", "z"],
@@ -155,7 +164,7 @@ def destagger(
                 keep_attrs=True,
             )
             .transpose(*dims)
-            .assign_attrs(origin=field.origin | {dim: 0.0})
+            .assign_attrs(origin=field.origin | {dim: 0.0}, **_update_vertical(field))
         )
 
     raise ValueError("Unknown dimension", dim)
