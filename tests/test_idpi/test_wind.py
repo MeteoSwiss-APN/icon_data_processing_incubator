@@ -13,9 +13,9 @@ from idpi.operators import wind
 @pytest.fixture
 def data(work_dir, request_template):
     tmpl = request_template | {
-        "date": "20240223",
+        "date": "20240307",
         "time": "0600",
-        "model": "ICON-CH1-EPS",
+        "model": "icon-ch1-eps",
     }
     source = DataSource(request_template=tmpl, polytope_collection="mch")
     fields = {

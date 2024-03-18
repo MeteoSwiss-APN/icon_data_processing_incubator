@@ -32,13 +32,13 @@ class LevType(str, Enum):
 
 
 class Model(str, Enum):
-    COSMO_1E = "COSMO-1E"
-    COSMO_2E = "COSMO-2E"
-    KENDA_1 = "KENDA-1"
-    SNOWPOLINO = "SNOWPOLINO"
-    ICON_CH1_EPS = "ICON-CH1-EPS"
-    ICON_CH2_EPS = "ICON-CH2-EPS"
-    KENDA_CH1 = "KENDA-CH1"
+    COSMO_1E = "cosmo-1e"
+    COSMO_2E = "cosmo-2e"
+    KENDA_1 = "kenda-1"
+    SNOWPOLINO = "snowpolino"
+    ICON_CH1_EPS = "icon-ch1-eps"
+    ICON_CH2_EPS = "icon-ch2-eps"
+    KENDA_CH1 = "kenda-ch1"
 
 
 class Stream(str, Enum):
