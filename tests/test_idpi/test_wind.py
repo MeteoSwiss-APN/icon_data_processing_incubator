@@ -11,13 +11,8 @@ from idpi.operators import wind
 
 
 @pytest.fixture
-def data(work_dir, request_template):
-    tmpl = request_template | {
-        "date": "20240307",
-        "time": "0600",
-        "model": "icon-ch1-eps",
-    }
-    source = DataSource(request_template=tmpl, polytope_collection="mch")
+def data(work_dir, request_template, setup_fdb):
+    source = DataSource(request_template=request_template)
     fields = {
         "inputi": [(p, "sfc") for p in ("U_10M", "V_10M")],
     }
