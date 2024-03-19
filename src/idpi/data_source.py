@@ -12,7 +12,7 @@ from pathlib import Path
 # Third-party
 import earthkit.data as ekd  # type: ignore
 import eccodes  # type: ignore
-import polytope
+import polytope  # type: ignore
 
 # Local
 from . import config, mars
