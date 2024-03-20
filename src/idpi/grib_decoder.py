@@ -2,6 +2,7 @@
 
 # Standard library
 import datetime as dt
+import dataclasses as dc
 import io
 import logging
 import typing
@@ -37,39 +38,8 @@ def _is_ensemble(field) -> bool:
         return False
 
 
-def _gather_coords(field_map, dims):
-    coord_values = zip(*field_map)
-    unique = (sorted(set(values)) for values in coord_values)
-    coords = {dim: c for dim, c in zip(dims[:-2], unique)}
-
-    if missing := [
-        combination
-        for combination in product(*coords.values())
-        if combination not in field_map
-    ]:
-        msg = f"Missing combinations: {missing}"
-        logger.exception(msg)
-        raise RuntimeError(msg)
-
-    ny, nx = next(iter(field_map.values())).shape
-    shape = tuple(len(v) for v in coords.values()) + (ny, nx)
-    return coords, shape
-
-
 def _parse_datetime(date, time):
     return dt.datetime.strptime(f"{date}{time:04d}", "%Y%m%d%H%M")
-
-
-def _gather_tcoords(time_meta):
-    time = None
-    valid_time = []
-    for step in sorted(time_meta):
-        tm = time_meta[step]
-        valid_time.append(_parse_datetime(tm["validityDate"], tm["validityTime"]))
-        if time is None:
-            time = _parse_datetime(tm["dataDate"], tm["dataTime"])
-
-    return {"valid_time": ("time", valid_time), "ref_time": time}
 
 
 def _extract_pv(pv):
@@ -80,6 +50,115 @@ def _extract_pv(pv):
         "ak": xr.DataArray(pv[:i], dims="z"),
         "bk": xr.DataArray(pv[i:], dims="z"),
     }
+
+
+@dc.dataclass
+class FieldBuffer:
+    dims: tuple[str, ...] | None = None
+    hcoords: dict[str, xr.DataArray] = dc.field(default_factory=dict)
+    metadata: dict[str, typing.Any] = dc.field(default_factory=dict)
+    time_meta: dict[int, dict] = dc.field(default_factory=dict)
+    values: dict[tuple[int, ...], np.ndarray] = dc.field(default_factory=dict)
+
+    def load(self, field):
+        dim_keys = (
+            ("perturbationNumber", "step", "level")
+            if _is_ensemble(field)
+            else ("step", "level")
+        )
+        key = field.metadata(*dim_keys)
+        logger.debug("Received field for key: %s", key)
+        self.values[key] = field.to_numpy(dtype=np.float32)
+
+        step = key[-2]  # assume all members share the same time steps
+        if step not in self.time_meta:
+            self.time_meta[step] = field.metadata(namespace="time")
+
+        if not self.dims:
+            self.dims = tuple(DIM_MAP[d] for d in dim_keys) + ("y", "x")
+
+        if not self.metadata:
+            self.metadata = {
+                "message": field.message(),
+                **metadata.extract(field.metadata()),
+            }
+
+        if not self.hcoords:
+            self.hcoords = {
+                dim: xr.DataArray(dims=("y", "x"), data=values)
+                for dim, values in field.to_latlon().items()
+            }
+
+    def _gather_coords(self):
+        if self.dims is None:
+            raise RuntimeError
+
+        coord_values = zip(*self.values)
+        unique = (sorted(set(values)) for values in coord_values)
+        coords = {dim: c for dim, c in zip(self.dims[:-2], unique)}
+
+        if missing := [
+            combination
+            for combination in product(*coords.values())
+            if combination not in self.values
+        ]:
+            msg = f"Missing combinations: {missing}"
+            logger.exception(msg)
+            raise RuntimeError(msg)
+
+        ny, nx = next(iter(self.values.values())).shape
+        shape = tuple(len(v) for v in coords.values()) + (ny, nx)
+        return coords, shape
+
+    def _gather_tcoords(self):
+        time = None
+        valid_time = []
+        for step in sorted(self.time_meta):
+            tm = self.time_meta[step]
+            valid_time.append(_parse_datetime(tm["validityDate"], tm["validityTime"]))
+            if time is None:
+                time = _parse_datetime(tm["dataDate"], tm["dataTime"])
+
+        return {"valid_time": ("time", valid_time), "ref_time": time}
+
+    def to_xarray(self):
+        coords, shape = self._gather_coords()
+        tcoords = self._gather_tcoords()
+
+        array = xr.DataArray(
+            np.array([self.values.pop(key) for key in sorted(self.values)]).reshape(
+                shape
+            ),
+            coords=coords | self.hcoords | tcoords,
+            dims=self.dims,
+            attrs=self.metadata,
+        )
+
+        return (
+            array if array.vcoord_type != "surface" else array.squeeze("z", drop=True)
+        )
+
+
+def load(
+    source: data_source.DataSource,
+    request: Request,
+    single_param: bool = False,
+):
+    logger.info("Retrieving request: %s", request)
+    fs = source.retrieve(request)
+
+    buffer_map: dict[str, FieldBuffer] = {}
+
+    for field in fs:
+        name = field.metadata("shortName")
+        buffer = buffer_map.setdefault(name, FieldBuffer())
+        buffer.load(field)
+
+    if single_param:
+        [buffer] = buffer_map.values()
+        return buffer.to_xarray()
+
+    return {name: buffer.to_xarray() for name, buffer in buffer_map.items()}
 
 
 class GribReader:
@@ -132,65 +211,6 @@ class GribReader:
         for field in fs:
             return field.metadata("pv")
 
-    def _load_param(
-        self,
-        req: Request,
-    ):
-        logger.info("Retrieving request: %s", req)
-        fs = self.data_source.retrieve(req)
-
-        hcoords: dict[str, xr.DataArray] = {}
-        metadata_values: dict[str, typing.Any] = {}
-        time_meta: dict[int, dict] = {}
-        dims: tuple[str, ...] | None = None
-        field_map: dict[tuple[int, ...], np.ndarray] = {}
-
-        for field in fs:
-            dim_keys = (
-                ("perturbationNumber", "step", "level")
-                if _is_ensemble(field)
-                else ("step", "level")
-            )
-            key = field.metadata(*dim_keys)
-            logger.debug("Received field for key: %s", key)
-            field_map[key] = field.to_numpy(dtype=np.float32)
-
-            step = key[-2]  # assume all members share the same time steps
-            if step not in time_meta:
-                time_meta[step] = field.metadata(namespace="time")
-
-            if not dims:
-                dims = tuple(DIM_MAP[d] for d in dim_keys) + ("y", "x")
-
-            if not metadata_values:
-                metadata_values = {
-                    "message": field.message(),
-                    **metadata.extract(field.metadata()),
-                }
-
-            if not hcoords:
-                hcoords = {
-                    dim: xr.DataArray(dims=("y", "x"), data=values)
-                    for dim, values in field.to_latlon().items()
-                }
-
-        if not field_map:
-            raise RuntimeError(f"requested {req=} not found.")
-
-        coords, shape = _gather_coords(field_map, dims)
-        tcoords = _gather_tcoords(time_meta)
-
-        array = xr.DataArray(
-            np.array([field_map.pop(key) for key in sorted(field_map)]).reshape(shape),
-            coords=coords | hcoords | tcoords,
-            dims=dims,
-            attrs=metadata_values,
-        )
-
-        return (
-            array if array.vcoord_type != "surface" else array.squeeze("z", drop=True)
-        )
-
     def load(
         self,
         requests: Mapping[str, Request],
@@ -218,7 +238,7 @@ class GribReader:
 
         """
         result = {
-            name: tasking.delayed(self._load_param)(req)
+            name: tasking.delayed(load)(self.data_source, req, single_param=True)
             for name, req in requests.items()
         }
 
