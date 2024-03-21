@@ -53,7 +53,7 @@ def _extract_pv(pv):
 
 
 @dc.dataclass
-class FieldBuffer:
+class _FieldBuffer:
     dims: tuple[str, ...] | None = None
     hcoords: dict[str, xr.DataArray] = dc.field(default_factory=dict)
     metadata: dict[str, typing.Any] = dc.field(default_factory=dict)
@@ -121,43 +121,56 @@ class FieldBuffer:
 
         return {"valid_time": ("time", valid_time), "ref_time": time}
 
-    def to_xarray(self):
+    def to_xarray(self) -> xr.DataArray:
         coords, shape = self._gather_coords()
         tcoords = self._gather_tcoords()
 
         array = xr.DataArray(
-            np.array([self.values.pop(key) for key in sorted(self.values)]).reshape(
-                shape
-            ),
+            data=np.array(
+                [self.values.pop(key) for key in sorted(self.values)]
+            ).reshape(shape),
             coords=coords | self.hcoords | tcoords,
             dims=self.dims,
             attrs=self.metadata,
         )
 
-        return (
-            array if array.vcoord_type != "surface" else array.squeeze("z", drop=True)
-        )
+        if array.vcoord_type != "surface":
+            return array
+
+        return array.squeeze("z", drop=True)
+
+
+def _load_buffer_map(
+    source: data_source.DataSource,
+    request: Request,
+) -> dict[str, _FieldBuffer]:
+    logger.info("Retrieving request: %s", request)
+    fs = source.retrieve(request)
+
+    buffer_map: dict[str, _FieldBuffer] = {}
+
+    for field in fs:
+        name = field.metadata("shortName")
+        buffer = buffer_map.setdefault(name, _FieldBuffer())
+        buffer.load(field)
+
+    return buffer_map
+
+
+def load_single_param(
+    source: data_source.DataSource,
+    request: Request,
+) -> xr.DataArray:
+    buffer_map = _load_buffer_map(source, request)
+    [buffer] = buffer_map.values()
+    return buffer.to_xarray()
 
 
 def load(
     source: data_source.DataSource,
     request: Request,
-    single_param: bool = False,
-):
-    logger.info("Retrieving request: %s", request)
-    fs = source.retrieve(request)
-
-    buffer_map: dict[str, FieldBuffer] = {}
-
-    for field in fs:
-        name = field.metadata("shortName")
-        buffer = buffer_map.setdefault(name, FieldBuffer())
-        buffer.load(field)
-
-    if single_param:
-        [buffer] = buffer_map.values()
-        return buffer.to_xarray()
-
+) -> dict[str, xr.DataArray]:
+    buffer_map = _load_buffer_map(source, request)
     return {name: buffer.to_xarray() for name, buffer in buffer_map.items()}
 
 
@@ -238,7 +251,7 @@ class GribReader:
 
         """
         result = {
-            name: tasking.delayed(load)(self.data_source, req, single_param=True)
+            name: tasking.delayed(load_single_param)(self.data_source, req)
             for name, req in requests.items()
         }
 
