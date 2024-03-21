@@ -91,7 +91,7 @@ class _FieldBuffer:
 
     def _gather_coords(self):
         if self.dims is None:
-            raise RuntimeError
+            raise RuntimeError("No dims.")
 
         coord_values = zip(*self.values)
         unique = (sorted(set(values)) for values in coord_values)
@@ -122,6 +122,9 @@ class _FieldBuffer:
         return {"valid_time": ("time", valid_time), "ref_time": time}
 
     def to_xarray(self) -> xr.DataArray:
+        if not self.values:
+            raise RuntimeError("No values.")
+
         coords, shape = self._gather_coords()
         tcoords = self._gather_tcoords()
 
@@ -161,6 +164,26 @@ def load_single_param(
     source: data_source.DataSource,
     request: Request,
 ) -> xr.DataArray:
+    """Request data from a data source for a single parameter.
+
+    Parameters
+    ----------
+    source : data_source.DataSource
+        Source to request the data from.
+    request : str | tuple[str, str] | dict[str, Any]
+        Request for data from the source in the mars language.
+
+    Raises
+    ------
+    RuntimeError
+        when data is missing.
+
+    Returns
+    -------
+    xarray.DataArray
+        A data array of the requested field.
+
+    """
     buffer_map = _load_buffer_map(source, request)
     [buffer] = buffer_map.values()
     return buffer.to_xarray()
@@ -170,6 +193,26 @@ def load(
     source: data_source.DataSource,
     request: Request,
 ) -> dict[str, xr.DataArray]:
+    """Request data from a data source.
+
+    Parameters
+    ----------
+    source : data_source.DataSource
+        Source to request the data from.
+    request : str | tuple[str, str] | dict[str, Any]
+        Request for data from the source in the mars language.
+
+    Raises
+    ------
+    RuntimeError
+        when data is missing.
+
+    Returns
+    -------
+    dict[str, xarray.DataArray]
+        A mapping of shortName to data arrays of the requested fields.
+
+    """
     buffer_map = _load_buffer_map(source, request)
     return {name: buffer.to_xarray() for name, buffer in buffer_map.items()}
 
