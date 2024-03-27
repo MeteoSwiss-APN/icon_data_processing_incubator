@@ -3,7 +3,7 @@ import pytest
 import xarray as xr
 
 # First-party
-from idpi import grib_decoder, data_source
+from idpi import data_source, grib_decoder
 
 
 @pytest.mark.parametrize(
