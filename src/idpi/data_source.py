@@ -57,7 +57,7 @@ class DataSource:
 
     @singledispatchmethod
     def retrieve(
-        self, request: dict[str, typing.Any] | str | tuple[str, str]
+        self, request: dict[str, typing.Any] | str | tuple[str, str] | mars.Request
     ) -> Iterator:
         """Stream GRIB fields from files or FDB.
 
@@ -67,11 +67,12 @@ class DataSource:
         Simple strings are interpreted as `param` filters and pairs of strings
         are interpreted as `param` and `levtype` filters.
         Key value pairs from the `request_template` attribute are used as default
-        values.
+        values. Note that the default values in the mars request passed as an input
+        will take precedence on the template values.
 
         Parameters
         ----------
-        request : dict | str | tuple[str, str]
+        request : dict | str | tuple[str, str] | idpi.mars.Request
             Request for data from the source in the mars language.
 
         Yields
