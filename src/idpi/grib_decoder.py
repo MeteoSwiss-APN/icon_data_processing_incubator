@@ -15,6 +15,7 @@ from warnings import warn
 import earthkit.data as ekd  # type: ignore
 import numpy as np
 import xarray as xr
+from numpy.typing import DTypeLike
 
 # Local
 from . import data_source, metadata, tasking
@@ -29,6 +30,17 @@ DIM_MAP = {
 INV_DIM_MAP = {v: k for k, v in DIM_MAP.items()}
 
 Request = str | tuple | dict
+
+
+class GribField(typing.Protocol):
+    def metadata(self, *args, **kwargs) -> typing.Any: ...
+    def message(self) -> bytes: ...
+    def to_numpy(self, dtype: DTypeLike) -> np.ndarray: ...
+    def to_latlon(self) -> dict[str, np.ndarray]: ...
+
+
+class MissingData(RuntimeError):
+    pass
 
 
 def _is_ensemble(field) -> bool:
@@ -60,7 +72,7 @@ class _FieldBuffer:
     time_meta: dict[int, dict] = dc.field(default_factory=dict)
     values: dict[tuple[int, ...], np.ndarray] = dc.field(default_factory=dict)
 
-    def load(self, field):
+    def load(self, field: GribField) -> None:
         dim_keys = (
             ("perturbationNumber", "step", "level")
             if _is_ensemble(field)
@@ -123,7 +135,7 @@ class _FieldBuffer:
 
     def to_xarray(self) -> xr.DataArray:
         if not self.values:
-            raise RuntimeError("No values.")
+            raise MissingData("No values.")
 
         coords, shape = self._gather_coords()
         tcoords = self._gather_tcoords()
@@ -175,8 +187,10 @@ def load_single_param(
 
     Raises
     ------
+    ValueError
+        if more than one param is present in the request.
     RuntimeError
-        when data is missing.
+        when all of the requested data is not returned from the data source.
 
     Returns
     -------
@@ -184,6 +198,13 @@ def load_single_param(
         A data array of the requested field.
 
     """
+    if (
+        isinstance(request, dict)
+        and isinstance(request["param"], Sequence)
+        and len(request["param"]) > 1
+    ):
+        raise ValueError("Only one param is supported.")
+
     buffer_map = _load_buffer_map(source, request)
     [buffer] = buffer_map.values()
     return buffer.to_xarray()
@@ -205,7 +226,7 @@ def load(
     Raises
     ------
     RuntimeError
-        when data is missing.
+        when all of the requested data is not returned from the data source.
 
     Returns
     -------
@@ -214,7 +235,13 @@ def load(
 
     """
     buffer_map = _load_buffer_map(source, request)
-    return {name: buffer.to_xarray() for name, buffer in buffer_map.items()}
+    result = {}
+    for name, buffer in buffer_map.items():
+        try:
+            result[name] = buffer.to_xarray()
+        except MissingData as e:
+            raise RuntimeError(f"Missing data for param: {name}") from e
+    return result
 
 
 class GribReader:
