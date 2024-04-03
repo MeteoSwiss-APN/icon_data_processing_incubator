@@ -59,6 +59,11 @@ def get_from_polytope(request: mars.Request) -> dict[str, xr.DataArray]:
     request : mars.Request
         Request for data defined in the mars language.
 
+    Raises
+    ------
+    RuntimeError
+        if the required environment variables for polytope are not set.
+        
     Returns
     -------
     dict[str, xarray.DataArray]
