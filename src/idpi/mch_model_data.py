@@ -46,7 +46,7 @@ def get_from_fdb(request: mars.Request) -> dict[str, xr.DataArray]:
         msg = "FDB does not support the feature attribute."
         logger.exception(msg)
         raise ValueError(msg)
-    logger.info("Getting request %s from FDB.")
+    logger.info("Getting request %s from FDB.", request)
     source = data_source.DataSource()
     return grib_decoder.load(source, request)
 
