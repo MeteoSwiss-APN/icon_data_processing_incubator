@@ -130,8 +130,8 @@ class Request:
     def _param_id(self):
         mapping = _load_mapping()
         if isinstance(self.param, Iterable) and not isinstance(self.param, str):
-            return [str(mapping[param]["cosmo"]["paramId"]) for param in self.param]
-        return str(mapping[self.param]["cosmo"]["paramId"])
+            return [mapping[param]["cosmo"]["paramId"] for param in self.param]
+        return mapping[self.param]["cosmo"]["paramId"]
 
     def _staggered(self):
         mapping = _load_mapping()
@@ -155,4 +155,12 @@ class Request:
 
         obj = dc.replace(self, levelist=levelist)
         out = typing.cast(dict[str, typing.Any], obj.dump())
-        return out | {"param": self._param_id(), "model": self.model.lower()}
+        return out | {"param": self._param_id()}
+    
+    def to_polytope(self) -> dict[str, typing.Any]:
+        result = self.to_fdb()
+        if isinstance(result["param"], list):
+            param = [str(p) for p in result["param"]]
+        else:
+            param = str(result["param"])
+        return result | {"param": param, "model": result["model"].lower()}

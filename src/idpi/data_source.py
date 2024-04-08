@@ -109,7 +109,7 @@ class DataSource:
             elif self.polytope_collection is not None:
                 pointers = self.polytope_client.retrieve(
                     self.polytope_collection,
-                    req.to_fdb(),
+                    req.to_polytope(),
                     pointer=True,
                     asynchronous=False,
                 )
