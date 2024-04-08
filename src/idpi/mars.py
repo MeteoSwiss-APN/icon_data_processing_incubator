@@ -160,7 +160,7 @@ class Request:
     def to_polytope(self) -> dict[str, typing.Any]:
         result = self.to_fdb()
         if isinstance(result["param"], list):
-            param = [str(p) for p in result["param"]]
+            param: str | list[str] = [str(p) for p in result["param"]]
         else:
             param = str(result["param"])
         return result | {"param": param, "model": result["model"].lower()}
