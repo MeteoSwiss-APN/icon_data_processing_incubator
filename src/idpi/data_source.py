@@ -114,7 +114,7 @@ class DataSource:
                     asynchronous=False,
                 )
                 urls = [p["location"] for p in pointers]
-                source = ekd.from_source("url", urls)
+                source = ekd.from_source("url", urls, stream=True)
             else:
                 source = ekd.from_source("fdb", req.to_fdb())
             yield from source  # type: ignore

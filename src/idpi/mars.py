@@ -100,8 +100,8 @@ class Request:
 
     expver: str = "0001"
     levelist: int | tuple[int, ...] | None = None
-    number: int | tuple[int, ...] = 0
-    step: int | tuple[int, ...] = 0
+    number: int | tuple[int, ...] | None = None
+    step: int | tuple[int, ...] | None = None
 
     class_: Class = dc.field(
         default=Class.OPERATIONAL_DATA,
@@ -130,8 +130,8 @@ class Request:
     def _param_id(self):
         mapping = _load_mapping()
         if isinstance(self.param, Iterable) and not isinstance(self.param, str):
-            return [mapping[param]["cosmo"]["paramId"] for param in self.param]
-        return mapping[self.param]["cosmo"]["paramId"]
+            return [str(mapping[param]["cosmo"]["paramId"]) for param in self.param]
+        return str(mapping[self.param]["cosmo"]["paramId"])
 
     def _staggered(self):
         mapping = _load_mapping()
@@ -155,4 +155,4 @@ class Request:
 
         obj = dc.replace(self, levelist=levelist)
         out = typing.cast(dict[str, typing.Any], obj.dump())
-        return out | {"param": self._param_id()}
+        return out | {"param": self._param_id(), "model": self.model.lower()}
