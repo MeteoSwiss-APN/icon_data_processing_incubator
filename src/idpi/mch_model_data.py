@@ -1,10 +1,12 @@
 """Get Meteoswiss model data from FDB or polytope."""
 
 # Standard library
+import io
 import logging
 import os
 
 # Third-party
+import pyfdb
 import xarray as xr
 
 # Local
@@ -87,3 +89,29 @@ def get_from_polytope(request: mars.Request) -> dict[str, xr.DataArray]:
     logger.info("Getting request %s from polytope collection %s", request, collection)
     source = data_source.DataSource(polytope_collection=collection)
     return grib_decoder.load(source, request)
+
+
+def archive_to_fdb(
+    field: xr.DataArray,
+    request: mars.Request | None = None,
+    bits_per_value: int = 16,
+) -> None:
+    """Archive a field to FDB.
+
+    Parameters
+    ----------
+    field : xarray.DataArray
+        The field that should be archived.
+    request : mars.Request, optional
+        The request under which the data should be archived.
+        If not provided, the keys are derived from the field.
+    bits_per_value : int, optional
+        Bits per value encoded in the archived data. (Default: 16)
+
+    """
+    buffer = io.BytesIO()
+    handle = io.BufferedWriter(buffer.raw)
+    grib_decoder.save(field, handle, bits_per_value)
+    fdb = pyfdb.FDB()
+    req = request.to_fdb() if request is not None else None
+    fdb.archive(buffer.getvalue(), req)
