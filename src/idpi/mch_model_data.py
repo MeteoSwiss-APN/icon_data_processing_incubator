@@ -98,6 +98,8 @@ def archive_to_fdb(
 ) -> None:
     """Archive a field to FDB.
 
+    Note that all messages will be held in memory during archival.
+
     Parameters
     ----------
     field : xarray.DataArray
