@@ -6,7 +6,7 @@ import logging
 import os
 
 # Third-party
-import pyfdb
+import pyfdb  # type: ignore
 import xarray as xr
 
 # Local
