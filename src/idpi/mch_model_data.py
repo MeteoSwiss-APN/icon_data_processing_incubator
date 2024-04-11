@@ -1,4 +1,9 @@
-"""Get Meteoswiss model data from FDB or polytope."""
+"""Meteoswiss model data.
+
+Module for retrieving Meteoswiss model data from FDB or Polytope,
+and archiving data to FDB.
+
+"""
 
 # Standard library
 import io
@@ -116,4 +121,8 @@ def archive_to_fdb(
     grib_decoder.save(field, handle, bits_per_value)
     fdb = pyfdb.FDB()
     req = request.to_fdb() if request is not None else None
+    if request is not None:
+        logger.info("Archiving request %s to FDB", request)
+    elif "parameter" in field.attrs:
+        logger.info("Archiving field %s to FDB", field.parameter["shortName"])
     fdb.archive(buffer.getvalue(), req)
