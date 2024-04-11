@@ -19,14 +19,13 @@ def test_curl(data_dir):
     set_origin_xy(ds, ref_param="HHL")
 
     geo = ds["HHL"].attrs["geography"]
-    dlon = geo["iDirectionIncrementInDegrees"]
     dlat = geo["jDirectionIncrementInDegrees"]
     nj = geo["Nj"]
     lat_min = geo["latitudeOfFirstGridPointInDegrees"]
 
     deg2rad = np.pi / 180
     rlat = get_grid_coords(nj, lat_min, dlat, "y") * deg2rad
-    total_diff = TotalDiff(dlon * deg2rad, dlat * deg2rad, ds["HHL"])
+    total_diff = TotalDiff.from_hhl(ds["HHL"])
 
     a1, a2, a3 = curl.curl(ds["U"], ds["V"], ds["W"], rlat, total_diff)
     b1, b2, b3 = curl.curl_alt(ds["U"], ds["V"], ds["W"], rlat, total_diff)

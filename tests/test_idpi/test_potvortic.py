@@ -1,5 +1,4 @@
 # Third-party
-import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
@@ -9,9 +8,8 @@ from idpi.data_cache import DataCache
 from idpi.data_source import DataSource
 from idpi.grib_decoder import GribReader
 from idpi.metadata import set_origin_xy
-from idpi.operators.rho import f_rho_tot
-from idpi.operators.theta import ftheta
-from idpi.operators.total_diff import TotalDiff
+from idpi.operators.rho import compute_rho_tot
+from idpi.operators.theta import compute_theta
 
 
 @pytest.fixture
@@ -37,17 +35,12 @@ def test_pv(data, fieldextra):
     ds = reader.load_fieldnames(["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"])
     set_origin_xy(ds, ref_param="HHL")
 
-    theta = ftheta(ds["P"], ds["T"])
-    rho_tot = f_rho_tot(ds["T"], ds["P"], ds["QV"], ds["QC"], ds["QI"])
+    theta = compute_theta(ds["P"], ds["T"])
+    rho_tot = compute_rho_tot(ds["T"], ds["P"], ds["QV"], ds["QC"], ds["QI"])
 
-    geo = ds["HHL"].attrs["geography"]
-    dlon = geo["iDirectionIncrementInDegrees"]
-    dlat = geo["jDirectionIncrementInDegrees"]
-    deg2rad = np.pi / 180
-
-    total_diff = TotalDiff(dlon * deg2rad, dlat * deg2rad, ds["HHL"])
-
-    observed = pv.fpotvortic(ds["U"], ds["V"], ds["W"], theta, rho_tot, total_diff)
+    observed = pv.compute_pot_vortic(
+        ds["U"], ds["V"], ds["W"], theta, rho_tot, ds["HHL"]
+    )
 
     conf_files = cache.conf_files | {"output": "<hh>_outfile.nc"}
     fs_ds = fieldextra("POT_VORTIC", conf_files=conf_files)
