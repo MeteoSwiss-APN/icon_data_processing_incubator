@@ -20,7 +20,7 @@ def compute_theta(p: xr.DataArray, t: xr.DataArray) -> xr.DataArray:
 
     Returns
     -------
-    xr.DataArray
+    xarray.DataArray
         potential temperature in K
 
     """

@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 import idpi.operators.pot_vortic as pv
 from idpi.data_cache import DataCache
 from idpi.data_source import DataSource
-from idpi.grib_decoder import GribReader
+from idpi.grib_decoder import load
 from idpi.metadata import set_origin_xy
 from idpi.operators.rho import compute_rho_tot
 from idpi.operators.theta import compute_theta
@@ -25,14 +25,13 @@ def data(work_dir, request_template, setup_fdb):
     }
     cache = DataCache(cache_dir=work_dir, fields=fields, files=files)
     cache.populate(source)
-    reader = GribReader(source)
-    yield reader, cache
+    yield source, cache
     cache.clear()
 
 
 def test_pv(data, fieldextra):
-    reader, cache = data
-    ds = reader.load_fieldnames(["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"])
+    source, cache = data
+    ds = load(source, {"param": ["U", "V", "W", "P", "T", "QV", "QC", "QI", "HHL"]})
     set_origin_xy(ds, ref_param="HHL")
 
     theta = compute_theta(ds["P"], ds["T"])
