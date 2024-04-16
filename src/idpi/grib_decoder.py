@@ -79,7 +79,7 @@ class _FieldBuffer:
             else ("step", "level")
         )
         key = field.metadata(*dim_keys)
-        logger.debug("Received field for %s key: %s", name, key)
+        logger.debug("Received field for param: %s, key: %s", name, key)
         self.values[key] = field.to_numpy(dtype=np.float32)
 
         step = key[-2]  # assume all members share the same time steps
