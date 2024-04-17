@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>History &#8212; Icon Data Processing Incubator 0.2.0rc3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=64426804"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Credits" href="authors.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="history">
+<h1>History<a class="headerlink" href="#history" title="Permalink to this heading">¶</a></h1>
+<section id="rc3-2023-12-18">
+<h2><a class="reference external" href="https://github.com/MeteoSwiss-APN/icon_data_processing_incubator/compare/v0.2.0-rc2..v0.2.0-rc3">0.2.0-rc3</a> (2023-12-18)<a class="headerlink" href="#rc3-2023-12-18" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Added vertical interpolation operator <code class="docutils literal notranslate"><span class="pre">interpolate_k2any</span></code></p></li>
+<li><p>Testing data marker determines the test data that should be used</p></li>
+<li><p>Removed the <code class="docutils literal notranslate"><span class="pre">system_definitions</span></code> module</p></li>
+</ul>
+</section>
+<section id="rc2-2023-12-11">
+<h2><a class="reference external" href="https://github.com/MeteoSwiss-APN/icon_data_processing_incubator/compare/v0.2.0-rc1..v0.2.0-rc2">0.2.0-rc2</a> (2023-12-11)<a class="headerlink" href="#rc2-2023-12-11" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">product.run_products</span></code> function</p></li>
+<li><p>Updated field mappings</p></li>
+<li><p>Data cache will inject the step and number in the request depending on the file pattern</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mars.Request</span></code> now supports multiple params</p></li>
+</ul>
+</section>
+<section id="rc1-2023-12-01">
+<h2><a class="reference external" href="https://github.com/MeteoSwiss-APN/icon_data_processing_incubator/compare/v0.1.0..v0.2.0-rc1">0.2.0-rc1</a> (2023-12-01)<a class="headerlink" href="#rc1-2023-12-01" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Added support for the FDB data source</p></li>
+<li><p>Added support for running tests on balfrin (FDB only)</p></li>
+<li><p>Added modules</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code>: manage configuration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_cache</span></code>: support fieldextra testing from FDB</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_source</span></code>: enable reading from files or from FDB</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mars</span></code>: mars request validation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">product</span></code>: product description</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tasking</span></code>: dask delayed wrapper</p></li>
+</ul>
+</li>
+<li><p>Added operators</p>
+<ul>
+<li><p>atmo</p></li>
+<li><p>gis</p></li>
+<li><p>lateral_operators</p></li>
+<li><p>regrid</p></li>
+<li><p>relhum</p></li>
+<li><p>time_operators</p></li>
+<li><p>wind</p></li>
+</ul>
+</li>
+<li><p>Changed: flexpart operator no longer uses cosmo naming conventions</p></li>
+<li><p><strong>Breaking:</strong> removed the <code class="docutils literal notranslate"><span class="pre">load_fields</span></code> method from the GribReader class</p></li>
+<li><p><strong>Breaking:</strong> the <code class="docutils literal notranslate"><span class="pre">load</span></code> method of GribReader class now takes a mapping of labels to requests and returns a mapping of labels to <code class="docutils literal notranslate"><span class="pre">xarray.DataArray</span></code></p></li>
+</ul>
+</section>
+<section id="id2">
+<h2><a class="reference external" href="https://github.com/MeteoSwiss-APN/icon_data_processing_incubator/tree/v0.1.0">0.1.0</a> (2023-07-11)<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Added operators</p>
+<ul>
+<li><p>brn</p></li>
+<li><p>curl</p></li>
+<li><p>destagger</p></li>
+<li><p>diff</p></li>
+<li><p>flexpart (for IFS model output)</p></li>
+<li><p>hzerocl</p></li>
+<li><p>omega_slope</p></li>
+<li><p>pot_vortic</p></li>
+<li><p>rho</p></li>
+<li><p>theta</p></li>
+<li><p>thetav</p></li>
+<li><p>time_rate</p></li>
+<li><p>interpolate_k2p</p></li>
+<li><p>interpolate_k2theta</p></li>
+<li><p>minmax_k</p></li>
+<li><p>integrate_k</p></li>
+</ul>
+</li>
+<li><p>Added ninjo_k2th product</p></li>
+<li><p>Added GRIB data loader based on earthkit-data</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Icon Data Processing Incubator</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Icon Data Processing Incubator: Prototype for a data post-processing framework on the basis of xarray.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rc3-2023-12-18">0.2.0-rc3 (2023-12-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rc2-2023-12-11">0.2.0-rc2 (2023-12-11)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rc1-2023-12-01">0.2.0-rc1 (2023-12-01)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.1.0 (2023-07-11)</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="authors.html" title="previous chapter">Credits</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Tobias Wicky.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/history.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
